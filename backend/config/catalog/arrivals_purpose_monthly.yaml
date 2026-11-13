@@ -1,0 +1,29 @@
+table: arrivals_purpose_monthly
+title: 방문목적별 입도객 현황
+stages: [3]
+grain: 방문목적(9종) × 월 (제주 전체)
+time_column: month
+time_grain: month
+description: >
+  제주 입도객을 방문목적 9종(개별여행, 패키지, 부분패키지, 레저스포츠, 휴양및관람, 회의및업무, 교육여행,
+  친지방문, 기타방문)으로 나눈 월간 자료예요. 수요 기준선과 감편 시나리오를 계산할 때 써요.
+keywords: [입도객, 방문목적, 개별여행, 패키지, 수요, 시나리오, 감편, 항공]
+columns:
+  - {name: month, type: DATE, desc: 기준월 (매월 1일)}
+  - {name: purpose, type: VARCHAR, desc: 방문목적 (9종)}
+  - {name: visitors, type: BIGINT, desc: 방문자 수 (명)}
+limits:
+  - 제주 전체 값이에요. 시나리오는 예측이 아니라 가정에 따른 계산이에요.
+sources:
+  hub:
+    dataset_id: 580
+    data_key: DtaDa0555D801Da508DbDtt5t1bat1ta
+    title: 방문목적별 입도객 현황
+    dir: arrivals_purpose
+    date_format: YYYYMM
+    window: all
+    select:
+      month: "std_month(dtYearMonth)"
+      purpose: "replace(trim(CAST(visitPurpose AS VARCHAR)), ' ', '')"
+      visitors: "TRY_CAST(visitorCnt AS BIGINT)"
+    aggregate: {visitors: sum}

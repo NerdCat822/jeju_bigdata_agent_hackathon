@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>머물멍 제안서 · {{ place }}</title>
+<style>
+  :root { --ink:#22262e; --sub:#5b6472; --line:#e3e6ec; --bg:#fbf8f3; --card:#ffffff; --accent:#f7941d; --warn:#b4541a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif; line-height:1.65; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 0 0 12px; }
+  h3 { font-size: 15px; margin: 22px 0 8px; color: var(--sub); }
+  .meta { color: var(--sub); font-size: 13px; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; margin-right:6px; border:1px solid var(--line); background:#fff; }
+  .badge.type { background:#fdeee9; border-color:#f6cfc4; color:#b23a1e; }
+  .badge.assumption, .badge.warn { background:#fff4e2; border-color:#f3d6a5; color:var(--warn); }
+  .badge.data { background:#eef6ee; border-color:#cfe6cf; color:#2c6e3f; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px 24px; margin-top:20px; }
+  .headline { border-left:5px solid var(--accent); padding:6px 0 6px 14px; font-size:19px; font-weight:700; margin:10px 0 12px; }
+  .notice { background:#fff4e2; border:1px solid #f3d6a5; border-radius:10px; padding:10px 14px; font-size:14px; color:var(--warn); margin-top:14px; }
+  table { border-collapse: collapse; width:100%; font-size:13px; margin:6px 0 4px; }
+  th, td { border-bottom:1px solid var(--line); padding:6px 8px; text-align:right; white-space:nowrap; vertical-align:top; }
+  td.t, th.t { text-align:left; white-space:normal; min-width:4.5em; word-break:keep-all; }
+  th { background:#f6f7f9; font-weight:600; }
+  .scroll { overflow-x:auto; }
+  .note { color:var(--sub); font-size:12.5px; margin:4px 0 0; }
+  ul { margin: 6px 0 0 18px; padding:0; }
+  li { margin: 3px 0; }
+  .sugg { border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin:8px 0; }
+  .sugg b { margin-right:6px; }
+  details { margin-top:8px; }
+  summary { cursor:pointer; color:var(--sub); font-size:13px; }
+  pre { background:#f6f7f9; border-radius:8px; padding:10px 12px; overflow-x:auto; font-size:12px; line-height:1.45; }
+  .chart { width:100%; height:auto; margin-top:6px; }
+  .tick { font-size:11px; fill:#5b6472; }
+  .lbl { paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+  .check { font-size:13px; }
+  .ok { color:#2c6e3f; } .no { color:#b23a1e; }
+  @media print { body { background:#fff; } section { break-inside: avoid; } details[open] summary { display:none; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="meta">머물멍 · 읍면동 활력 3단계 AI 에이전트 · 최종 제안서</p>
+  <h1>{{ place }} 제안서</h1>
+  <p class="meta">발급 {{ issued }} · 해설 {{ explained }} · 데이터 <span class="badge data">{{ data_badge }}</span></p>
+  {% if sample %}<div class="notice">이 문서의 숫자는 <b>샘플(합성) 데이터</b>로 계산한 것이라 실제 통계가 아니에요. 화면 구성과 계산 과정을 보여 주기 위한 예시예요.</div>{% endif %}
+
+  <section>
+    <h2>한눈에 보기</h2>
+    <ul>
+    {% for a in answers %}<li><b>Stage {{ a.stage }} {{ a.stage_title }}</b> — {{ a.headline }}</li>{% endfor %}
+    </ul>
+  </section>
+
+  {% for a in answers %}
+  <section>
+    <h2>Stage {{ a.stage }} · {{ a.stage_title }}</h2>
+    <div>{% for b in a.badges %}<span class="badge {{ b.tone }}">{{ b.label }}</span>{% endfor %}</div>
+    <div class="headline">{{ a.headline }}</div>
+    <p>{{ a.explanation }}</p>
+    {% for n in a.notices %}<p class="note">※ {{ n }}</p>{% endfor %}
+
+    {% if a.suggestions %}
+    <h3>제안 (규칙 기반)</h3>
+    {% for s in a.suggestions %}
+    <div class="sugg"><b>{{ s.rule_id }}</b>{{ s.text }}
+      <p class="note">근거: {{ s.evidence_text | join(" · ") }}{% if s.target %} / 타깃: {{ s.target }}{% endif %}</p></div>
+    {% endfor %}
+    {% endif %}
+
+    {% for c in a.charts %}<h3>{{ c.title }}</h3>{{ c.svg | safe }}{% if c.note %}<p class="note">{{ c.note }}</p>{% endif %}{% endfor %}
+    {% for m in a.maps %}<h3>{{ m.title }}</h3>{{ m.svg | safe }}{% if m.note %}<p class="note">{{ m.note }}</p>{% endif %}{% endfor %}
+
+    <h3>근거표</h3>
+    {% for e in a.evidence %}
+    <p><b>{{ e.title }}</b>{% if e.period %} <span class="meta">· 데이터 기간 {{ e.period }}</span>{% endif %}</p>
+    <div class="scroll"><table>
+      <thead><tr>{% for c in e.columns %}<th{% if c.t %} class="t"{% endif %}>{{ c.v }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for r in e.rows %}<tr>{% for c in r %}<td{% if c.t %} class="t"{% endif %}>{{ c.v }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+    </table></div>
+    {% if e.truncated %}<p class="note">행이 많아 앞의 {{ e.rows | length }}행만 실었어요.</p>{% endif %}
+    {% if e.note %}<p class="note">{{ e.note }}</p>{% endif %}
+    {% if e.sql %}<details><summary>SQL 보기</summary><pre>{{ e.sql }}</pre></details>{% endif %}
+    {% endfor %}
+
+    <h3>한계</h3>
+    <ul>{% for l in a.limits %}<li>{{ l }}</li>{% endfor %}</ul>
+
+    <h3>검증</h3>
+    <p class="check">{% for c in a.checks %}<span class="{{ 'ok' if c.passed else 'no' }}">{{ '통과' if c.passed else '실패' }}</span> {{ c.label }} — {{ c.detail }}<br>{% endfor %}
+    {% if a.fallback %}<span class="no">LLM 해설이 검증을 통과하지 못해 템플릿 해설로 대신했어요.</span>{% endif %}</p>
+  </section>
+  {% endfor %}
+
+  <section>
+    <h2>자료와 읽는 법</h2>
+    <ul>
+      <li>출처: 제주특별자치도, 제주데이터허브{% if center %}, 제주빅데이터센터{% endif %}. 데이터 기간은 근거표마다 적혀 있어요.</li>
+      <li>숫자는 모두 SQL로 계산했고, 제안은 설정 파일의 규칙이 만들었어요. 문장은 검증기를 통과한 것만 실었어요.</li>
+      <li>함께 움직인 지표는 상관일 뿐 원인을 뜻하지 않아요. 최종 판단은 사람이 내려 주세요.</li>
+      <li>시나리오는 예측이 아니라 가정에 따른 계산이에요.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

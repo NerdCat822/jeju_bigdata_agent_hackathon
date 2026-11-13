@@ -1,0 +1,36 @@
+table: spend_tour_type_monthly
+title: 단체/개별 관광객 소비
+stages: [2, 3]
+grain: 업종 × 관광객구분(내국인/중국인) × 단체/개별 × 월 (제주 전체)
+time_column: month
+time_grain: month
+description: >
+  제주 전체에서 단체 관광객과 개별 관광객이 업종별로 한 사람당, 한 건당 얼마를 쓰는지 보여 주는 월간 자료예요.
+  개별여행 인당 배율(개별 인당 ÷ 단체 인당)을 계산할 때 써요.
+keywords: [단체, 개별, 관광객, 인당, 건당, 소비, 업종, 패키지]
+columns:
+  - {name: month, type: DATE, desc: 기준월 (매월 1일)}
+  - {name: market, type: VARCHAR, desc: 업종 (허브 원본 8종)}
+  - {name: theme, type: VARCHAR, desc: 테마 6종}
+  - {name: user_type, type: VARCHAR, desc: 관광객구분 (내국인/중국인)}
+  - {name: tour_type, type: VARCHAR, desc: 단체구분 (개별/단체)}
+  - {name: amt_per_tx, type: DOUBLE, desc: 건당 이용금액 (원)}
+  - {name: amt_per_person, type: DOUBLE, desc: 인당 이용금액 (원)}
+limits:
+  - 제주 전체 값이라 읍면동별 차이는 담지 못해요.
+sources:
+  hub:
+    dataset_id: 603
+    data_key: tDatbD61tD1tata3t3at3Dtt03D10D63
+    title: 단체/개별 관광객 소비 데이터
+    dir: spend_tour_type
+    date_format: YYYYMM
+    window: all
+    select:
+      month: "std_month(dtYearMonth)"
+      market: "trim(CAST(marketType AS VARCHAR))"
+      theme: "std_theme(marketType)"
+      user_type: "std_user_type(userType)"
+      tour_type: "trim(CAST(individualGroup AS VARCHAR))"
+      amt_per_tx: "TRY_CAST(eventSum AS DOUBLE)"
+      amt_per_person: "TRY_CAST(costOfPerson AS DOUBLE)"

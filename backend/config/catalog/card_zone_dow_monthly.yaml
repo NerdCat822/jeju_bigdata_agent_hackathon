@@ -1,0 +1,38 @@
+table: card_zone_dow_monthly
+title: 관광지 및 상업지구 요일별 카드
+stages: [1, 2]
+grain: 지구(5개) × 월 × 요일 × 관광객구분
+time_column: month
+time_grain: month
+description: >
+  5개 지구(상업지, 내국인 주요 관광지, 중국인 주요 관광지, 제주시 구도심, 서귀포시 구도심)의
+  요일별 카드 이용이에요. 주말 소비비와 요일 피크를 볼 때 써요.
+keywords: [카드, 요일, 주말, 평일, 지구, 구도심, 상업지, 관광지, 소비]
+columns:
+  - {name: month, type: DATE, desc: 기준월 (매월 1일)}
+  - {name: zone, type: VARCHAR, desc: 지구}
+  - {name: user_type, type: VARCHAR, desc: 관광객구분 (내국인/중국인)}
+  - {name: dow, type: VARCHAR, desc: 요일 (월~일)}
+  - {name: user_cnt, type: BIGINT, desc: 이용자수}
+  - {name: use_cnt, type: BIGINT, desc: 이용횟수}
+  - {name: use_amt, type: BIGINT, desc: 이용금액 (원)}
+limits:
+  - 카드 소비는 내국인과 중국인 관광객만 포함해요.
+  - 지구 단위 자료라 읍면동과 직접 대응하지 않는 곳은 참고 지구로 보여 줘요.
+sources:
+  hub:
+    dataset_id: 608
+    data_key: 868ttD1tbDb8tbt00tDtaba6t0Db1110
+    title: 관광지 및 상업지구 요일별 카드 데이터
+    dir: card_zone_dow
+    date_format: YYYYMM
+    window: all
+    select:
+      month: "std_month(dtYearMonth)"
+      zone: "trim(CAST(districtType AS VARCHAR))"
+      user_type: "std_user_type(userType)"
+      dow: "trim(CAST(dtWeek AS VARCHAR))"
+      user_cnt: "TRY_CAST(userCount AS BIGINT)"
+      use_cnt: "TRY_CAST(useCount AS BIGINT)"
+      use_amt: "TRY_CAST(useCost AS BIGINT)"
+    aggregate: {user_cnt: sum, use_cnt: sum, use_amt: sum}

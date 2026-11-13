@@ -1,0 +1,3004 @@
+{
+  "components": {
+    "schemas": {
+      "Answer": {
+        "description": "질문 하나에 대한 최종 답.",
+        "properties": {
+          "badges": {
+            "items": {
+              "$ref": "#/components/schemas/Badge"
+            },
+            "title": "Badges",
+            "type": "array"
+          },
+          "charts": {
+            "items": {
+              "$ref": "#/components/schemas/ChartSpec"
+            },
+            "title": "Charts",
+            "type": "array"
+          },
+          "data_badge": {
+            "default": "",
+            "title": "Data Badge",
+            "type": "string"
+          },
+          "data_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Period"
+          },
+          "elapsed": {
+            "default": 0.0,
+            "title": "Elapsed",
+            "type": "number"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceTable"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "explained_by": {
+            "default": "template",
+            "enum": [
+              "llm",
+              "template"
+            ],
+            "title": "Explained By",
+            "type": "string"
+          },
+          "explanation": {
+            "default": "",
+            "title": "Explanation",
+            "type": "string"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/Fact"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "headline": {
+            "default": "",
+            "title": "Headline",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "intent": {
+            "default": "diagnose",
+            "title": "Intent",
+            "type": "string"
+          },
+          "limits": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limits",
+            "type": "array"
+          },
+          "llm_mode": {
+            "default": "template",
+            "title": "Llm Mode",
+            "type": "string"
+          },
+          "llm_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model"
+          },
+          "llm_payload": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Payload"
+          },
+          "maps": {
+            "items": {
+              "$ref": "#/components/schemas/MapSpec"
+            },
+            "title": "Maps",
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "next_questions": {
+            "items": {
+              "$ref": "#/components/schemas/NextQuestion"
+            },
+            "title": "Next Questions",
+            "type": "array"
+          },
+          "notices": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notices",
+            "type": "array"
+          },
+          "ok": {
+            "default": true,
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "query": {
+            "$ref": "#/components/schemas/ParsedQuery-Output"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
+          "stage_output": {
+            "additionalProperties": true,
+            "title": "Stage Output",
+            "type": "object"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepLog"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/Suggestion"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          },
+          "verification": {
+            "$ref": "#/components/schemas/Verification"
+          }
+        },
+        "required": [
+          "id",
+          "ok",
+          "message",
+          "stage",
+          "intent",
+          "query",
+          "headline",
+          "explanation",
+          "badges",
+          "facts",
+          "evidence",
+          "charts",
+          "maps",
+          "suggestions",
+          "limits",
+          "next_questions",
+          "data_period",
+          "data_badge",
+          "llm_mode",
+          "llm_model",
+          "explained_by",
+          "verification",
+          "stage_output",
+          "steps",
+          "llm_payload",
+          "notices",
+          "elapsed"
+        ],
+        "title": "Answer",
+        "type": "object"
+      },
+      "AnswerOut": {
+        "properties": {
+          "answer": {
+            "$ref": "#/components/schemas/Answer"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "answer"
+        ],
+        "title": "AnswerOut",
+        "type": "object"
+      },
+      "AskOut": {
+        "description": "kind 가 answer 면 answer 에, chain 이면 chain 에 결과가 있어요.",
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Answer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chain": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChainResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "enum": [
+              "answer",
+              "chain"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "report_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Url"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "kind",
+          "answer",
+          "chain",
+          "report_url"
+        ],
+        "title": "AskOut",
+        "type": "object"
+      },
+      "Badge": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "tone": {
+            "default": "info",
+            "enum": [
+              "type",
+              "assumption",
+              "data",
+              "warn",
+              "info"
+            ],
+            "title": "Tone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "tone"
+        ],
+        "title": "Badge",
+        "type": "object"
+      },
+      "BootstrapOut": {
+        "properties": {
+          "options": {
+            "$ref": "#/components/schemas/OptionsOut"
+          },
+          "places": {
+            "items": {
+              "$ref": "#/components/schemas/PlaceOut"
+            },
+            "title": "Places",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusOut"
+          },
+          "suggested": {
+            "items": {
+              "$ref": "#/components/schemas/SuggestedGroup"
+            },
+            "title": "Suggested",
+            "type": "array"
+          }
+        },
+        "required": [
+          "status",
+          "places",
+          "suggested",
+          "options"
+        ],
+        "title": "BootstrapOut",
+        "type": "object"
+      },
+      "CardOut": {
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/ConfirmCard"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "card"
+        ],
+        "title": "CardOut",
+        "type": "object"
+      },
+      "ChainIn": {
+        "properties": {
+          "place": {
+            "description": "읍면동 이름 (예: 성산읍)",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Place",
+            "type": "string"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9_-]{1,64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "with_report": {
+            "default": false,
+            "title": "With Report",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "place"
+        ],
+        "title": "ChainIn",
+        "type": "object"
+      },
+      "ChainOut": {
+        "properties": {
+          "chain": {
+            "$ref": "#/components/schemas/ChainResult"
+          },
+          "report_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Url"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "chain",
+          "report_url"
+        ],
+        "title": "ChainOut",
+        "type": "object"
+      },
+      "ChainResult": {
+        "description": "'처음부터 끝까지' 실행 결과: Stage 1 → 2 → 3.",
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/Answer"
+            },
+            "title": "Answers",
+            "type": "array"
+          },
+          "elapsed": {
+            "default": 0.0,
+            "title": "Elapsed",
+            "type": "number"
+          },
+          "place_name": {
+            "title": "Place Name",
+            "type": "string"
+          },
+          "report_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Path"
+          }
+        },
+        "required": [
+          "place_name",
+          "answers",
+          "report_path",
+          "elapsed"
+        ],
+        "title": "ChainResult",
+        "type": "object"
+      },
+      "ChartSpec": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "line",
+              "bar",
+              "hbar"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/Series"
+            },
+            "title": "Series",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "x": {
+            "items": {
+              "type": "string"
+            },
+            "title": "X",
+            "type": "array"
+          },
+          "y_format": {
+            "default": "num",
+            "enum": [
+              "num",
+              "pct",
+              "index",
+              "won"
+            ],
+            "title": "Y Format",
+            "type": "string"
+          },
+          "y_title": {
+            "default": "",
+            "title": "Y Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "x",
+          "series",
+          "y_title",
+          "y_format",
+          "note"
+        ],
+        "title": "ChartSpec",
+        "type": "object"
+      },
+      "Check": {
+        "properties": {
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "passed",
+          "detail"
+        ],
+        "title": "Check",
+        "type": "object"
+      },
+      "Chip": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "Chip",
+        "type": "object"
+      },
+      "ConfirmCard": {
+        "description": "'이렇게 이해했어요' 카드.",
+        "properties": {
+          "chips": {
+            "items": {
+              "$ref": "#/components/schemas/Chip"
+            },
+            "title": "Chips",
+            "type": "array"
+          },
+          "query": {
+            "$ref": "#/components/schemas/ParsedQuery-Output"
+          },
+          "runnable": {
+            "default": true,
+            "title": "Runnable",
+            "type": "boolean"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "query",
+          "chips",
+          "warnings",
+          "runnable"
+        ],
+        "title": "ConfirmCard",
+        "type": "object"
+      },
+      "ConsentIn": {
+        "properties": {
+          "consent": {
+            "title": "Consent",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "consent"
+        ],
+        "title": "ConsentIn",
+        "type": "object"
+      },
+      "ConsentOut": {
+        "properties": {
+          "consent": {
+            "title": "Consent",
+            "type": "boolean"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "consent"
+        ],
+        "title": "ConsentOut",
+        "type": "object"
+      },
+      "DataIssue": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "issue": {
+            "title": "Issue",
+            "type": "string"
+          },
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "table_name": {
+            "title": "Table Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "table_name",
+          "issue",
+          "detail",
+          "n"
+        ],
+        "title": "DataIssue",
+        "type": "object"
+      },
+      "EvidenceTable": {
+        "description": "근거표: 화면에는 표로, 제안서에는 표와 SQL로 들어가요.",
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "formats": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Formats",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period"
+          },
+          "rows": {
+            "items": {
+              "items": {},
+              "type": "array"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "sql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sql"
+          },
+          "tables": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tables",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "columns",
+          "rows",
+          "formats",
+          "sql",
+          "tables",
+          "period",
+          "note"
+        ],
+        "title": "EvidenceTable",
+        "type": "object"
+      },
+      "Fact": {
+        "description": "해설에 쓸 수 있는 값 하나. 해설 속 숫자는 모두 여기 또는 근거표에 있어야 해요.",
+        "properties": {
+          "flag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period"
+          },
+          "text": {
+            "default": "",
+            "title": "Text",
+            "type": "string"
+          },
+          "unit": {
+            "default": "text",
+            "enum": [
+              "pct",
+              "people",
+              "won",
+              "count",
+              "ratio",
+              "text",
+              "index",
+              "month"
+            ],
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "value",
+          "unit",
+          "text",
+          "period",
+          "flag"
+        ],
+        "title": "Fact",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthOut": {
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "ok": {
+            "default": true,
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "ready",
+          "message"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      },
+      "HubInfo": {
+        "properties": {
+          "hub_id": {
+            "title": "Hub Id",
+            "type": "string"
+          },
+          "hub_nm": {
+            "title": "Hub Nm",
+            "type": "string"
+          },
+          "hub_type": {
+            "title": "Hub Type",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          }
+        },
+        "required": [
+          "hub_id",
+          "hub_nm",
+          "hub_type",
+          "lat",
+          "lon"
+        ],
+        "title": "HubInfo",
+        "type": "object"
+      },
+      "MapLine": {
+        "properties": {
+          "keys": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Keys",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "keys"
+        ],
+        "title": "MapLine",
+        "type": "object"
+      },
+      "MapPoint": {
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "default": "other",
+            "enum": [
+              "target",
+              "peer",
+              "hub",
+              "via",
+              "other"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "lat",
+          "lon",
+          "category",
+          "value",
+          "role"
+        ],
+        "title": "MapPoint",
+        "type": "object"
+      },
+      "MapSpec": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "legend": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Legend",
+            "type": "object"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/MapLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/MapPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "points",
+          "lines",
+          "legend",
+          "note"
+        ],
+        "title": "MapSpec",
+        "type": "object"
+      },
+      "ModeOption": {
+        "properties": {
+          "available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null 이면 바꿔 봐야 알 수 있어요 (로컬 LLM)",
+            "title": "Available"
+          },
+          "current": {
+            "title": "Current",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "label",
+          "available",
+          "current"
+        ],
+        "title": "ModeOption",
+        "type": "object"
+      },
+      "ModesIn": {
+        "properties": {
+          "data_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "synthetic",
+                  "hub",
+                  "center"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Mode"
+          },
+          "llm_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "template",
+                  "ollama",
+                  "anthropic"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Mode"
+          }
+        },
+        "title": "ModesIn",
+        "type": "object"
+      },
+      "ModesOut": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ModeOption"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "llm": {
+            "items": {
+              "$ref": "#/components/schemas/ModeOption"
+            },
+            "title": "Llm",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "llm"
+        ],
+        "title": "ModesOut",
+        "type": "object"
+      },
+      "NextQuestion": {
+        "properties": {
+          "kind": {
+            "default": "follow_up",
+            "enum": [
+              "next_stage",
+              "follow_up",
+              "report"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          }
+        },
+        "required": [
+          "label",
+          "question",
+          "kind",
+          "stage"
+        ],
+        "title": "NextQuestion",
+        "type": "object"
+      },
+      "OptionsOut": {
+        "description": "확인 카드에서 고를 수 있는 값과 화면 범례.",
+        "properties": {
+          "age_bands": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Age Bands",
+            "type": "array"
+          },
+          "elasticity_default": {
+            "title": "Elasticity Default",
+            "type": "number"
+          },
+          "elasticity_grid": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Elasticity Grid",
+            "type": "array"
+          },
+          "hubs": {
+            "items": {
+              "$ref": "#/components/schemas/HubInfo"
+            },
+            "title": "Hubs",
+            "type": "array"
+          },
+          "intent_stage": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Intent Stage",
+            "type": "object"
+          },
+          "intents": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Intents",
+            "type": "object"
+          },
+          "period_months": {
+            "title": "Period Months",
+            "type": "integer"
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/StageInfo"
+            },
+            "title": "Stages",
+            "type": "array"
+          },
+          "supply_change_default": {
+            "title": "Supply Change Default",
+            "type": "number"
+          },
+          "themes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Themes",
+            "type": "array"
+          },
+          "types": {
+            "items": {
+              "$ref": "#/components/schemas/TypeInfo"
+            },
+            "title": "Types",
+            "type": "array"
+          },
+          "youth_age_bands": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Youth Age Bands",
+            "type": "array"
+          },
+          "zones": {
+            "items": {
+              "$ref": "#/components/schemas/ZoneInfo"
+            },
+            "title": "Zones",
+            "type": "array"
+          }
+        },
+        "required": [
+          "stages",
+          "intents",
+          "intent_stage",
+          "types",
+          "themes",
+          "hubs",
+          "zones",
+          "age_bands",
+          "youth_age_bands",
+          "period_months",
+          "elasticity_grid",
+          "elasticity_default",
+          "supply_change_default"
+        ],
+        "title": "OptionsOut",
+        "type": "object"
+      },
+      "ParsedQuery-Input": {
+        "description": "질문 해석 결과 (확인 카드에서 고칠 수 있는 값).",
+        "properties": {
+          "ages": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Ages",
+            "type": "array"
+          },
+          "auto_place": {
+            "anyOf": [
+              {
+                "enum": [
+                  "declining",
+                  "growing"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Place"
+          },
+          "elasticity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elasticity"
+          },
+          "emd_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "읍면",
+                  "동"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emd Type"
+          },
+          "hub_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hub Id"
+          },
+          "intent": {
+            "default": "diagnose",
+            "enum": [
+              "diagnose",
+              "trend",
+              "recommend",
+              "peers",
+              "shift",
+              "plan",
+              "forecast",
+              "routes",
+              "courses",
+              "chain",
+              "free"
+            ],
+            "title": "Intent",
+            "type": "string"
+          },
+          "last_n_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last N Months"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "parsed_by": {
+            "default": "rule",
+            "enum": [
+              "rule",
+              "llm"
+            ],
+            "title": "Parsed By",
+            "type": "string"
+          },
+          "place_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Key"
+          },
+          "place_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "emd",
+                  "zone",
+                  "city"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Kind"
+          },
+          "place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Name"
+          },
+          "question": {
+            "default": "",
+            "title": "Question",
+            "type": "string"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "enum": [
+                  1,
+                  2,
+                  3
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
+          "stage_question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Question"
+          },
+          "supply_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supply Change"
+          },
+          "target_month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Month"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "wants_cause": {
+            "default": false,
+            "title": "Wants Cause",
+            "type": "boolean"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "title": "ParsedQuery",
+        "type": "object"
+      },
+      "ParsedQuery-Output": {
+        "description": "질문 해석 결과 (확인 카드에서 고칠 수 있는 값).",
+        "properties": {
+          "ages": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Ages",
+            "type": "array"
+          },
+          "auto_place": {
+            "anyOf": [
+              {
+                "enum": [
+                  "declining",
+                  "growing"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Place"
+          },
+          "elasticity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elasticity"
+          },
+          "emd_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "읍면",
+                  "동"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emd Type"
+          },
+          "hub_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hub Id"
+          },
+          "intent": {
+            "default": "diagnose",
+            "enum": [
+              "diagnose",
+              "trend",
+              "recommend",
+              "peers",
+              "shift",
+              "plan",
+              "forecast",
+              "routes",
+              "courses",
+              "chain",
+              "free"
+            ],
+            "title": "Intent",
+            "type": "string"
+          },
+          "last_n_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last N Months"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "parsed_by": {
+            "default": "rule",
+            "enum": [
+              "rule",
+              "llm"
+            ],
+            "title": "Parsed By",
+            "type": "string"
+          },
+          "place_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Key"
+          },
+          "place_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "emd",
+                  "zone",
+                  "city"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Kind"
+          },
+          "place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Name"
+          },
+          "question": {
+            "default": "",
+            "title": "Question",
+            "type": "string"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "enum": [
+                  1,
+                  2,
+                  3
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
+          "stage_question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Question"
+          },
+          "supply_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supply Change"
+          },
+          "target_month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Month"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "wants_cause": {
+            "default": false,
+            "title": "Wants Cause",
+            "type": "boolean"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "question",
+          "stage",
+          "intent",
+          "place_kind",
+          "place_key",
+          "place_name",
+          "auto_place",
+          "ages",
+          "last_n_months",
+          "year",
+          "theme",
+          "emd_type",
+          "supply_change",
+          "elasticity",
+          "target_month",
+          "hub_id",
+          "wants_cause",
+          "stage_question",
+          "notes",
+          "parsed_by"
+        ],
+        "title": "ParsedQuery",
+        "type": "object"
+      },
+      "PlaceOut": {
+        "properties": {
+          "area_type": {
+            "title": "Area Type",
+            "type": "string"
+          },
+          "city": {
+            "title": "City",
+            "type": "string"
+          },
+          "emd_cd": {
+            "title": "Emd Cd",
+            "type": "string"
+          },
+          "emd_nm": {
+            "title": "Emd Nm",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "region7": {
+            "title": "Region7",
+            "type": "string"
+          }
+        },
+        "required": [
+          "emd_cd",
+          "emd_nm",
+          "city",
+          "area_type",
+          "region7",
+          "lat",
+          "lon"
+        ],
+        "title": "PlaceOut",
+        "type": "object"
+      },
+      "QueryIn": {
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/ParsedQuery-Input"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9_-]{1,64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "QueryIn",
+        "type": "object"
+      },
+      "QuestionIn": {
+        "properties": {
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9_-]{1,64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "QuestionIn",
+        "type": "object"
+      },
+      "ReportIn": {
+        "properties": {
+          "place": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          },
+          "session_id": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id"
+        ],
+        "title": "ReportIn",
+        "type": "object"
+      },
+      "ReportOut": {
+        "properties": {
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "filename",
+          "url"
+        ],
+        "title": "ReportOut",
+        "type": "object"
+      },
+      "Series": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "y": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Y",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "y"
+        ],
+        "title": "Series",
+        "type": "object"
+      },
+      "SessionOut": {
+        "properties": {
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id"
+        ],
+        "title": "SessionOut",
+        "type": "object"
+      },
+      "StageInfo": {
+        "properties": {
+          "stage": {
+            "title": "Stage",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "title"
+        ],
+        "title": "StageInfo",
+        "type": "object"
+      },
+      "StatusOut": {
+        "properties": {
+          "built_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Built At"
+          },
+          "data_badge": {
+            "title": "Data Badge",
+            "type": "string"
+          },
+          "data_mode": {
+            "title": "Data Mode",
+            "type": "string"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/DataIssue"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "llm_label": {
+            "title": "Llm Label",
+            "type": "string"
+          },
+          "llm_mode": {
+            "title": "Llm Mode",
+            "type": "string"
+          },
+          "llm_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model"
+          },
+          "llm_note": {
+            "default": "",
+            "title": "Llm Note",
+            "type": "string"
+          },
+          "modes": {
+            "$ref": "#/components/schemas/ModesOut"
+          },
+          "route_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Ref"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/components/schemas/TableInfo"
+            },
+            "title": "Tables",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data_mode",
+          "data_badge",
+          "built_at",
+          "llm_mode",
+          "llm_model",
+          "llm_label",
+          "llm_note",
+          "tables",
+          "issues",
+          "route_ref",
+          "modes"
+        ],
+        "title": "StatusOut",
+        "type": "object"
+      },
+      "StepLog": {
+        "properties": {
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "ok": {
+            "default": true,
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "seconds": {
+            "default": 0.0,
+            "title": "Seconds",
+            "type": "number"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "ok",
+          "seconds",
+          "note"
+        ],
+        "title": "StepLog",
+        "type": "object"
+      },
+      "SuggestedGroup": {
+        "properties": {
+          "questions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "title",
+          "questions"
+        ],
+        "title": "SuggestedGroup",
+        "type": "object"
+      },
+      "Suggestion": {
+        "properties": {
+          "evidence_keys": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Keys",
+            "type": "array"
+          },
+          "evidence_text": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Text",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "name",
+          "text",
+          "target",
+          "evidence_keys",
+          "evidence_text"
+        ],
+        "title": "Suggestion",
+        "type": "object"
+      },
+      "TableInfo": {
+        "properties": {
+          "period": {
+            "title": "Period",
+            "type": "string"
+          },
+          "rows": {
+            "title": "Rows",
+            "type": "integer"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "table": {
+            "title": "Table",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "table",
+          "title",
+          "rows",
+          "source",
+          "period"
+        ],
+        "title": "TableInfo",
+        "type": "object"
+      },
+      "TypeInfo": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "meaning": {
+            "title": "Meaning",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "meaning"
+        ],
+        "title": "TypeInfo",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "Verification": {
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/Check"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "fallback": {
+            "default": false,
+            "title": "Fallback",
+            "type": "boolean"
+          },
+          "passed": {
+            "default": true,
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "retries": {
+            "default": 0,
+            "title": "Retries",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "passed",
+          "checks",
+          "retries",
+          "fallback"
+        ],
+        "title": "Verification",
+        "type": "object"
+      },
+      "ZoneInfo": {
+        "properties": {
+          "zone": {
+            "title": "Zone",
+            "type": "string"
+          },
+          "zone_type": {
+            "title": "Zone Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "zone",
+          "zone_type"
+        ],
+        "title": "ZoneInfo",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "머물멍 (Jeju Town Vitality Agent) 백엔드. React 화면이 부르는 API예요.",
+    "title": "머물멍 API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/ask": {
+      "post": {
+        "description": "질문 한 줄을 확인 카드 없이 바로 실행해요. '처음부터 끝까지'는 연계 실행(chain)으로 돌려줘요.",
+        "operationId": "ask_api_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask",
+        "tags": [
+          "질문"
+        ]
+      }
+    },
+    "/api/ask/stream": {
+      "post": {
+        "operationId": "ask_stream_api_ask_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {}
+            },
+            "description": "event: progress | answer | done | error (README 8절)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask Stream",
+        "tags": [
+          "스트리밍"
+        ]
+      }
+    },
+    "/api/bootstrap": {
+      "get": {
+        "description": "첫 화면에 필요한 것을 한 번에 줘요.",
+        "operationId": "bootstrap_api_bootstrap_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BootstrapOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Bootstrap",
+        "tags": [
+          "상태"
+        ]
+      }
+    },
+    "/api/chain": {
+      "post": {
+        "description": "읍면동 하나를 Stage 1 → 2 → 3 으로 끝까지 실행해요.",
+        "operationId": "chain_api_chain_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChainIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChainOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chain",
+        "tags": [
+          "질문"
+        ]
+      }
+    },
+    "/api/chain/stream": {
+      "post": {
+        "operationId": "chain_stream_api_chain_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChainIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {}
+            },
+            "description": "event: progress | answer | done | error (README 8절)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chain Stream",
+        "tags": [
+          "스트리밍"
+        ]
+      }
+    },
+    "/api/confirm": {
+      "post": {
+        "description": "화면에서 고친 해석으로 확인 카드를 다시 만들어요. 장소는 place_name 만 바꿔 보내면 돼요.",
+        "operationId": "confirm_api_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm",
+        "tags": [
+          "질문"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "상태"
+        ]
+      }
+    },
+    "/api/modes": {
+      "post": {
+        "description": "데이터 모드나 LLM 모드를 바꿔요. 데이터 모드를 바꾸면 대화 맥락은 새로 시작해요.",
+        "operationId": "set_modes_api_modes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Modes",
+        "tags": [
+          "상태"
+        ]
+      }
+    },
+    "/api/options": {
+      "get": {
+        "operationId": "options_api_options_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptionsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Options",
+        "tags": [
+          "상태"
+        ]
+      }
+    },
+    "/api/places": {
+      "get": {
+        "description": "지도에서 고를 읍면동 43곳 (좌표 포함).",
+        "operationId": "places_api_places_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceOut"
+                  },
+                  "title": "Response Places Api Places Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Places",
+        "tags": [
+          "상태"
+        ]
+      }
+    },
+    "/api/reports": {
+      "post": {
+        "description": "세션에 쌓인 Stage 1~3 답으로 최종 제안서(HTML)를 만들어요. 빠진 단계는 먼저 실행해요.",
+        "operationId": "make_report_api_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Make Report",
+        "tags": [
+          "제안서"
+        ]
+      }
+    },
+    "/api/reports/{filename}": {
+      "get": {
+        "description": "만들어 둔 제안서를 돌려줘요. download=true 면 파일로 내려받아요.",
+        "operationId": "get_report_api_reports__filename__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "filename",
+            "required": true,
+            "schema": {
+              "title": "Filename",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "download",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Download",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Report",
+        "tags": [
+          "제안서"
+        ]
+      }
+    },
+    "/api/run": {
+      "post": {
+        "description": "확인 카드의 해석(고친 것 포함)을 실행해요.",
+        "operationId": "run_api_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run",
+        "tags": [
+          "질문"
+        ]
+      }
+    },
+    "/api/run/stream": {
+      "post": {
+        "operationId": "run_stream_api_run_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {}
+            },
+            "description": "event: progress | answer | done | error (README 8절)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Stream",
+        "tags": [
+          "스트리밍"
+        ]
+      }
+    },
+    "/api/sessions": {
+      "post": {
+        "description": "대화 하나를 시작해요. session_id 를 이후 요청에 넣으면 후속 질문과 단계 연계가 이어져요.",
+        "operationId": "new_session_api_sessions_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "New Session",
+        "tags": [
+          "세션"
+        ]
+      }
+    },
+    "/api/sessions/{session_id}/cloud-consent": {
+      "post": {
+        "description": "클라우드 LLM 전송 동의. 화면에서 전송 미리보기(Answer.llm_payload)를 보여 준 뒤에만 켜요.",
+        "operationId": "cloud_consent_api_sessions__session_id__cloud_consent_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cloud Consent",
+        "tags": [
+          "세션"
+        ]
+      }
+    },
+    "/api/status": {
+      "get": {
+        "description": "데이터 배지, LLM 모드, 테이블별 수록 기간, 적재할 때 생긴 문제.",
+        "operationId": "status_api_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "상태"
+        ]
+      }
+    },
+    "/api/understand": {
+      "post": {
+        "description": "질문을 해석해 확인 카드를 돌려줘요. 실행은 하지 않아요.",
+        "operationId": "understand_api_understand_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Understand",
+        "tags": [
+          "질문"
+        ]
+      }
+    }
+  }
+}

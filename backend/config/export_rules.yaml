@@ -1,0 +1,22 @@
+# 반출 게이트 규칙 — LLM에 넘기는 표와 반출 패키지에 공통으로 적용해요.
+min_cell: 5                 # 사람 수·건수 열에서 이보다 작은 셀은 가림(센터 기준 확정 후 조정)
+max_rows: 200               # 한 표의 최대 행 수
+count_columns:              # 최소 셀 크기를 검사할 열 이름 패턴
+  - "user_cnt"
+  - "use_cnt"
+  - "visitors"
+  - "riders"
+  - "_cnt$"
+forbidden_columns:          # 식별 가능 열: 어떤 경우에도 내보내지 않음
+  - "biz_num"
+  - "ent_nm"
+  - "kedcd"
+  - "user_id"
+  - "mac_address"
+  - "tag_gno"
+  - "device_no"
+  - "zip_code"
+grades:                     # 데이터 등급: open(공개) / aggregate_only(집계만)
+  synthetic: open
+  hub: open
+  center: aggregate_only

@@ -1,0 +1,30 @@
+table: foreign_visitors_monthly
+title: 외국인관광객현황 (국적별 월간)
+stages: [2, 3]
+grain: 국적(12종) × 월 (제주 전체)
+time_column: month
+time_grain: month
+description: >
+  제주를 찾은 외국인 관광객 수를 국적 12종으로 나눈 월간 자료예요. 어느 국적이 빠르게 늘고 있는지 볼 때 써요.
+  허브 파일 '외국인관광객현황_20251231' 또는 API '국가별 입도객 현황'을 여기에 적재해요.
+keywords: [외국인, 관광객, 국적, 국가, 입도객, 중국, 일본, 대만, 성장]
+columns:
+  - {name: month, type: DATE, desc: 기준월 (매월 1일)}
+  - {name: nationality, type: VARCHAR, desc: 국적 (12종)}
+  - {name: visitors, type: BIGINT, desc: 방문자 수 (명)}
+limits:
+  - 제주 전체 값이라 읍면동별 방문 국적은 알 수 없어요.
+sources:
+  hub:
+    dataset_id: 582
+    data_key: tbata552bat15Daa585t52D5a5t818t2
+    title: 국가별 입도객 현황 (파일 '외국인관광객현황_20251231'도 같은 폴더에 CSV로 넣을 수 있어요)
+    dir: foreign_visitors
+    date_format: YYYYMM
+    window: all
+    loader: foreign_visitors      # 세로형(API)과 가로형(파일) 모두 처리하는 전용 적재기
+    select:
+      month: "std_month(dtYearMonth)"
+      nationality: "std_nationality(nationality)"
+      visitors: "TRY_CAST(visitorCnt AS BIGINT)"
+    aggregate: {visitors: sum}

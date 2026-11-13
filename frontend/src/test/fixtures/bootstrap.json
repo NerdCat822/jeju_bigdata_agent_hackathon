@@ -1,0 +1,693 @@
+{
+ "status": {
+  "data_mode": "synthetic",
+  "data_badge": "샘플 데이터",
+  "built_at": "2026-11-13T10:55:23",
+  "llm_mode": "template",
+  "llm_model": null,
+  "llm_label": "템플릿 (LLM 없음)",
+  "llm_note": "",
+  "tables": [
+   {
+    "table": "arrivals_purpose_monthly",
+    "title": "방문목적별 입도객 현황",
+    "rows": 324,
+    "source": "synthetic",
+    "period": "2023-11-01~2026-10-01"
+   },
+   {
+    "table": "bus_route_daily",
+    "title": "일일 노선별 버스 이용자",
+    "rows": 455936,
+    "source": "synthetic",
+    "period": "2023-11-01~2026-10-31"
+   },
+   {
+    "table": "card_cn_area_monthly",
+    "title": "중국인 관광객 지역·업종별 카드 이용 (월간)",
+    "rows": 864,
+    "source": "synthetic",
+    "period": "2023-11-01~2026-10-01"
+   },
+   {
+    "table": "card_zone_dow_monthly",
+    "title": "관광지 및 상업지구 요일별 카드",
+    "rows": 2520,
+    "source": "synthetic",
+    "period": "2023-11-01~2026-10-01"
+   },
+   {
+    "table": "foreign_visitors_monthly",
+    "title": "외국인관광객현황 (국적별 월간)",
+    "rows": 432,
+    "source": "synthetic",
+    "period": "2023-11-01~2026-10-01"
+   },
+   {
+    "table": "pop_for_long_emd_daily",
+    "title": "읍면동 단위 외국인 장기체류 유동인구",
+    "rows": 377024,
+    "source": "synthetic",
+    "period": "2023-11-01~2026-10-31"
+   },
+   {
+    "table": "pop_kor_emd_daily",
+    "title": "읍면동 단위 내국인 유동인구",
+    "rows": 754048,
+    "source": "synthetic",
+    "period": "2023-11-01~2026-10-31"
+   },
+   {
+    "table": "spend_tour_type_monthly",
+    "title": "단체/개별 관광객 소비",
+    "rows": 1152,
+    "source": "synthetic",
+    "period": "2023-11-01~2026-10-01"
+   }
+  ],
+  "issues": [],
+  "route_ref": "sample",
+  "modes": {
+   "data": [
+    {
+     "mode": "synthetic",
+     "label": "샘플 데이터",
+     "available": true,
+     "current": true
+    },
+    {
+     "mode": "hub",
+     "label": "실데이터",
+     "available": false,
+     "current": false
+    },
+    {
+     "mode": "center",
+     "label": "센터 데이터",
+     "available": false,
+     "current": false
+    }
+   ],
+   "llm": [
+    {
+     "mode": "template",
+     "label": "템플릿 (LLM 없음)",
+     "available": true,
+     "current": true
+    },
+    {
+     "mode": "ollama",
+     "label": "로컬 · qwen3:4b",
+     "available": null,
+     "current": false
+    },
+    {
+     "mode": "anthropic",
+     "label": "클라우드 · claude-opus-5-5",
+     "available": false,
+     "current": false
+    }
+   ]
+  }
+ },
+ "places": [
+  {
+   "emd_cd": "50110250",
+   "emd_nm": "한림읍",
+   "city": "제주시",
+   "area_type": "읍면",
+   "region7": "제주시 서부",
+   "lat": 33.411,
+   "lon": 126.269
+  },
+  {
+   "emd_cd": "50110253",
+   "emd_nm": "애월읍",
+   "city": "제주시",
+   "area_type": "읍면",
+   "region7": "제주시 서부",
+   "lat": 33.463,
+   "lon": 126.33
+  },
+  {
+   "emd_cd": "50110256",
+   "emd_nm": "구좌읍",
+   "city": "제주시",
+   "area_type": "읍면",
+   "region7": "제주시 동부",
+   "lat": 33.52,
+   "lon": 126.85
+  },
+  {
+   "emd_cd": "50110259",
+   "emd_nm": "조천읍",
+   "city": "제주시",
+   "area_type": "읍면",
+   "region7": "제주시 동부",
+   "lat": 33.534,
+   "lon": 126.634
+  },
+  {
+   "emd_cd": "50110310",
+   "emd_nm": "한경면",
+   "city": "제주시",
+   "area_type": "읍면",
+   "region7": "제주시 서부",
+   "lat": 33.334,
+   "lon": 126.19
+  },
+  {
+   "emd_cd": "50110320",
+   "emd_nm": "추자면",
+   "city": "제주시",
+   "area_type": "읍면",
+   "region7": "제주시 서부",
+   "lat": 33.96,
+   "lon": 126.3
+  },
+  {
+   "emd_cd": "50110330",
+   "emd_nm": "우도면",
+   "city": "제주시",
+   "area_type": "읍면",
+   "region7": "제주시 동부",
+   "lat": 33.506,
+   "lon": 126.953
+  },
+  {
+   "emd_cd": "50110510",
+   "emd_nm": "일도1동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(동)",
+   "lat": 33.513,
+   "lon": 126.527
+  },
+  {
+   "emd_cd": "50110520",
+   "emd_nm": "일도2동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(동)",
+   "lat": 33.508,
+   "lon": 126.537
+  },
+  {
+   "emd_cd": "50110530",
+   "emd_nm": "이도1동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(동)",
+   "lat": 33.508,
+   "lon": 126.524
+  },
+  {
+   "emd_cd": "50110540",
+   "emd_nm": "이도2동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(동)",
+   "lat": 33.497,
+   "lon": 126.535
+  },
+  {
+   "emd_cd": "50110550",
+   "emd_nm": "삼도1동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.508,
+   "lon": 126.518
+  },
+  {
+   "emd_cd": "50110560",
+   "emd_nm": "삼도2동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.513,
+   "lon": 126.521
+  },
+  {
+   "emd_cd": "50110570",
+   "emd_nm": "용담1동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.51,
+   "lon": 126.512
+  },
+  {
+   "emd_cd": "50110580",
+   "emd_nm": "용담2동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.508,
+   "lon": 126.498
+  },
+  {
+   "emd_cd": "50110590",
+   "emd_nm": "건입동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(동)",
+   "lat": 33.516,
+   "lon": 126.535
+  },
+  {
+   "emd_cd": "50110600",
+   "emd_nm": "화북동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(동)",
+   "lat": 33.52,
+   "lon": 126.57
+  },
+  {
+   "emd_cd": "50110610",
+   "emd_nm": "삼양동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(동)",
+   "lat": 33.52,
+   "lon": 126.59
+  },
+  {
+   "emd_cd": "50110620",
+   "emd_nm": "봉개동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(동)",
+   "lat": 33.49,
+   "lon": 126.6
+  },
+  {
+   "emd_cd": "50110630",
+   "emd_nm": "아라동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(동)",
+   "lat": 33.47,
+   "lon": 126.55
+  },
+  {
+   "emd_cd": "50110640",
+   "emd_nm": "오라동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.49,
+   "lon": 126.51
+  },
+  {
+   "emd_cd": "50110650",
+   "emd_nm": "연동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.487,
+   "lon": 126.49
+  },
+  {
+   "emd_cd": "50110660",
+   "emd_nm": "노형동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.48,
+   "lon": 126.475
+  },
+  {
+   "emd_cd": "50110670",
+   "emd_nm": "외도동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.49,
+   "lon": 126.43
+  },
+  {
+   "emd_cd": "50110680",
+   "emd_nm": "이호동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.495,
+   "lon": 126.455
+  },
+  {
+   "emd_cd": "50110690",
+   "emd_nm": "도두동",
+   "city": "제주시",
+   "area_type": "도심",
+   "region7": "제주시 중부(서)",
+   "lat": 33.505,
+   "lon": 126.465
+  },
+  {
+   "emd_cd": "50130250",
+   "emd_nm": "대정읍",
+   "city": "서귀포시",
+   "area_type": "읍면",
+   "region7": "서귀포시 서부",
+   "lat": 33.222,
+   "lon": 126.25
+  },
+  {
+   "emd_cd": "50130253",
+   "emd_nm": "남원읍",
+   "city": "서귀포시",
+   "area_type": "읍면",
+   "region7": "서귀포시 동부",
+   "lat": 33.28,
+   "lon": 126.72
+  },
+  {
+   "emd_cd": "50130259",
+   "emd_nm": "성산읍",
+   "city": "서귀포시",
+   "area_type": "읍면",
+   "region7": "서귀포시 동부",
+   "lat": 33.44,
+   "lon": 126.91
+  },
+  {
+   "emd_cd": "50130310",
+   "emd_nm": "안덕면",
+   "city": "서귀포시",
+   "area_type": "읍면",
+   "region7": "서귀포시 서부",
+   "lat": 33.26,
+   "lon": 126.33
+  },
+  {
+   "emd_cd": "50130320",
+   "emd_nm": "표선면",
+   "city": "서귀포시",
+   "area_type": "읍면",
+   "region7": "서귀포시 동부",
+   "lat": 33.33,
+   "lon": 126.83
+  },
+  {
+   "emd_cd": "50130510",
+   "emd_nm": "송산동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.245,
+   "lon": 126.575
+  },
+  {
+   "emd_cd": "50130520",
+   "emd_nm": "정방동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.247,
+   "lon": 126.57
+  },
+  {
+   "emd_cd": "50130530",
+   "emd_nm": "중앙동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.25,
+   "lon": 126.565
+  },
+  {
+   "emd_cd": "50130540",
+   "emd_nm": "천지동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.25,
+   "lon": 126.56
+  },
+  {
+   "emd_cd": "50130550",
+   "emd_nm": "효돈동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.26,
+   "lon": 126.61
+  },
+  {
+   "emd_cd": "50130560",
+   "emd_nm": "영천동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.27,
+   "lon": 126.59
+  },
+  {
+   "emd_cd": "50130570",
+   "emd_nm": "동홍동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.26,
+   "lon": 126.57
+  },
+  {
+   "emd_cd": "50130580",
+   "emd_nm": "서홍동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.26,
+   "lon": 126.55
+  },
+  {
+   "emd_cd": "50130590",
+   "emd_nm": "대륜동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.25,
+   "lon": 126.51
+  },
+  {
+   "emd_cd": "50130600",
+   "emd_nm": "대천동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.26,
+   "lon": 126.48
+  },
+  {
+   "emd_cd": "50130610",
+   "emd_nm": "중문동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.25,
+   "lon": 126.42
+  },
+  {
+   "emd_cd": "50130620",
+   "emd_nm": "예래동",
+   "city": "서귀포시",
+   "area_type": "도심",
+   "region7": "서귀포시 중부",
+   "lat": 33.25,
+   "lon": 126.39
+  }
+ ],
+ "suggested": [
+  {
+   "stage": 1,
+   "title": "청년이 머무는 동네",
+   "questions": [
+    "성산읍 청년 인구 왜 줄었어?",
+    "30대가 살기 좋은 읍면은?",
+    "한 달 살이 지원은 어디에?"
+   ]
+  },
+  {
+   "stage": 2,
+   "title": "빈자리를 누가 채우나",
+   "questions": [
+    "성산읍에 누가 올까?",
+    "서귀포 구도심 음식점인데 외국인 손님 늘릴 수 있나?",
+    "구좌읍 숙박 중국인 소비 변화"
+   ]
+  },
+  {
+   "stage": 3,
+   "title": "어떻게 오게 하나",
+   "questions": [
+    "구좌읍까지 오는 코스는?",
+    "국내선 10% 감편 시 12월 개별여행 입도객",
+    "성산읍 감편 때 버스 수요는?"
+   ]
+  }
+ ],
+ "options": {
+  "stages": [
+   {
+    "stage": 1,
+    "title": "청년이 머무는 동네"
+   },
+   {
+    "stage": 2,
+    "title": "빈자리를 누가 채우나"
+   },
+   {
+    "stage": 3,
+    "title": "어떻게 오게 하나"
+   }
+  ],
+  "intents": {
+   "diagnose": "진단",
+   "trend": "추이",
+   "recommend": "추천 순위",
+   "peers": "비슷한 읍면 비교",
+   "shift": "관광객 구조 진단",
+   "plan": "수요·노선·코스",
+   "forecast": "수요 시나리오",
+   "routes": "노선 민감도",
+   "courses": "코스",
+   "chain": "처음부터 끝까지",
+   "free": "자유 질문"
+  },
+  "intent_stage": {
+   "diagnose": 1,
+   "trend": 1,
+   "recommend": 1,
+   "peers": 1,
+   "shift": 2,
+   "plan": 3,
+   "forecast": 3,
+   "routes": 3,
+   "courses": 3
+  },
+  "types": [
+   {
+    "code": "A",
+    "label": "정착 성장형",
+    "meaning": "청년이 살고 일하는 동네"
+   },
+   {
+    "code": "B",
+    "label": "출퇴근형",
+    "meaning": "일자리는 있으나 거주는 약함"
+   },
+   {
+    "code": "C",
+    "label": "방문 의존형",
+    "meaning": "사람은 오지만 머물지 않음"
+   },
+   {
+    "code": "D",
+    "label": "활력 저하형",
+    "meaning": "사람도 방문도 줄어듦"
+   },
+   {
+    "code": "유지",
+    "label": "유지형",
+    "meaning": "변화가 작음"
+   }
+  ],
+  "themes": [
+   "식음료",
+   "숙박",
+   "쇼핑·소매",
+   "교통",
+   "문화·레저",
+   "기타"
+  ],
+  "hubs": [
+   {
+    "hub_id": "JEJU_AIRPORT",
+    "hub_nm": "제주국제공항",
+    "hub_type": "공항",
+    "lat": 33.5104,
+    "lon": 126.4914
+   },
+   {
+    "hub_id": "JEJU_PORT",
+    "hub_nm": "제주항 여객터미널",
+    "hub_type": "항만",
+    "lat": 33.521,
+    "lon": 126.543
+   },
+   {
+    "hub_id": "JEJU_TERMINAL",
+    "hub_nm": "제주버스터미널",
+    "hub_type": "터미널",
+    "lat": 33.4996,
+    "lon": 126.5148
+   },
+   {
+    "hub_id": "SEOGWIPO_TERMINAL",
+    "hub_nm": "서귀포버스터미널",
+    "hub_type": "터미널",
+    "lat": 33.2496,
+    "lon": 126.5075
+   },
+   {
+    "hub_id": "SEONGSAN_PORT",
+    "hub_nm": "성산포항",
+    "hub_type": "항만",
+    "lat": 33.4735,
+    "lon": 126.9335
+   },
+   {
+    "hub_id": "MOSEULPO_PORT",
+    "hub_nm": "모슬포 운진항",
+    "hub_type": "항만",
+    "lat": 33.213,
+    "lon": 126.251
+   }
+  ],
+  "zones": [
+   {
+    "zone": "제주시 구도심",
+    "zone_type": "구도심"
+   },
+   {
+    "zone": "서귀포시 구도심",
+    "zone_type": "구도심"
+   },
+   {
+    "zone": "상업지",
+    "zone_type": "상업지"
+   },
+   {
+    "zone": "내국인 주요 관광지",
+    "zone_type": "관광지"
+   },
+   {
+    "zone": "중국인 주요 관광지",
+    "zone_type": "관광지"
+   }
+  ],
+  "age_bands": [
+   10,
+   20,
+   30,
+   40,
+   50,
+   60,
+   70
+  ],
+  "youth_age_bands": [
+   20,
+   30
+  ],
+  "period_months": 12,
+  "elasticity_grid": [
+   0.5,
+   1.0,
+   1.5
+  ],
+  "elasticity_default": 1.0,
+  "supply_change_default": -0.1
+ }
+}

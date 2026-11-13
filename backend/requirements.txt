@@ -1,0 +1,15 @@
+# 머물멍 백엔드 런타임 의존성 (버전 고정본은 requirements.lock)
+duckdb>=1.1
+pandas>=2.2
+pyarrow>=17
+numpy>=1.26
+pydantic>=2.7
+pydantic-settings>=2.3
+PyYAML>=6.0
+Jinja2>=3.1
+httpx>=0.27
+# 웹 API 서버 (React 화면이 붙는 곳)
+fastapi>=0.115
+uvicorn>=0.30
+# 선택: 클라우드 LLM 모드에서만 사용 (인터넷·API 키 필요)
+anthropic>=1.0

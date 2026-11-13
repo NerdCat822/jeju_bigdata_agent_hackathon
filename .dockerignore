@@ -1,0 +1,41 @@
+# 이미지에 넣을 것만 골라 담아요. 나머지는 모두 뺍니다.
+# 비밀정보(.env, API 키), 센터·허브 원자료, 실행 결과, 대회 제공 자료는 절대 이미지에 들어가면 안 돼요.
+*
+
+!backend/
+!frontend/
+
+# ---- 백엔드에서 빼는 것
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/.venv/
+backend/data/synthetic/
+backend/data/hub/
+backend/data/center/
+backend/data/warehouse/
+backend/outputs/
+backend/tests/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/*.egg-info/
+backend/.pytest_cache/
+backend/.ruff_cache/
+
+# ---- 화면에서 빼는 것 (이미지 안에서 다시 설치하고 빌드해요)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+
+# ---- 어디에 있든 빼는 것
+**/*.xlsx
+**/*.xls
+**/*.hwp
+**/*.pdf
+**/*.duckdb
+**/*.duckdb.wal
+**/*.key
+**/*.pem
+**/.git/
+**/.DS_Store

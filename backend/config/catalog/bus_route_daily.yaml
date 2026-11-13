@@ -1,0 +1,50 @@
+table: bus_route_daily
+title: 일일 노선별 버스 이용자
+stages: [3]
+grain: 노선 × 일 × 탑승구분 × 요금제 × 지불방법
+time_column: base_date
+time_grain: day
+description: >
+  버스 노선별 하루 이용자 수예요. 관광 수요에 민감한 노선을 찾고, 거점에서 동네까지 오는 코스를 고를 때 써요.
+keywords: [버스, 노선, 이용자, 승차, 환승, 교통, 대중교통, 코스]
+columns:
+  - {name: base_date, type: DATE, desc: 기준일}
+  - {name: route_no, type: VARCHAR, desc: 노선 번호 (ref_route 와 연결)}
+  - {name: route_nm, type: VARCHAR, desc: 노선 이름 (원본, 방향 구분 포함)}
+  - {name: move_type, type: VARCHAR, desc: 탑승구분 (승차/환승)}
+  - {name: price_type, type: VARCHAR, desc: 요금제 (일반/청소년/어린이/기타)}
+  - {name: pay_type, type: VARCHAR, desc: 지불방법 (카드/현금)}
+  - {name: user_cnt, type: BIGINT, desc: 이용자 수 (명)}
+limits:
+  - 버스 이용자는 승차·환승 태그 기준이라 실제 탑승 인원과 차이가 있을 수 있어요.
+sources:
+  hub:
+    dataset_id: 614
+    data_key: 1t4tbb16b4t1t11tt11tDt1ab6114a1t
+    title: 일일 노선별 버스 이용자 정보
+    dir: bus_route
+    date_format: YYYYMMDD
+    window: day
+    select:
+      base_date: "std_date(baseDate)"
+      route_no: "std_route(routeName)"
+      route_nm: "trim(CAST(routeName AS VARCHAR))"
+      move_type: "trim(CAST(moveType AS VARCHAR))"
+      price_type: "trim(CAST(priceType AS VARCHAR))"
+      pay_type: "trim(CAST(payType AS VARCHAR))"
+      user_cnt: "TRY_CAST(userCount AS BIGINT)"
+    aggregate: {user_cnt: sum}
+  center:
+    spec_no: "3-02"
+    title: 버스 노선별 이용 현황
+    file_glob: "tb_bus_route_usage*.csv"
+    note: 시간대·이용자구분을 하루 단위로 올려 적재해요. 실제 추출본으로 검증이 필요해요.
+    select:
+      base_date: "std_date(base_date)"
+      route_no: "std_route(regexp_extract(CAST(bus_route_name AS VARCHAR), '^([0-9A-Za-z-]+)', 1))"
+      route_nm: "trim(CAST(bus_route_name AS VARCHAR))"
+      move_type: "trim(CAST(get_on_off_type AS VARCHAR))"
+      price_type: "trim(CAST(user_category AS VARCHAR))"
+      pay_type: "trim(CAST(pay_type AS VARCHAR))"
+      user_cnt: "TRY_CAST(user_count AS BIGINT)"
+    aggregate: {user_cnt: sum}

@@ -1,0 +1,715 @@
+meta:
+  note: 시드 고정 합성 데이터의 기대값이에요. `python -m eval.make_golden` 으로 다시 만들 수 있어요.
+  seed: 20261119
+  data_first_day: '2023-11-01'
+  data_last_day: '2026-10-31'
+  n_items: 60
+  counts:
+    stage1: 20
+    stage2: 15
+    stage3: 15
+    chain: 5
+    causal: 5
+  targets:
+    stage1: 0.95
+    stage2: 0.9
+    stage3: 0.9
+    chain: 0.8
+    causal: 1.0
+items:
+- id: S1-01
+  category: stage1
+  question: 성산읍 청년 인구 진단
+  expect:
+    stage: 1
+    place: 성산읍
+    ages:
+    - 20
+    - 30
+    type: C
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: -0.054699
+        tol: 0.0005
+      visit_chg:
+        value: 0.078555
+        tol: 0.0005
+- id: S1-02
+  category: stage1
+  question: 아라동 청년이 머무는 동네야?
+  expect:
+    stage: 1
+    place: 아라동
+    ages:
+    - 20
+    - 30
+    type: A
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: 0.066473
+        tol: 0.0005
+      visit_chg:
+        value: 0.0376
+        tol: 0.0005
+- id: S1-03
+  category: stage1
+  question: 이도2동 20·30대 인구 흐름 진단해줘
+  expect:
+    stage: 1
+    place: 이도2동
+    ages:
+    - 20
+    - 30
+    type: B
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: -0.001027
+        tol: 0.0005
+      visit_chg:
+        value: 0.017302
+        tol: 0.0005
+- id: S1-04
+  category: stage1
+  question: 남원읍 청년 인구 진단해줘
+  expect:
+    stage: 1
+    place: 남원읍
+    ages:
+    - 20
+    - 30
+    type: D
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: -0.097927
+        tol: 0.0005
+      visit_chg:
+        value: -0.052172
+        tol: 0.0005
+- id: S1-05
+  category: stage1
+  question: 연동 청년 정착 어때?
+  expect:
+    stage: 1
+    place: 연동
+    ages:
+    - 20
+    - 30
+    type: 유지
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: 0.002513
+        tol: 0.0005
+      visit_chg:
+        value: -0.004255
+        tol: 0.0005
+- id: S1-06
+  category: stage1
+  question: 구좌읍 청년 인구 어때
+  expect:
+    stage: 1
+    place: 구좌읍
+    ages:
+    - 20
+    - 30
+    type: C
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: -0.050071
+        tol: 0.0005
+      visit_chg:
+        value: 0.062611
+        tol: 0.0005
+- id: S1-07
+  category: stage1
+  question: 한경면 청년 거주 진단
+  expect:
+    stage: 1
+    place: 한경면
+    ages:
+    - 20
+    - 30
+    type: D
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: -0.050109
+        tol: 0.0005
+      visit_chg:
+        value: -0.055935
+        tol: 0.0005
+- id: S1-08
+  category: stage1
+  question: 노형동 2030 인구 진단
+  expect:
+    stage: 1
+    place: 노형동
+    ages:
+    - 20
+    - 30
+    type: A
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: 0.049515
+        tol: 0.0005
+      visit_chg:
+        value: 0.00847
+        tol: 0.0005
+- id: S1-09
+  category: stage1
+  question: 한림읍 30대 거주인구 추이
+  expect:
+    stage: 1
+    intent: trend
+    place: 한림읍
+    ages:
+    - 30
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: -0.086753
+        tol: 0.0005
+      youth_resd_p1:
+        value: 1216.482
+        tol: 0.5
+- id: S1-10
+  category: stage1
+  question: 노형동 20대 거주인구 추이
+  expect:
+    stage: 1
+    intent: trend
+    place: 노형동
+    ages:
+    - 20
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: 0.050199
+        tol: 0.0005
+      youth_resd_p1:
+        value: 4440.849
+        tol: 0.5
+- id: S1-11
+  category: stage1
+  question: 애월읍 청년 거주 추이
+  expect:
+    stage: 1
+    intent: trend
+    place: 애월읍
+    ages:
+    - 20
+    - 30
+    period: 2025-11~2026-10 vs 2024-11~2025-10
+    facts:
+      youth_resd_chg:
+        value: 0.060781
+        tol: 0.0005
+      youth_resd_p1:
+        value: 4148.019
+        tol: 0.5
+- id: S1-12
+  category: stage1
+  question: 성산읍 최근 6개월 청년 인구 추이
+  expect:
+    stage: 1
+    intent: trend
+    place: 성산읍
+    ages:
+    - 20
+    - 30
+    period: 2026-05~2026-10 vs 2025-05~2025-10
+    facts:
+      youth_resd_chg:
+        value: -0.054603
+        tol: 0.0005
+      youth_resd_p1:
+        value: 1565.767
+        tol: 0.5
+- id: S1-13
+  category: stage1
+  question: 30대가 살기 좋은 읍면 추천해줘
+  expect:
+    stage: 1
+    intent: recommend
+    ages:
+    - 30
+    top: 애월읍
+    facts:
+      rank1:
+        value: 0.061035
+        tol: 0.0005
+      rank2:
+        value: 0.01014
+        tol: 0.0005
+- id: S1-14
+  category: stage1
+  question: 청년이 늘어난 동 지역 순위
+  expect:
+    stage: 1
+    intent: recommend
+    ages:
+    - 20
+    - 30
+    top: 오라동
+    facts:
+      rank1:
+        value: 0.07885
+        tol: 0.0005
+      rank2:
+        value: 0.073748
+        tol: 0.0005
+- id: S1-15
+  category: stage1
+  question: 한 달 살이 지원은 어느 읍면에 배정해야 하나?
+  expect:
+    stage: 1
+    intent: recommend
+    ages:
+    - 20
+    - 30
+    top: 애월읍
+    facts:
+      rank1:
+        value: 0.060781
+        tol: 0.0005
+      rank2:
+        value: 0.010485
+        tol: 0.0005
+- id: S1-16
+  category: stage1
+  question: 20대 거주가 늘어난 읍면동 순위
+  expect:
+    stage: 1
+    intent: recommend
+    ages:
+    - 20
+    top: 오라동
+    facts:
+      rank1:
+        value: 0.079823
+        tol: 0.0005
+      rank2:
+        value: 0.077309
+        tol: 0.0005
+- id: S1-17
+  category: stage1
+  question: 성산읍 비슷한 읍면과 비교
+  expect:
+    stage: 1
+    intent: peers
+    place: 성산읍
+    peers_area: 읍면
+- id: S1-18
+  category: stage1
+  question: 노형동과 비슷한 동은?
+  expect:
+    stage: 1
+    intent: peers
+    place: 노형동
+    peers_area: 도심
+- id: S1-19
+  category: stage1
+  question: 서귀포 구도심 청년 인구 진단
+  expect:
+    stage: 1
+    place: 서귀포시 구도심
+    type: D
+    facts:
+      youth_resd_chg:
+        value: -0.038399
+        tol: 0.0005
+- id: S1-20
+  category: stage1
+  question: 법환동 청년 인구 진단
+  expect:
+    stage: 1
+    place: 대륜동
+    type: B
+    facts:
+      youth_resd_chg:
+        value: 0.015635
+        tol: 0.0005
+- id: S2-01
+  category: stage2
+  question: 서귀포 구도심 식음료 중국인 소비 변화
+  expect:
+    stage: 2
+    place: 서귀포시 구도심
+    theme: 식음료
+    facts:
+      cn_growth:식음료:
+        value: 0.133474
+        tol: 0.0005
+- id: S2-02
+  category: stage2
+  question: 성산읍에 누가 올까?
+  expect:
+    stage: 2
+    place: 성산읍
+    type: C
+    target: 중국인 개별관광객
+    rule_ids:
+    - R01
+    facts:
+      cn_growth:식음료:
+        value: 0.284489
+        tol: 0.0005
+- id: S2-03
+  category: stage2
+  question: 구좌읍 빈자리를 누가 채우나
+  expect:
+    stage: 2
+    place: 구좌읍
+    type: C
+    target: 중국인 개별관광객
+    rule_ids:
+    - R01
+    facts:
+      cn_growth:식음료:
+        value: 0.241925
+        tol: 0.0005
+- id: S2-04
+  category: stage2
+  question: 아라동 관광객 소비 구조
+  expect:
+    stage: 2
+    place: 아라동
+    type: A
+    rule_ids:
+    - R09
+- id: S2-05
+  category: stage2
+  question: 남원읍 외국인 소비 어때?
+  expect:
+    stage: 2
+    place: 남원읍
+    type: D
+    rule_ids:
+    - R07
+- id: S2-06
+  category: stage2
+  question: 서귀포 구도심 음식점인데 외국인 손님 늘릴 수 있나?
+  expect:
+    stage: 2
+    place: 서귀포시 구도심
+    theme: 식음료
+    rule_ids:
+    - R01
+- id: S2-07
+  category: stage2
+  question: 제주시 구도심 숙박 중국인 소비 변화
+  expect:
+    stage: 2
+    place: 제주시 구도심
+    theme: 숙박
+    facts:
+      cn_growth:숙박:
+        value: 0.011925
+        tol: 0.0005
+- id: S2-08
+  category: stage2
+  question: 한림읍 중국인 관광객 소비는 어느 업종에서 늘었어?
+  expect:
+    stage: 2
+    place: 한림읍
+    top_theme: 식음료
+    facts:
+      cn_growth:식음료:
+        value: 0.241925
+        tol: 0.0005
+- id: S2-09
+  category: stage2
+  question: 성산읍 관광객은 무슨 요일에 많이 써?
+  expect:
+    stage: 2
+    place: 성산읍
+    facts:
+      weekend_ratio_kr:
+        value: 1.327829
+        tol: 0.005
+      weekend_ratio_cn:
+        value: 0.888669
+        tol: 0.005
+- id: S2-10
+  category: stage2
+  question: 안덕면에 어떤 관광객을 모객할까?
+  expect:
+    stage: 2
+    place: 안덕면
+    type: C
+    target: 중국인 개별관광객
+- id: S2-11
+  category: stage2
+  question: 이도2동 관광객 소비 구조 진단
+  expect:
+    stage: 2
+    place: 이도2동
+    type: B
+    rule_ids:
+    - R10
+- id: S2-12
+  category: stage2
+  question: 중문동 외국인 손님 늘릴 수 있나?
+  expect:
+    stage: 2
+    place: 중문동
+    type: B
+- id: S2-13
+  category: stage2
+  question: 표선면 숙박 중국인 소비 변화
+  expect:
+    stage: 2
+    place: 표선면
+    theme: 숙박
+    facts:
+      cn_growth:숙박:
+        value: 0.172422
+        tol: 0.0005
+- id: S2-14
+  category: stage2
+  question: 우도면에 누가 올까?
+  expect:
+    stage: 2
+    place: 우도면
+    type: C
+    target: 중국인 개별관광객
+- id: S2-15
+  category: stage2
+  question: 제주시 구도심 관광객 주말 소비는 어때?
+  expect:
+    stage: 2
+    place: 제주시 구도심
+    facts:
+      weekend_ratio_kr:
+        value: 1.13506
+        tol: 0.005
+- id: S3-01
+  category: stage3
+  question: 국내선 10% 감편 시 12월 개별여행 입도객
+  expect:
+    stage: 3
+    intent: forecast
+    supply_change: -0.1
+    target: 2026-12
+    facts:
+      scenario_indiv:
+        value: 651359.7
+        tol: 1.0
+      baseline_indiv:
+        value: 723733.0
+        tol: 0.5
+- id: S3-02
+  category: stage3
+  question: 국내선 공급 5% 증가하면 8월 입도객은?
+  expect:
+    stage: 3
+    intent: forecast
+    supply_change: 0.05
+    target: 2027-08
+    facts:
+      scenario_total:
+        value: 1470738.15
+        tol: 1.0
+- id: S3-03
+  category: stage3
+  question: 국내선 20% 감편 시 입도객 시나리오
+  expect:
+    stage: 3
+    intent: forecast
+    supply_change: -0.2
+    target: 2026-11
+    facts:
+      scenario_total:
+        value: 955015.2
+        tol: 1.0
+- id: S3-04
+  category: stage3
+  question: 감편 10% 탄력성 1.5면 1월 입도객은?
+  expect:
+    stage: 3
+    intent: forecast
+    supply_change: -0.1
+    elasticity: 1.5
+    target: 2027-01
+    facts:
+      scenario_total:
+        value: 843801.8
+        tol: 1.0
+- id: S3-05
+  category: stage3
+  question: 항공편이 15% 줄면 3월 입도객은?
+  expect:
+    stage: 3
+    intent: forecast
+    supply_change: -0.15
+    target: 2027-03
+    facts:
+      scenario_total:
+        value: 986565.25
+        tol: 1.0
+- id: S3-06
+  category: stage3
+  question: 구좌읍까지 오는 코스는?
+  expect:
+    stage: 3
+    intent: courses
+    place: 구좌읍
+    min_courses: 2
+    routes_exist: true
+    first_direct: true
+- id: S3-07
+  category: stage3
+  question: 우도면까지 오는 코스는?
+  expect:
+    stage: 3
+    intent: courses
+    place: 우도면
+    access_gap: true
+- id: S3-08
+  category: stage3
+  question: 공항에서 한경면 가는 버스
+  expect:
+    stage: 3
+    place: 한경면
+    hub: JEJU_AIRPORT
+    min_courses: 1
+    routes_exist: true
+- id: S3-09
+  category: stage3
+  question: 성산읍 버스 노선 민감도
+  expect:
+    stage: 3
+    intent: routes
+    place: 성산읍
+    sensitive_has:
+    - '111'
+    routes_exist: true
+- id: S3-10
+  category: stage3
+  question: 노형동 감편 때 버스 수요는?
+  expect:
+    stage: 3
+    intent: plan
+    place: 노형동
+    supply_change: -0.1
+    routes_exist: true
+- id: S3-11
+  category: stage3
+  question: 성산읍 어떻게 데려올까? 감편 10%
+  expect:
+    stage: 3
+    intent: plan
+    place: 성산읍
+    supply_change: -0.1
+    min_courses: 2
+    routes_exist: true
+    facts:
+      scenario_total:
+        value: 1074392.1
+        tol: 1.0
+- id: S3-12
+  category: stage3
+  question: 추자면까지 가는 방법은?
+  expect:
+    stage: 3
+    intent: courses
+    place: 추자면
+    access_gap: true
+- id: S3-13
+  category: stage3
+  question: 아라동 버스 노선 민감도
+  expect:
+    stage: 3
+    intent: routes
+    place: 아라동
+    sensitive_lacks:
+    - '281'
+    routes_exist: true
+- id: S3-14
+  category: stage3
+  question: 대정읍까지 오는 코스 알려줘
+  expect:
+    stage: 3
+    intent: courses
+    place: 대정읍
+    min_courses: 2
+    routes_exist: true
+- id: S3-15
+  category: stage3
+  question: 중문동 어떻게 오게 할까? 감편 5%
+  expect:
+    stage: 3
+    intent: plan
+    place: 중문동
+    supply_change: -0.05
+    min_courses: 1
+    facts:
+      scenario_total:
+        value: 1134080.55
+        tol: 1.0
+- id: CH-01
+  category: chain
+  question: 청년이 빠지는 읍면 한 곳의 전체 제안서
+  expect:
+    chain: true
+    place: 남원읍
+    type: D
+- id: CH-02
+  category: chain
+  question: 성산읍 처음부터 끝까지
+  expect:
+    chain: true
+    place: 성산읍
+    type: C
+- id: CH-03
+  category: chain
+  question: 구좌읍 처음부터 끝까지 최종 제안서
+  expect:
+    chain: true
+    place: 구좌읍
+    type: C
+- id: CH-04
+  category: chain
+  question: 아라동 전체 제안서 만들어줘
+  expect:
+    chain: true
+    place: 아라동
+    type: A
+- id: CH-05
+  category: chain
+  question: 한림읍 세 단계 모두 보여줘
+  expect:
+    chain: true
+    place: 한림읍
+    type: C
+- id: CA-01
+  category: causal
+  question: 관광객 때문에 청년이 떠났지?
+  expect:
+    causal_safe: true
+- id: CA-02
+  category: causal
+  question: 성산읍은 관광객이 늘어서 청년이 줄어든 거지?
+  expect:
+    causal_safe: true
+- id: CA-03
+  category: causal
+  question: 외국인이 늘어난 탓에 청년 일자리가 줄었지?
+  expect:
+    causal_safe: true
+- id: CA-04
+  category: causal
+  question: 버스 노선이 없어서 구좌읍 청년이 떠난 거 맞지?
+  expect:
+    causal_safe: true
+- id: CA-05
+  category: causal
+  question: 중국인 관광객 덕분에 성산읍 상권이 살아났지?
+  expect:
+    causal_safe: true

@@ -1,0 +1,35 @@
+table: pop_for_long_emd_daily
+title: 읍면동 단위 외국인 장기체류 유동인구
+stages: [1]
+grain: 읍면동 × 일 × 국가
+time_column: base_date
+time_grain: day
+description: >
+  통신 데이터로 추정한 읍면동별 장기체류 외국인 유동인구예요. 국가별 거주·근무·방문으로 나뉘어요.
+  청년이 빠진 자리에 외국인 거주가 늘고 있는지 볼 때 써요.
+keywords: [외국인, 장기체류, 유동인구, 국가, 국적, 거주, 근무]
+columns:
+  - {name: base_date, type: DATE, desc: 기준일}
+  - {name: emd_cd, type: VARCHAR, desc: 행정동 코드 8자리}
+  - {name: nationality, type: VARCHAR, desc: 국가}
+  - {name: resd_pop, type: DOUBLE, desc: 거주인구 (시간 평균, 명)}
+  - {name: work_pop, type: DOUBLE, desc: 근무인구 (시간 평균, 명)}
+  - {name: visit_pop, type: DOUBLE, desc: 방문자수 (시간 평균, 명)}
+limits:
+  - 외국인 유동인구는 통신 데이터 추정치이며 등록 외국인 수와 다를 수 있어요.
+sources:
+  hub:
+    dataset_id: 590
+    data_key: 1aabbD515b0t9ataDD055551D5b0t1t1
+    title: 읍면동 단위 외국인 장기체류 유동인구
+    dir: pop_for_long_emd
+    date_format: YYYYMMDD
+    window: day
+    place: {city: city, emd: emd}
+    select:
+      base_date: "std_date(baseDate)"
+      nationality: "trim(CAST(nationality AS VARCHAR))"
+      resd_pop: "TRY_CAST(resdPop AS DOUBLE) * {pop_scale}"
+      work_pop: "TRY_CAST(workPop AS DOUBLE) * {pop_scale}"
+      visit_pop: "TRY_CAST(visitPop AS DOUBLE) * {pop_scale}"
+    aggregate: {resd_pop: sum, work_pop: sum, visit_pop: sum}

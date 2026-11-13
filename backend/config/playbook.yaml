@@ -1,0 +1,129 @@
+# Stage 2 제안 규칙 (v0 초안, 12개) — 제안 후보는 이 규칙만으로 만들어요. LLM은 문장만 다듬어요.
+#
+# 형식
+#   id        규칙 ID (제안마다 화면·제안서에 표시)
+#   types     적용할 읍면동 유형 (A 정착 성장 · B 출퇴근 · C 방문 의존 · D 활력 저하 · 유지)
+#   when      모두 만족해야 하는 조건. metric 은 아래 '지표 이름' 참고. theme: any 는 조건을 만족하는 테마 중 값이 가장 큰 것
+#   target    타깃 관광객 (Stage 3로 넘김). {nationality}, {theme} 를 쓸 수 있어요
+#   suggest   제안 문장 (해요체). {theme}, {nationality} 를 쓸 수 있어요
+#   priority  작을수록 먼저 보여요
+#
+# 지표 이름
+#   cn_growth[테마]        중국인 이용금액 증가율 (P1 ÷ P0 − 1, 시군구×도심/읍면)
+#   cn_share[테마]         중국인 이용금액 중 테마 비중 (P1)
+#   indiv_ratio_cn[테마]   중국인 개별여행 인당 배율 (개별 인당 ÷ 단체 인당)
+#   indiv_ratio_kr[테마]   내국인 개별여행 인당 배율
+#   weekend_ratio_cn       중국인 주말 소비비 (토·일 하루 평균 ÷ 평일 하루 평균)
+#   weekend_ratio_kr       내국인 주말 소비비
+#   nat_growth_top         가장 빠르게 늘어난 국적의 성장률 (전년 동기 대비)
+#   nat_share_top          그 국적의 방문자 비중
+#   youth_resd_chg, youth_work_chg, visit_chg, youth_share, settle_ratio, foreign_resd_chg   (Stage 1 지표)
+
+rules:
+  - id: R01
+    name: 중국인 개별관광객 식음료
+    types: [C, D]
+    priority: 1
+    when:
+      - {metric: cn_growth, theme: 식음료, op: ">=", value: 0.10}
+      - {metric: indiv_ratio_cn, theme: 식음료, op: ">=", value: 1.0}
+    target: 중국인 개별관광객
+    suggest: 중국인 개별관광객을 겨냥해 간편결제(알리페이·위챗페이)와 중국어 메뉴판을 준비해 보세요.
+
+  - id: R02
+    name: 중국인 숙박 체류
+    types: [C, D]
+    priority: 2
+    when:
+      - {metric: cn_growth, theme: 숙박, op: ">=", value: 0.10}
+    target: 중국인 체류형 관광객
+    suggest: 중국인 숙박 소비가 늘고 있어요. 숙박과 묶은 체험·식사 상품을 검토해 보세요.
+
+  - id: R03
+    name: 중국인 쇼핑·소매
+    types: [C, D]
+    priority: 3
+    when:
+      - {metric: cn_growth, theme: 쇼핑·소매, op: ">=", value: 0.10}
+      - {metric: cn_share, theme: 쇼핑·소매, op: ">=", value: 0.30}
+    target: 중국인 쇼핑 관광객
+    suggest: 쇼핑·소매 비중이 크고 늘고 있어요. 지역 특산품 판매처에 간편결제와 면세 안내를 갖춰 보세요.
+
+  - id: R04
+    name: 내국인 주말 집중
+    types: [C, D]
+    priority: 4
+    when:
+      - {metric: weekend_ratio_kr, op: ">=", value: 1.3}
+    target: 내국인 주말 관광객
+    suggest: 내국인 소비가 주말에 몰려요. 주말 영업시간 연장과 주말 한정 프로그램을 검토해 보세요.
+
+  - id: R05
+    name: 중국인 평일 분산
+    types: [C, D]
+    priority: 5
+    when:
+      - {metric: weekend_ratio_cn, op: "<=", value: 0.95}
+    target: 중국인 평일 관광객
+    suggest: 중국인 소비는 평일에도 고르게 나타나요. 한산한 평일에 외국인 대상 프로그램을 배치해 보세요.
+
+  - id: R06
+    name: 성장 국적 선점
+    types: [C, D]
+    priority: 6
+    when:
+      - {metric: nat_growth_top, op: ">=", value: 0.20}
+      - {metric: nat_share_top, op: ">=", value: 0.03}
+    target: "{nationality} 관광객"
+    suggest: "{nationality} 방문객이 빠르게 늘고 있어요. {nationality} 방문객용 안내물과 결제수단을 먼저 점검해 보세요."
+
+  - id: R07
+    name: 접근성 우선 점검
+    types: [D]
+    priority: 0
+    when:
+      - {metric: visit_chg, op: "<", value: 0}
+    suggest: 방문도 함께 줄고 있어 모객보다 접근성 점검이 먼저예요. 다음 단계에서 노선과 코스를 확인해 보세요.
+
+  - id: R08
+    name: 내국인 개별여행 고단가 테마
+    types: [C, D]
+    priority: 7
+    when:
+      - {metric: indiv_ratio_kr, theme: any, op: ">=", value: 1.2}
+    target: 내국인 개별여행객
+    suggest: "내국인 개별여행객은 {theme}에서 단체보다 한 사람당 더 많이 써요. 개별여행객용 {theme} 상품을 우선해 보세요."
+
+  - id: R09
+    name: 평일 생활 소비 기반
+    types: [A]
+    priority: 1
+    when:
+      - {metric: youth_resd_chg, op: ">=", value: 0.03}
+      - {metric: settle_ratio, op: ">=", value: 0.5}
+    suggest: 청년 거주가 늘고 머무는 사람의 비중도 높아요. 평일 저녁 영업과 생활형 업종 같은 생활 환경을 키워 보세요.
+
+  - id: R10
+    name: 근무자 소비와 정주 여건
+    types: [B]
+    priority: 1
+    when:
+      - {metric: youth_work_chg, op: ">=", value: 0.03}
+      - {metric: settle_ratio, op: "<=", value: 0.6}
+    suggest: 일하러 오는 청년은 늘지만 거주는 따라오지 않아요. 점심·퇴근길 소비를 살리고 임대·교통 같은 정주 여건을 점검해 보세요.
+
+  - id: R11
+    name: 외국인 장기체류 생활 편의
+    types: [A, B, 유지]
+    priority: 2
+    when:
+      - {metric: foreign_resd_chg, op: ">=", value: 0.10}
+    suggest: 외국인 장기체류 거주가 늘고 있어요. 다국어 생활 안내와 생활 업종의 결제 편의를 갖춰 보세요.
+
+  - id: R12
+    name: 관광 소비 분산 유도
+    types: [A, B]
+    priority: 3
+    when:
+      - {metric: cn_growth, theme: 식음료, op: ">=", value: 0.10}
+    suggest: 외국인 식음료 소비도 늘고 있어요. 주민 생활권과 겹치지 않는 시간대와 구역으로 관광 소비를 유도해 보세요.

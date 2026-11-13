@@ -1,0 +1,52 @@
+{
+ "session_id": "fixture-session",
+ "card": {
+  "query": {
+   "question": "성산읍 청년 인구 왜 줄었어?",
+   "stage": 1,
+   "intent": "diagnose",
+   "place_kind": "emd",
+   "place_key": "50130259",
+   "place_name": "성산읍",
+   "auto_place": null,
+   "ages": [
+    20,
+    30
+   ],
+   "last_n_months": null,
+   "year": null,
+   "theme": null,
+   "emd_type": null,
+   "supply_change": null,
+   "elasticity": null,
+   "target_month": null,
+   "hub_id": null,
+   "wants_cause": true,
+   "stage_question": null,
+   "notes": [],
+   "parsed_by": "rule"
+  },
+  "chips": [
+   {
+    "label": "장소",
+    "value": "성산읍"
+   },
+   {
+    "label": "연령",
+    "value": "20·30대"
+   },
+   {
+    "label": "기간",
+    "value": "최근 12개월 vs 직전"
+   },
+   {
+    "label": "질문",
+    "value": "Stage 1 청년이 머무는 동네 · 진단"
+   }
+  ],
+  "warnings": [
+   "원인은 이 자료만으로 단정할 수 없어요. 함께 움직인 지표와 확인할 외부 요인으로 답할게요."
+  ],
+  "runnable": true
+ }
+}

@@ -1,0 +1,44 @@
+# 재배포 금지 자료 (센터 데이터 명세서, DAKER 제공 데이터 목록 등)
+*.xlsx
+*.xls
+*.hwp
+
+# 센터 원자료 추출본, 허브 수집본, 합성 데이터, 데이터 창고 (backend/.gitignore 에도 같은 규칙이 있어요)
+**/data/center/
+**/data/hub/
+**/data/synthetic/
+**/data/warehouse/
+*.duckdb
+*.duckdb.wal
+
+# 실행 결과
+**/outputs/
+runs/
+
+# 비밀정보
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# OS / 편집기
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 화면 (frontend/.gitignore 에도 같은 규칙이 있어요)
+node_modules/
+frontend/dist/

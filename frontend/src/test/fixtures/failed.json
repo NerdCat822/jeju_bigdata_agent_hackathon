@@ -1,0 +1,82 @@
+{
+ "id": "9bd0839126",
+ "ok": false,
+ "message": "준비된 분석에 맞지 않는 질문이에요. 자유 질문은 LLM 모드에서만 답할 수 있어요. 읍면동을 하나 골라 '성산읍 청년 인구 진단'처럼 물어 보세요.",
+ "stage": null,
+ "intent": "free",
+ "query": {
+  "question": "오늘 날씨 어때?",
+  "stage": null,
+  "intent": "free",
+  "place_kind": null,
+  "place_key": null,
+  "place_name": null,
+  "auto_place": null,
+  "ages": [
+   20,
+   30
+  ],
+  "last_n_months": null,
+  "year": null,
+  "theme": null,
+  "emd_type": null,
+  "supply_change": null,
+  "elasticity": null,
+  "target_month": null,
+  "hub_id": null,
+  "wants_cause": false,
+  "stage_question": null,
+  "notes": [],
+  "parsed_by": "rule"
+ },
+ "headline": "준비된 분석에 맞지 않는 질문이에요. 자유 질문은 LLM 모드에서만 답할 수 있어요. 읍면동을 하나 골라 '성산읍 청년 인구 진단'처럼 물어 보세요.",
+ "explanation": "",
+ "badges": [
+  {
+   "label": "샘플 데이터",
+   "tone": "data"
+  }
+ ],
+ "facts": [],
+ "evidence": [],
+ "charts": [],
+ "maps": [],
+ "suggestions": [],
+ "limits": [],
+ "next_questions": [
+  {
+   "label": "성산읍 청년 인구 진단",
+   "question": "성산읍 청년 인구 진단",
+   "kind": "follow_up",
+   "stage": 1
+  },
+  {
+   "label": "30대가 살기 좋은 읍면은?",
+   "question": "30대가 살기 좋은 읍면 추천해줘",
+   "kind": "follow_up",
+   "stage": 1
+  },
+  {
+   "label": "국내선 10% 감편 시 입도객",
+   "question": "국내선 10% 감편 시 입도객은?",
+   "kind": "follow_up",
+   "stage": 3
+  }
+ ],
+ "data_period": null,
+ "data_badge": "샘플 데이터",
+ "llm_mode": "template",
+ "llm_model": null,
+ "explained_by": "template",
+ "verification": {
+  "passed": true,
+  "checks": [],
+  "retries": 0,
+  "fallback": false
+ },
+ "stage_output": {},
+ "steps": [],
+ "llm_payload": null,
+ "notices": [],
+ "elapsed": 0.0
+}
