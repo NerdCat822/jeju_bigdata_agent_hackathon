@@ -192,7 +192,7 @@ describe('차트', () => {
     expect(screen.getByRole('button', { name: '차트로 보기' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('선 차트는 첫 계열만 강조색이고 나머지는 중립색이에요', () => {
+  it('선 차트는 기획서 예시처럼 첫 계열은 파랑, 둘째는 귤색이에요', () => {
     const { container } = render(<ChartCard spec={line} />)
     const strokes = [...container.querySelectorAll('path.viz-line')].map((p) => p.getAttribute('stroke'))
     expect(strokes).toEqual(['var(--series-1)', 'var(--series-2)'])

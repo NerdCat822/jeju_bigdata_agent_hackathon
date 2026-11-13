@@ -5,13 +5,13 @@
 #   docker compose down              내리기 (제안서와 실행 기록은 볼륨에 남아요)
 #
 # 클라우드 LLM(Claude)을 쓰려면 backend/.env 에 ANTHROPIC_API_KEY 를 넣고 다시 띄워요.
-name: meomulmeong
+name: jeju-meomulmeong
 
 services:
   app:
     build: .
-    image: meomulmeong:local
-    container_name: meomulmeong
+    image: jeju-meomulmeong:0.1.0
+    container_name: jeju-meomulmeong-app
     ports:
       - "127.0.0.1:3000:3000" # 이 PC 안에서만 열어요. 로그인 기능이 없어서 밖으로는 열지 않아요.
     env_file:

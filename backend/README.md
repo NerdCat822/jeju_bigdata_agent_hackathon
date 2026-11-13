@@ -428,14 +428,14 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 **팀에서 정할 것**
 
 - [ ] 센터 PC는 인터넷이 없어 클라우드 LLM을 쓸 수 없어요. 로컬 LLM을 쓰지 않기로 해서 센터에서는 템플릿 모드로만 돌아가요.
-      기획서의 "로컬 LLM 기본" 문구와 다르니, 제출 전에 기획서와 발표 자료를 맞춰야 해요.
+      기획서 PDF 는 이에 맞춰 고쳤어요 (2026-11-13). 발표 자료를 만들 때도 같은 기준으로 써 주세요.
 
 **구현**
 
 - [x] React 화면(`frontend/`). 실행과 구성은 [../frontend/README.md](../frontend/README.md)에 있어요.
 - [ ] Docker 에서 실데이터(허브 · 센터)를 쓰려면 `data/` 폴더와 데이터 창고를 볼륨으로 연결해야 해요. 지금 이미지는 샘플 데이터만 담고 있어요 (12절).
 - [ ] `install.bat` / `run.bat`, 오프라인 설치 꾸러미(wheelhouse + 빌드한 화면). `run.bat` 은 `python -m meomulmeong serve --open` 을 부르면 돼요.
-- [ ] 기획서 5.2·5.4절에는 화면 기술이 Streamlit 으로 적혀 있어요. React 웹으로 가므로 제출 전에 기획서 문구도 맞춰야 해요.
+- [x] 기획서 PDF 의 Streamlit · 로컬 LLM 문구를 React 웹 · 템플릿 + Claude 로 고쳤어요 (2026-11-13).
 - [ ] 센터 모드: `4-11 유동인구 v02`, `3-02 버스 노선별 이용` 변환식은 명세서만 보고 썼어요. 실제 추출본으로 검증해야 해요. `1-08 카드 v02`(읍면동 × 업종 42개)는 아직 연결하지 않았어요.
 - [ ] 반출 신청 패키지, PDF 제안서 (기획서의 탑재 후 확장 항목).
 - [ ] `playbook.yaml` 규칙 12개는 초안이에요. 문구와 임계값을 팀에서 검토해 주세요.
@@ -457,11 +457,11 @@ docker compose down -v              # 볼륨까지 지우기
 
 | 항목 | 내용 |
 |---|---|
-| 이미지 | `meomulmeong:local`, 약 630MB. 백엔드 + 빌드한 React 화면 + 샘플 데이터 창고. Node 는 빌드 단계에서만 써요 |
+| 이미지 · 컨테이너 | 이미지 `jeju-meomulmeong:0.1.0`(약 630MB), 컨테이너 `jeju-meomulmeong-app`. 백엔드 + 빌드한 React 화면 + 샘플 데이터 창고. Node 는 빌드 단계에서만 써요 |
 | 주소 | `127.0.0.1:3000` 으로만 열어요. 로그인 기능이 없어서 밖으로는 열지 않아요 |
 | 실행 사용자 | 루트가 아닌 `meomul` (uid 10001) |
 | 환경변수 | `backend/.env` 가 있으면 실행할 때 읽어 넘겨요. API 키는 이미지에 들어가지 않아요 |
-| 결과물 | 제안서 · 실행 기록은 `meomulmeong_outputs` 볼륨(`/app/backend/outputs`)에 남아요 |
+| 결과물 | 제안서 · 실행 기록은 `jeju-meomulmeong_outputs` 볼륨(`/app/backend/outputs`)에 남아요 |
 | 상태 확인 | 30초마다 `/api/health` 를 불러요 (`docker ps` 의 healthy) |
 
 **클라우드 LLM(Claude)을 쓸 때** — `backend/.env` 에 `ANTHROPIC_API_KEY` 를 넣고 다시 띄우면 화면의 LLM 모드에서 클라우드를 고를 수 있어요.

@@ -47,7 +47,7 @@ export function AnswerView({ answer: a, stageTitle, typeNames, busy, needsConsen
           )}
           <span className="spacer" />
           {type && isTypeCode(type) && (
-            <span className="type-name">
+            <span className="type-name" data-type={type}>
               <TypeMark code={type} />
               {type === '유지' ? '유지형' : `${type} ${typeNames.get(type) ?? ''}`}
             </span>

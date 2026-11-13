@@ -1,43 +1,51 @@
 /* 머물멍 화면 스타일.
-   바탕과 틀은 조용한 중립색으로 두고, 색은 뜻이 있는 곳에만 써요:
-   귤색은 다음으로 나아가는 단추 · 선택 · 차트의 주인공, 유형 색(A~D)은 지도와 유형 표식.
+   색은 기획서 5.3절 예시 화면을 따라요: 크림색 사이드바, 흰 본문, 귤색 단추와 확인 카드,
+   진한 갈색 실행 단추, 파랑(청년 거주)과 귤색(방문자) 차트, 연두색 섬 지도.
    글꼴과 아이콘은 모두 빌드 결과물에 담아요 (센터 PC는 인터넷이 없어요). */
 
 :root {
-  /* 중립 색 (현무암 빛 먹색 글자, 종이 같은 바탕) */
-  --page: #fafafa;
+  /* 바탕과 글자 (기획서 예시 화면의 따뜻한 크림색과 갈색 먹색) */
+  --page: #fbf7f0;
   --surface: #ffffff;
-  --raised: #f4f4f5;
-  --text: #1a1a1a;
-  --text-2: #525252;
-  --text-3: #737373;
-  --line: rgba(26, 26, 26, 0.08);
-  --line-strong: rgba(26, 26, 26, 0.16);
+  --raised: #f6f1e9;
+  --text: #2b211b;
+  --text-2: #635a54;
+  --text-3: #7a716b;
+  --line: rgba(43, 33, 27, 0.1);
+  --line-strong: rgba(43, 33, 27, 0.18);
+  --dark: #2b211b;
+  --dark-hover: #45382f;
 
-  /* 강조색 하나 (귤색). 글자로 쓸 때는 더 어두운 단계를 써요 */
-  --accent: #f7941d;
-  --accent-strong: #e07b00;
-  --accent-ink: #a8500a;
+  /* 귤색. 단추 · 선택 · 한 줄 결론 표시에 써요. 글자로 쓸 때는 더 어두운 단계를 써요 */
+  --accent: #ff9f2e;
+  --accent-strong: #f08a12;
+  --accent-ink: #c2410c;
+  --accent-soft: #fff1de;
+  --accent-wash: #fff8ee;
+  --accent-line: #ffe3bf;
+  --green-soft: #e7f6ec;
+  --green-ink: #1f8a4c;
 
   /* 뜻이 있는 색 */
   --positive: #15803d;
   --negative: #b91c1c;
-  --type-a: #1baf7a;
-  --type-b: #2a78d6;
-  --type-c: #e34948;
-  --type-d: #eda100;
-  --type-keep: #a3a3a3;
+  --type-a: #22a06b;
+  --type-b: #2f80ed;
+  --type-c: #f0503c;
+  --type-d: #f5a524;
+  --type-keep: #b8b0a8;
 
-  /* 차트: 주인공만 강조색, 나머지는 중립 단계 */
-  --series-1: var(--accent-strong);
-  --series-2: #737373;
-  --series-3: #a3a3a3;
-  --series-4: #404040;
-  --bar-quiet: #d4d4d4;
-  --grid: rgba(26, 26, 26, 0.07);
-  --axis: rgba(26, 26, 26, 0.2);
-  --island: #f4f4f5;
-  --map-dot: #a3a3a3;
+  /* 차트: 기획서 예시처럼 청년 거주는 파랑, 방문자는 귤색 */
+  --series-1: #2f80ed;
+  --series-2: var(--accent);
+  --series-3: #22a06b;
+  --series-4: #8a817a;
+  --bar-quiet: #ebe4da;
+  --grid: rgba(43, 33, 27, 0.07);
+  --axis: rgba(43, 33, 27, 0.2);
+  --island: #eef6f0;
+  --island-line: #c9e3d1;
+  --map-dot: #b8b0a8;
 
   --r-tag: 6px;
   --r-control: 8px;
@@ -312,10 +320,9 @@ a {
 }
 
 .seg-item.is-on {
-  background: var(--surface);
-  color: var(--text);
+  background: var(--green-soft);
+  color: var(--green-ink);
   font-weight: 500;
-  box-shadow: var(--shadow-sm);
 }
 
 .seg-item:disabled:not(.is-on) {
@@ -380,10 +387,9 @@ a {
 }
 
 .nav-row.is-on {
-  background: var(--surface);
-  color: var(--text);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
   font-weight: 500;
-  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
 }
 
 .nav-row:disabled {
@@ -466,10 +472,11 @@ a {
   width: 100%;
 }
 
-/* 다음으로 나아가는 단추에만 강조색을 써요 */
+/* 묻기 · 다음 단계로 가는 단추 (기획서 예시처럼 귤색에 흰 글자) */
 .btn-accent {
   background: var(--accent);
-  color: var(--text);
+  color: #fff;
+  font-weight: 600;
 }
 
 .btn-accent:hover:not(:disabled) {
@@ -477,12 +484,12 @@ a {
 }
 
 .btn-dark {
-  background: var(--text);
+  background: var(--dark);
   color: #fff;
 }
 
 .btn-dark:hover:not(:disabled) {
-  background: #333333;
+  background: var(--dark-hover);
 }
 
 .btn-outline {
@@ -595,13 +602,39 @@ a {
   line-height: 1;
 }
 
+/* 유형 꼬리표: 유형 색을 옅게 깔아요 (기획서 예시의 '유형 C') */
 .type-name {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  height: 28px;
+  padding: 0 12px 0 6px;
+  border-radius: 999px;
+  background: var(--raised);
   color: var(--text-2);
   font-size: 13px;
+  font-weight: 500;
   white-space: nowrap;
+}
+
+.type-name[data-type='A'] {
+  background: #e7f6ec;
+  color: #1a7a4c;
+}
+
+.type-name[data-type='B'] {
+  background: #e8f1fd;
+  color: #1d5fbf;
+}
+
+.type-name[data-type='C'] {
+  background: #fdecec;
+  color: #c2410c;
+}
+
+.type-name[data-type='D'] {
+  background: #fff3d6;
+  color: #9a5b00;
 }
 
 .callout {
@@ -690,9 +723,13 @@ a {
   display: grid;
   gap: 12px;
   padding: 16px 20px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--accent-line);
   border-radius: var(--r-card);
-  background: var(--page);
+  background: var(--accent-wash);
+}
+
+.confirm .chip {
+  border-color: var(--accent-line);
 }
 
 .confirm-main {
@@ -859,9 +896,12 @@ a {
   border-top: 1px solid var(--line);
 }
 
+/* 한 줄 결론: 기획서 예시처럼 왼쪽에 귤색 막대 */
 .headline {
   display: grid;
   gap: 8px;
+  padding-left: 16px;
+  border-left: 4px solid var(--accent);
 }
 
 .headline-meta {
@@ -1727,7 +1767,7 @@ a {
 
 .map-island {
   fill: var(--island);
-  stroke: var(--line-strong);
+  stroke: var(--island-line);
   stroke-width: 1;
 }
 
@@ -1759,7 +1799,7 @@ a {
 }
 
 rect.map-mark {
-  fill: var(--text);
+  fill: var(--dark);
 }
 
 .map-dot.role-target .map-mark,
