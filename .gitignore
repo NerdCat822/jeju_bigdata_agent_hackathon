@@ -42,3 +42,6 @@ Thumbs.db
 # 화면 (frontend/.gitignore 에도 같은 규칙이 있어요)
 node_modules/
 frontend/dist/
+
+# 저장소에 올리지 않고 이 PC에만 두는 문서 (옛 작업 문서 등)
+_local/
