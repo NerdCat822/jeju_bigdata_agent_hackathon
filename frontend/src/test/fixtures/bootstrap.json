@@ -96,12 +96,6 @@
      "current": true
     },
     {
-     "mode": "ollama",
-     "label": "로컬 · qwen3:4b",
-     "available": null,
-     "current": false
-    },
-    {
      "mode": "anthropic",
      "label": "클라우드 · claude-opus-5-5",
      "available": false,

@@ -12,7 +12,7 @@
     POST /api/reports      {session_id}         최종 제안서 만들기 → GET /api/reports/{filename}
     POST /api/modes        {data_mode, llm_mode}  데이터 · LLM 모드 바꾸기
 
-분석은 한 번에 하나씩 실행해요. 로컬 LLM이 한 번에 한 요청만 처리하고, 센터 PC 한 대에서 한 사람이 쓰는 도구라서요.
+분석은 한 번에 하나씩 실행해요. 센터 PC 한 대에서 한 사람이 쓰는 도구라서요.
 """
 
 from __future__ import annotations
@@ -147,7 +147,7 @@ class DataIssue(BaseModel):
 class ModeOption(BaseModel):
     mode: str
     label: str
-    available: bool | None = Field(description="null 이면 바꿔 봐야 알 수 있어요 (로컬 LLM)")
+    available: bool = Field(description="지금 고를 수 있는지 (클라우드 LLM은 API 키가 있어야 해요)")
     current: bool
 
 
@@ -287,8 +287,6 @@ class ApiState:
                       "current": bool(svc and svc.agent.ctx.wh.data_mode == m)} for m in ("synthetic", "hub", "center")],
             "llm": [
                 {"mode": "template", "label": "템플릿 (LLM 없음)", "available": True, "current": cur_llm == "template"},
-                # 로컬 LLM은 바꿔 봐야 알 수 있어요 (서버가 꺼져 있으면 템플릿으로 내려가고 llm_note 에 이유가 남아요)
-                {"mode": "ollama", "label": f"로컬 · {s.ollama_model}", "available": None, "current": cur_llm == "ollama"},
                 {"mode": "anthropic", "label": f"클라우드 · {s.anthropic_model}",
                  "available": bool(os.environ.get("ANTHROPIC_API_KEY")), "current": cur_llm == "anthropic"},
             ],

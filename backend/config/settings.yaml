@@ -32,9 +32,8 @@ llm:
   explain: true               # false 로 두면 해설은 항상 규칙 문장(템플릿)이고, LLM은 질문 해석과 자유 질문에만 써요
   evidence_max_rows: 40       # LLM에 넘기는 지표·결과 행 수 상한 (집계값만 전달)
   explain_budget_seconds: 45  # 해설 쓰기에 이만큼 쓰고도 검증을 통과하지 못하면 더 다시 쓰지 않고 템플릿 해설로 대체해요 (0 이면 한도 없음)
-  # 목록이 들어가는 답은 LLM 모드에서도 규칙 문장을 그대로 써요.
+  # 목록이 들어가는 답은 LLM 모드에서도 규칙 문장을 그대로 써요. 목록을 옮겨 적다 순서나 이름이 틀리는 일을 막아요.
   # recommend 추천 순위, courses 코스, plan Stage 3 전체 계획 (시나리오·노선·코스를 함께 보여 주는 답. 연계 실행의 Stage 3 포함)
-  # qwen3:4b 는 plan 해설에서 코스 목록을 틀리게 옮기는 일이 잦았어요. 큰 모델을 쓸 때는 plan 을 빼고 다시 재 보세요.
   template_only_intents: [recommend, courses, plan]
 
 sources:

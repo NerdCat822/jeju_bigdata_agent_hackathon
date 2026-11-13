@@ -104,3 +104,12 @@ export function hasBatchim(word: string): boolean {
 export function josa(word: string, pair: '을를' | '은는' | '이가' | '과와'): string {
   return word + (hasBatchim(word) ? pair[0] : pair[1])
 }
+
+/**
+ * 화면에 붙는 짧은 설명 문구를 다듬어요.
+ * 한 문장이면 끝의 마침표를 떼고, 여러 문장이면 그대로 둬요.
+ */
+export function caption(text: string): string {
+  const t = text.trim()
+  return /[.?!]\s+\S/.test(t) ? t : t.replace(/\.$/, '')
+}

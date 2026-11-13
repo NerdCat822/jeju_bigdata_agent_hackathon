@@ -93,7 +93,8 @@ ORDER BY baseline DESC"""
         id="s3_scenario", kind="bar", title=f"{t_lab} 입도객 합계: 기준선과 시나리오",
         x=["기준선", *[f"ε {e:.1f}" for e in grid]],
         series=[Series(name="입도객 합계", y=[round(total), *[round(scen(total, e)) for e in grid]])],
-        y_title="명", y_format="num", note=_assumption(delta, eps))
+        y_title="명", y_format="num", note=_assumption(delta, eps),
+        highlight=next((f"ε {e:.1f}" for e in grid if abs(e - eps) < 1e-9), None))
     limits = [*ctx.limits([ARR]),
               "시나리오는 예측이 아니에요. 공급 변화율과 탄력성 ε는 가정값이고, 모든 방문목적에 같은 비율을 적용했어요."]
     return ToolResult(tool="s3_forecast", facts=facts, evidence=[ev], charts=[chart], limits=limits,

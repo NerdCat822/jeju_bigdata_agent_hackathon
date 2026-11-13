@@ -147,10 +147,12 @@ ORDER BY amt_p1 DESC NULLS LAST"""
                               text=fmt.pct(growth["전체"]), period=p.label))
         ordered = [r for r in rows if growth[r[0]] is not None]
         if ordered:
+            names = [r[0] for r in ordered]
+            focus = theme if theme in names else max(names, key=lambda t: growth[t])
             charts.append(ChartSpec(
                 id="s2_cn_growth", kind="bar", title=f"{area['area_label']} 중국인 테마별 소비 증가율",
-                x=[r[0] for r in ordered], series=[Series(name="증가율", y=[_r4(growth[r[0]]) for r in ordered])],
-                y_title="증가율", y_format="pct", note=p.label))
+                x=names, series=[Series(name="증가율", y=[_r4(growth[t]) for t in names])],
+                y_title="증가율", y_format="pct", note=p.label, highlight=focus))
         note_period("중국인 카드", p)
         tables.append(CARD_CN)
         add_limits([CARD_CN])

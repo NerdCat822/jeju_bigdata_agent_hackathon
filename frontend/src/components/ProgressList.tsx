@@ -38,7 +38,7 @@ export function ProgressList({ items, running, startedAt }: Props): ReactNode {
             '이렇게 만들었어요'
           )}
         </span>
-        {running && <span className="muted">{seconds(elapsed)}</span>}
+        {running && <span className="muted mono small">{seconds(elapsed)}</span>}
       </div>
       <ol className="progress-list">
         {rows.map((r) =>
@@ -48,7 +48,7 @@ export function ProgressList({ items, running, startedAt }: Props): ReactNode {
             </li>
           ) : (
             <li key={r.key} className={`progress-step is-${r.state}`}>
-              {r.state === 'wait' ? <Spinner size={12} /> : <Icon name={r.state === 'ok' ? 'check' : 'x'} size={14} />}
+              {r.state === 'wait' ? <Spinner /> : <Icon name={r.state === 'ok' ? 'check' : 'x'} />}
               <span>{r.label}</span>
               {r.note && <span className="muted">{r.note}</span>}
             </li>
@@ -56,7 +56,7 @@ export function ProgressList({ items, running, startedAt }: Props): ReactNode {
         )}
         {running && !waiting && (
           <li className="progress-step is-wait">
-            <Spinner size={12} /> <span>계산하는 중</span>
+            <Spinner /> <span>계산하는 중</span>
           </li>
         )}
       </ol>

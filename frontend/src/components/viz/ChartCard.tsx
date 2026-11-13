@@ -1,25 +1,31 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import type { ChartSpec } from '../../api/types'
-import { valueLabel } from '../../lib/format'
+import { caption, valueLabel } from '../../lib/format'
 import { BarChart } from './BarChart'
-import { HBarChart } from './HBarChart'
+import { BarList } from './BarList'
 import { LineChart } from './LineChart'
 import { seriesColor } from './palette'
 
-/** 차트 한 장: 제목, 범례(계열이 둘 이상일 때), 그림, 설명. '표' 단추로 같은 값을 표로 볼 수 있어요. */
-export function ChartCard({ spec }: { spec: ChartSpec }): ReactNode {
+/**
+ * 차트 한 장: 제목, 범례(계열이 둘 이상일 때), 그림, 설명.
+ * 추이는 선, 몇 개 항목의 비교는 막대 목록으로 그려요. '표로 보기'로 같은 값을 표로 볼 수 있어요.
+ */
+export function ChartCard({ spec, wide = false }: { spec: ChartSpec; wide?: boolean }): ReactNode {
   const [asTable, setAsTable] = useState(false)
   const line = spec.kind === 'line'
+  const list = !line && spec.series.length === 1
   return (
-    <figure className="viz-card">
+    <figure className={`viz-card${wide ? ' is-wide' : ''}`}>
       <div className="viz-head">
         <figcaption className="viz-title">{spec.title}</figcaption>
-        <button type="button" className="viz-toggle" aria-pressed={asTable} onClick={() => setAsTable((v) => !v)}>
-          {asTable ? '차트로 보기' : '표로 보기'}
-        </button>
+        {!list && (
+          <button type="button" className="viz-toggle" aria-pressed={asTable} onClick={() => setAsTable((v) => !v)}>
+            {asTable ? '차트로 보기' : '표로 보기'}
+          </button>
+        )}
       </div>
-      {spec.series.length >= 2 && (
+      {!list && spec.series.length >= 2 && (
         <ul className="viz-legend" aria-label="범례">
           {spec.series.map((s, k) => (
             <li key={s.name}>
@@ -29,20 +35,12 @@ export function ChartCard({ spec }: { spec: ChartSpec }): ReactNode {
           ))}
         </ul>
       )}
-      {asTable ? (
-        <ChartTable spec={spec} />
-      ) : line ? (
-        <LineChart spec={spec} />
-      ) : spec.kind === 'hbar' ? (
-        <HBarChart spec={spec} />
-      ) : (
-        <BarChart spec={spec} />
-      )}
+      {asTable ? <ChartTable spec={spec} /> : line ? <LineChart spec={spec} /> : list ? <BarList spec={spec} /> : <BarChart spec={spec} />}
       {(spec.y_title || spec.note) && (
         <p className="viz-note">
-          {spec.y_title && <span>세로축: {spec.y_title}</span>}
-          {spec.y_title && spec.note && ' · '}
-          {spec.note}
+          {line && spec.y_title ? `세로축: ${spec.y_title}` : ''}
+          {line && spec.y_title && spec.note ? ' · ' : ''}
+          {spec.note ? caption(spec.note) : ''}
         </p>
       )}
     </figure>

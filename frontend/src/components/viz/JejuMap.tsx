@@ -35,7 +35,7 @@ interface Placed extends MapDot, XY {
 const radius = (d: MapDot, typed: boolean): number =>
   d.role === 'target' ? 10 : d.role === 'peer' || d.role === 'via' ? 8 : d.role === 'hub' ? 7 : !typed ? 5.5 : d.category !== '유지' ? 6 : 4.5
 
-const CHAR_W = 11.5
+const CHAR_W = 11
 type Box = [number, number, number, number]
 const hits = (a: Box, b: Box): boolean => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]
 
@@ -109,7 +109,8 @@ export function JejuMap({ dots, lines = [], selectedKey = null, onSelect, label 
           ) : null
         })}
         {drawn.map((d) => {
-          const color = d.category && d.category in TYPE_COLORS ? TYPE_COLORS[d.category] : 'var(--map-dot)'
+          const typedColor = !!d.category && d.category in TYPE_COLORS
+          const color = typedColor ? TYPE_COLORS[d.category as string] : 'var(--map-dot)'
           const letter = typed && d.category && d.category !== '유지' && d.category in TYPE_COLORS && d.r >= 6 ? d.category : null
           const selected = d.key === selectedKey
           const cls = `map-dot role-${d.role}${selected ? ' is-selected' : ''}${hover === d.key ? ' is-hover' : ''}`
@@ -141,10 +142,10 @@ export function JejuMap({ dots, lines = [], selectedKey = null, onSelect, label 
               {d.role === 'hub' ? (
                 <rect className="map-mark" x={d.x - d.r} y={d.y - d.r} width={d.r * 2} height={d.r * 2} rx={2.5} />
               ) : (
-                <circle className="map-mark" cx={d.x} cy={d.y} r={d.r} fill={color} />
+                <circle className={`map-mark${typedColor ? '' : ' is-plain'}`} cx={d.x} cy={d.y} r={d.r} fill={color} />
               )}
               {letter && (
-                <text className="map-letter" x={d.x} y={d.y} fill={TYPE_INK[letter]} fontSize={d.r >= 8 ? 10.5 : 8.5} textAnchor="middle" dominantBaseline="central">
+                <text className="map-letter" x={d.x} y={d.y} fill={TYPE_INK[letter]} fontSize={d.r >= 8 ? 10 : 8} textAnchor="middle" dominantBaseline="central">
                   {letter}
                 </text>
               )}

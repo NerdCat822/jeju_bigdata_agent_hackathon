@@ -1,5 +1,7 @@
 """LLM 경로: 가짜 공급자로 검증 → 재시도 → 템플릿 대체, LLM 해석, 자유 질문을 시험해요."""
 
+import os
+
 import pytest
 
 from meomulmeong.agent.orchestrator import Agent
@@ -27,7 +29,7 @@ class FakeLLM(LLMProvider):
         self.is_cloud = cloud
         self.calls: list[tuple[str, str]] = []
 
-    def generate(self, system, user, out, *, purpose="", model=None, effort="low", temperature=0.0):
+    def generate(self, system, user, out, *, purpose="", model=None, effort="low"):
         self.calls.append((purpose, user))
         item = self.script[purpose].pop(0)
         if isinstance(item, Exception):
@@ -144,6 +146,9 @@ def test_free_question_with_sql_retry(agent):
     assert a.evidence[0].rows[0][0] == "201"
     assert "카탈로그에 없는 테이블" in ag.llm.calls[2][1]  # 실패한 SQL의 오류를 돌려줘요
     assert any("LLM이 썼어요" in lim for lim in a.limits)
+    explain_input = ag.llm.calls[-1][1]
+    riders = a.evidence[0].rows[0][1]
+    assert riders >= 10_000 and f"{riders:,}" in explain_input  # 큰 정수는 쉼표를 붙여 넘겨요
 
 
 def test_free_question_rejects_unsafe_sql(agent):
@@ -160,18 +165,19 @@ def test_free_explanation_numbers_are_checked(agent):
     assert a.ok and a.explained_by == "template" and a.verification.fallback and "5행" in a.explanation
 
 
-@pytest.mark.llm
-def test_real_ollama_roundtrip(svc):
-    """로컬 Ollama 서버가 있을 때만: pytest -m llm"""
-    from meomulmeong.llm.ollama_provider import OllamaProvider
+@pytest.mark.cloud
+def test_real_claude_roundtrip(svc):
+    """실제 Claude API를 한 번 불러요 (요금이 나가요). API 키가 있을 때만: pytest -m cloud"""
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        pytest.skip("ANTHROPIC_API_KEY 가 없어요")
+    from meomulmeong.llm.anthropic_provider import AnthropicProvider
 
-    llm = OllamaProvider(svc.settings.ollama_host, svc.settings.ollama_model)
-    ok, note = llm.check()
-    if not ok:
-        pytest.skip(note)
+    llm = AnthropicProvider(svc.settings.anthropic_model)
     ag = Agent(svc.agent.ctx, llm)
-    a = ag.ask("성산읍 청년 인구 진단", ag.session())
-    assert a.ok and a.verification.passed
+    session = ag.session()
+    session.cloud_consent = True  # 화면에서는 전송 미리보기를 보고 동의해야 보내요
+    a = ag.ask("성산읍 청년 인구 진단", session)
+    assert a.ok and a.verification.passed and llm.usage.calls >= 1
 
 
 def test_cause_questions_always_use_rule_sentences(agent):

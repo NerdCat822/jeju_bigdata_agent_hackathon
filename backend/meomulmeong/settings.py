@@ -14,7 +14,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BACKEND_DIR = Path(os.environ.get("MEOMUL_HOME") or Path(__file__).resolve().parents[1]).resolve()
 
 DataMode = Literal["synthetic", "hub", "center"]
-LlmMode = Literal["template", "ollama", "anthropic"]
+LlmMode = Literal["template", "anthropic"]
 
 DATA_BADGE = {"synthetic": "샘플 데이터", "hub": "실데이터", "center": "센터 데이터"}
 
@@ -105,11 +105,6 @@ class Settings(BaseSettings):
 
     data_mode: DataMode = "synthetic"
     llm_mode: LlmMode = "template"
-
-    ollama_host: str = "http://127.0.0.1:11434"
-    ollama_model: str = "qwen3:4b"
-    ollama_explain_model: str = ""
-    ollama_timeout: float = 180.0
 
     anthropic_model: str = "claude-opus-5-5"
 

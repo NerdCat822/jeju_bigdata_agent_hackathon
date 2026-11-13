@@ -38,11 +38,8 @@ class LLMProvider(ABC):
 
     @abstractmethod
     def generate(self, system: str, user: str, out: type[T], *, purpose: str = "", model: str | None = None,
-                 effort: str = "low", temperature: float = 0.0) -> T:
-        """system·user 프롬프트를 보내고 out 스키마에 맞는 객체를 돌려줘요.
-
-        effort 는 클라우드 모델의 사고 깊이, temperature 는 로컬 모델의 무작위성이에요 (공급자마다 쓰는 것만 써요).
-        """
+                 effort: str = "low") -> T:
+        """system·user 프롬프트를 보내고 out 스키마에 맞는 객체를 돌려줘요. effort 는 모델의 사고 깊이예요."""
 
     @abstractmethod
     def check(self) -> tuple[bool, str]:

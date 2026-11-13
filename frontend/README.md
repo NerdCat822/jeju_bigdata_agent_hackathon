@@ -37,7 +37,7 @@ cd ../backend && .venv/bin/python -m meomulmeong serve --open
 |---|---|
 | `npm run dev` | 개발 서버 |
 | `npm run build` | 타입 검사 뒤 `dist/` 에 빌드 |
-| `npm test` | 테스트 65개 (Vitest + Testing Library) |
+| `npm test` | 테스트 69개 (Vitest + Testing Library) |
 | `npm run lint` | 린트 (oxlint) |
 | `npm run typecheck` | 타입 검사만 |
 | `npm run gen:api` | 백엔드 OpenAPI 명세에서 `src/api/schema.d.ts` 다시 만들기 |
@@ -48,9 +48,9 @@ cd ../backend && .venv/bin/python -m meomulmeong serve --open
 
 | 영역 | 내용 |
 |---|---|
-| 왼쪽 메뉴 | 데이터 모드(샘플 · 실데이터 · 센터), LLM 모드, 단계 ① ② ③, 최종 제안서, 지난 질문, "처음부터 끝까지" |
+| 왼쪽 메뉴 | 데이터 모드(샘플 · 실데이터 · 센터), LLM 모드, 지금 보는 읍면동과 유형 표식, 단계 1 · 2 · 3, 최종 제안서, 지난 질문, "처음부터 끝까지" |
 | 위쪽 | 지금 쓰는 데이터 배지와 LLM 모드 (항상 보여요), 질문 입력창, 이어서 물어볼 질문 칩 |
-| 첫 화면 | 단계별 추천 질문 칩, 읍면동 지도(43곳)에서 고르기 |
+| 첫 화면 | 단계별 추천 질문, 읍면동 지도(43곳)에서 고르기 |
 | 확인 카드 | "이렇게 이해했어요" 칩. "고치기"로 장소 · 연령 · 기간 · 테마 · 가정값을 바꾸고 "다시 실행" |
 | 진행 상황 | 답을 만드는 동안 도구 실행과 LLM 해설 시도를 한 줄씩 보여 줘요 |
 | 답 | 한 줄 결론 → 쉬운 해설 → 제안 후보 → 차트 · 지도 → 근거표 · SQL(접힘) → 한계(접힘) → 검증 결과 · 실행 기록(접힘) → 다음 질문 |
@@ -76,14 +76,14 @@ frontend/
    ├─ main.tsx  App.tsx  styles.css
    ├─ api/         client(호출 · SSE) · types · schema.d.ts(자동 생성) · openapi.json(명세 사본)
    ├─ state/       agent(화면 상태와 동작: 질문 하나 = Turn 하나)
-   ├─ components/  Sidebar · AskBar · ConfirmCard · ProgressList · TurnView · AnswerView · EvidencePanel · VerificationPanel · Home · DataInfo · Toast
-   │  └─ viz/      ChartCard · LineChart · BarChart · HBarChart · JejuMap · MapCard · Tooltip · palette
+   ├─ components/  Sidebar · AskBar · ConfirmCard · ProgressList · TurnView · AnswerView · EvidencePanel · VerificationPanel · Home · DataInfo · Toast · Icon · TypeMark
+   │  └─ viz/      ChartCard · LineChart · BarChart · BarList · JejuMap · MapCard · Tooltip · palette
    ├─ lib/         format(숫자 표기) · scale(축 눈금) · sse(스트림 풀기) · geo(지도 좌표 · 윤곽 · 점 벌리기) · useSize
    ├─ assets/      마스코트 그림 4장
    └─ test/        setup · fixtures(실제 API 응답에서 뽑은 예시)
 ```
 
-의존성은 React 와 React DOM 뿐이에요. 차트와 지도는 SVG 로 직접 그려요.
+실행 의존성은 React, React DOM, Pretendard(글꼴), lucide-react(아이콘)예요. 차트와 지도는 SVG 로 직접 그려요.
 
 ---
 
@@ -91,22 +91,41 @@ frontend/
 
 센터 PC는 인터넷이 안 돼요. 그래서 아래를 지켜요.
 
-- 글꼴, 아이콘, 스크립트를 **CDN 에서 불러오지 않아요.** 글꼴은 PC에 있는 것을 쓰고(맑은 고딕 등), 아이콘은 코드에 넣은 SVG 예요.
+- 글꼴, 아이콘, 스크립트를 **CDN 에서 불러오지 않아요.** 글꼴(Pretendard 가변 글꼴, 약 2MB)과 아이콘(lucide)은 빌드 결과물에 함께 담겨요.
 - **지도 타일 서버를 쓰지 않아요.** 본섬의 대략 윤곽 위에 읍면동을 점으로 찍어요. 행정동 경계 GeoJSON 을 구하면 `JejuMap` 에 붙일 수 있어요.
 - 새 라이브러리를 더할 때는 빌드 결과물에 다 담기는지 확인해요. 실제 브라우저로 띄워 봤을 때 바깥 주소로 나가는 요청은 0건이었어요.
 
 ---
 
-## 5. 차트와 지도를 그리는 기준
+## 5. 화면 디자인과 차트 · 지도 기준
+
+### 디자인 방향
+
+| 항목 | 정한 것 |
+|---|---|
+| 성격 | 차분하고, 근거를 따지고, 조금 다정한 |
+| 바탕 | 제주 마을 지도와 행정 보고서. 흰 종이 바탕에 먹색 글자, 귤색은 한 점만 |
+| 색 | 바탕 · 면 · 선 · 글자는 중립 회색 한 줄기(`--page` `--surface` `--raised` `--text` `--text-2` `--text-3` `--line`)예요. 귤색(`--accent`)은 앞으로 가는 단추, 고른 것, 차트의 주인공에만 써요 |
+| 글자 | Pretendard. 굵기는 400 과 500 만 쓰고(상표와 유형 표식만 600), 위계는 크기와 색으로 나눠요 |
+| 간격 | 4px 격자. 모서리는 꼬리표 6 · 단추 8 · 카드 12 · 큰 판 16 |
+| 아이콘 | lucide 한 벌, 16px, 선 굵기 1.5. 글자와 같은 색이에요 |
+| 유형 표식 | 유형 A~D 를 나타내는 작은 동그라미(`TypeMark`). 지도, 한 줄 결론, 근거표, 왼쪽 메뉴에서 똑같이 써요 |
+| 움직임 | 답이 나올 때 한 번 떠오르는 것과 진행 표시만 있어요. 움직임 줄이기 설정을 따라요 |
+
+색이나 간격을 더할 때는 `styles.css` 맨 위의 변수에서 골라요. 새 색을 직접 적지 않아요.
+
+### 차트와 지도
 
 | 기준 | 적용 |
 |---|---|
-| 색은 계열을 구분하는 일만 | 계열 색은 `styles.css` 의 `--series-1` … 순서대로만 써요. 한 계열짜리 막대는 모두 같은 색이에요 |
-| 색각 이상 구분 | 계열 색 순서와 유형 색(A~D)은 구분 검사를 통과한 값이에요. 지도는 색과 함께 유형 글자를 써요 |
+| 주인공만 강조색 | 차트마다 귤색은 하나예요. 선 차트는 첫 계열, 막대 목록은 백엔드가 `ChartSpec.highlight` 로 알려 준 항목만 귤색이고 나머지는 회색이에요 |
+| 색 없이도 읽히게 | 회색 계열은 밝기가 서로 달라요. 유형 색(A~D)은 구분 검사를 통과한 값이고, 지도와 표는 색과 함께 유형 글자를 써요 |
+| 차트 종류 | 추이는 선, 항목 비교(계열 하나)는 막대 목록, 계열이 둘 이상인 비교는 세로 막대예요 |
 | 축은 하나 | 단위가 다른 값은 한 그림에 겹치지 않아요. 선 차트는 지수(첫 달 = 100)로 맞춘 값을 받아 그려요 |
-| 막대는 0 에서 | 막대 축은 항상 0 을 포함하고, 값 쪽 끝만 둥글어요 |
-| 값 읽기 | 선 차트는 포인터나 화살표 키로 달을 고르면 모든 계열 값을 보여 줘요. 막대와 지도의 점은 Tab 키로 옮겨 읽을 수 있어요 |
-| 표로 보기 | 차트마다 "표로 보기"가 있어서 같은 값을 표로 볼 수 있어요 |
+| 막대는 0 에서 | 막대는 항상 0 에서 자라요. 음수와 양수가 섞이면 0 자리를 표시해요 |
+| 값 읽기 | 선 차트는 포인터나 화살표 키로 달을 고르면 모든 계열 값을 보여 줘요. 막대 목록은 줄마다 값을 적어요. 지도의 점은 Tab 키로 옮겨 읽을 수 있어요 |
+| 표로 보기 | 선 차트와 세로 막대에는 "표로 보기"가 있어요. 막대 목록은 값이 이미 적혀 있어 따로 두지 않았어요 |
+| 근거표 | 지금 보는 읍면동의 행과 유형 판정에서 충족한 행은 바탕을 한 단계 올려 표시해요 |
 | 숫자 표기 | 백엔드 제안서와 같은 규칙이에요 (변화율 +6.8%, 금액 1.97억 · 1,401만) |
 
 지도의 한계: 읍면동 위치는 대략 좌표이고, 섬 윤곽은 위치를 가늠하기 위한 밑그림이에요. 좌표가 몰린 도심의 동은 겹치지 않게 조금 벌려 그려요.
@@ -149,7 +168,9 @@ npm test
 
 - [ ] 행정동 경계 GeoJSON 이 생기면 지도를 경계 지도로 바꾸기
 - [ ] 클라우드 LLM 모드의 전송 미리보기와 동의 흐름을 실제 키로 확인하기 (API 키가 아직 없어 가짜 응답으로만 시험했어요)
-- [ ] 센터 PC(Windows, 맑은 고딕)에서 글자 줄바꿈과 지도 이름표 겹침 확인하기
+- [ ] 센터 PC(Windows)에서 Pretendard 글꼴이 뜨는지, 글자 줄바꿈과 지도 이름표 겹침이 없는지 확인하기
 - [ ] 어두운 화면 모드는 만들지 않았어요
 
-오픈소스: React(MIT), Vite(MIT), TypeScript(Apache-2.0), Vitest(MIT), Testing Library(MIT), jsdom(MIT), oxlint(MIT), openapi-typescript(MIT).
+오픈소스: React(MIT), Pretendard(OFL-1.1), Lucide(ISC), Vite(MIT), TypeScript(Apache-2.0), Vitest(MIT), Testing Library(MIT), jsdom(MIT), oxlint(MIT), openapi-typescript(MIT).
+
+화면 다듬기는 unslop 스킬(Damir Sokolovsky, CC BY 4.0)의 점검 순서를 따랐어요.

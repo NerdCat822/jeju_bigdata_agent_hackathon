@@ -125,6 +125,7 @@ class ChartSpec(BaseModel):
     y_title: str = ""
     y_format: Literal["num", "pct", "index", "won"] = "num"
     note: str | None = None
+    highlight: str | None = None  # 강조할 가로축 항목 (예: 지금 보는 읍면동). 화면은 그 막대만 강조색으로 그려요
 
     def to_plotly(self) -> dict[str, Any]:
         """Plotly figure dict (plotly 를 불러오지 않고 만들어요). 화면에서 react-plotly.js 의 data · layout 으로 쓸 수 있어요.

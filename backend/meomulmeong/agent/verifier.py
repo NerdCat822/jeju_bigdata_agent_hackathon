@@ -59,6 +59,11 @@ _SUPER = re.compile(r"(가장|제일)\s+([가-힣])|(최고|최대|최저|최소
 _BIG, _SMALL = "큰컸크높많", "작낮적덜"
 
 
+# 지표의 정의를 풀어 쓸 때 함께 나와도 되는 낱말 (초안 충실도 검사에서 다른 대상으로 보지 않아요)
+# 예) '거주인구 가운데 20·30대 비중은 17.5%예요', '정주비는 거주·근무·방문 인구 가운데 거주인구의 비중이에요'
+_DEFINITION_WORDS = {"youth_share": {"거주"}, "settle_ratio": {"거주", "근무", "방문"}}
+
+
 _SUPER_SAME = {"최고": "가장 큰", "최대": "가장 큰", "최저": "가장 작은", "최소": "가장 작은"}
 
 
@@ -91,7 +96,7 @@ def fact_anchors(f: Fact) -> list[str]:
     """그 값을 쓰는 문장에 함께 있어야 하는 낱말. 항목마다 '|'로 구분한 것 중 하나가 있으면 돼요."""
     k = f.key
     if k.startswith("youth_resd"):
-        return ["거주"]
+        return ["거주|사는|살고"]
     if k.startswith("youth_work"):
         return ["근무|일하"]
     if k in ("visit_p1", "visit_chg"):
@@ -132,7 +137,7 @@ def fact_anchors(f: Fact) -> list[str]:
     if k in ("baseline_indiv", "scenario_indiv"):
         return ["개별"]
     if k == "supply_change":
-        return ["공급|감편|증편|항공"]
+        return ["공급|감편|증편|항공|좌석|국내선"]
     if k == "elasticity":
         return ["ε|탄력"]
     if m := re.match(r"route\d+_(beta|r2|implied)$", k):
@@ -382,7 +387,7 @@ class Verifier:
                     unit_ok = (f.unit == "pct" and unit == "%") or (f.unit == "people" and unit == "명") or (
                         f.unit == "ratio" and (unit == "배" or d >= 1))
                     if unit_ok and abs(abs(v) - fv) <= tol and all(any(a in sent for a in g.split("|")) for g in anchors):
-                        own |= {w for g in anchors for w in g.split("|")}
+                        own |= {w for g in anchors for w in g.split("|")} | _DEFINITION_WORDS.get(f.key, set())
             extra = ents(sent) - set().union(*src) - (always if "지역" in sent else always - emd_names) - own
             if extra:
                 bad.append(f"'{', '.join(sorted(extra))}' ↔ {sent.strip()[:50]}")

@@ -47,11 +47,9 @@ def test_compose_opens_the_port_on_this_pc_only():
     assert "restart" not in app  # PC를 켤 때 저절로 뜨지 않게 해요
 
 
-def test_local_llm_override_stays_on_localhost():
-    path = ROOT / "docker-compose.local-llm.yml"
-    if not path.exists():
-        pytest.skip("docker-compose.local-llm.yml 이 없어요")
-    text = path.read_text(encoding="utf-8")
-    assert "network_mode: host" in text
-    assert 'command: ["serve", "--host", "127.0.0.1", "--port", "3000"]' in text  # 호스트 네트워크에서는 꼭 127.0.0.1
-    assert "0.0.0.0" not in text
+def test_no_local_llm_setup_is_left():
+    """로컬 LLM(Ollama · Qwen3)은 쓰지 않아요. 배포 파일과 환경변수 예시에 그 설정이 남지 않게 해요."""
+    assert not (ROOT / "docker-compose.local-llm.yml").exists()
+    for name in ("docker-compose.yml", "backend/.env.example"):
+        text = _read(name).lower()
+        assert "ollama" not in text and "qwen" not in text, f"{name} 에 로컬 LLM 설정이 남았어요"

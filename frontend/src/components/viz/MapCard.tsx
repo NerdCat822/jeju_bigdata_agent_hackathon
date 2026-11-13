@@ -1,18 +1,19 @@
 import type { ReactNode } from 'react'
 import type { MapSpec } from '../../api/types'
 import { pct } from '../../lib/format'
+import { TypeMark } from '../TypeMark'
 import { JejuMap } from './JejuMap'
 import type { MapDot } from './JejuMap'
-import { TYPE_COLORS, TYPE_INK } from './palette'
 
 interface Props {
   spec: MapSpec
+  wide?: boolean
   /** 지도에서 읍면동을 누르면 그 동네를 진단해요. */
   onPickPlace?: (name: string) => void
 }
 
 /** 답에 딸린 지도: 유형 지도(43개 읍면동) 또는 거점에서 오는 코스 지도. */
-export function MapCard({ spec, onPickPlace }: Props): ReactNode {
+export function MapCard({ spec, wide = false, onPickPlace }: Props): ReactNode {
   const legend = Object.entries(spec.legend)
   const counts = new Map<string, number>()
   for (const p of spec.points) if (p.category) counts.set(p.category, (counts.get(p.category) ?? 0) + 1)
@@ -30,7 +31,7 @@ export function MapCard({ spec, onPickPlace }: Props): ReactNode {
   const target = spec.points.find((p) => p.role === 'target')
 
   return (
-    <figure className="viz-card">
+    <figure className={`viz-card${wide ? ' is-wide' : ''}`}>
       <div className="viz-head">
         <figcaption className="viz-title">{spec.title}</figcaption>
       </div>
@@ -42,20 +43,18 @@ export function MapCard({ spec, onPickPlace }: Props): ReactNode {
         onSelect={onPickPlace ? (d) => d.role !== 'hub' && onPickPlace(d.name) : undefined}
       />
       {legend.length > 0 && (
-        <ul className="viz-legend map-legend" aria-label="유형 범례">
+        <ul className="viz-legend" aria-label="유형 범례">
           {legend.map(([code, label]) => (
             <li key={code}>
-              <span className="type-dot" style={{ background: TYPE_COLORS[code] ?? 'var(--map-dot)', color: TYPE_INK[code] ?? '#fff' }} aria-hidden="true">
-                {code === '유지' ? '' : code}
-              </span>
+              <TypeMark code={code} size={16} />
               {label}
-              <span className="muted">{counts.get(code) ?? 0}곳</span>
+              <span className="muted mono">{counts.get(code) ?? 0}</span>
             </li>
           ))}
         </ul>
       )}
       {hasHub && (
-        <ul className="viz-legend map-legend" aria-label="지도 범례">
+        <ul className="viz-legend" aria-label="지도 범례">
           <li>
             <span className="hub-key" aria-hidden="true" />
             출발 거점

@@ -7,8 +7,8 @@ import { useWidth } from '../../lib/useSize'
 import { seriesColor } from './palette'
 import { Tooltip } from './Tooltip'
 
-const H = 236
-const M = { top: 22, right: 12, bottom: 34, left: 50 }
+const H = 260
+const M = { top: 24, right: 12, bottom: 32, left: 48 }
 const MAX_BAR = 24
 const GAP = 2
 
@@ -20,14 +20,14 @@ function barPath(x: number, w: number, y0: number, y1: number): string {
   return `M${x},${y0}L${x},${y1 + s * r}Q${x},${y1} ${x + r},${y1}L${x + w - r},${y1}Q${x + w},${y1} ${x + w},${y1 + s * r}L${x + w},${y0}Z`
 }
 
-const CHAR_W = 11.5
+const CHAR_W = 12
 function fitLabel(text: string, room: number): string {
   if (text.length * CHAR_W <= room) return text
   const keep = Math.max(2, Math.floor(room / CHAR_W) - 1)
   return `${text.slice(0, keep)}…`
 }
 
-/** 세로 막대 차트. 막대는 0 에서 자라고, 막대마다 포인터·키보드로 값을 읽을 수 있어요. */
+/** 세로 막대 차트. 계열이 둘 이상인 비교에 써요 (계열이 하나면 막대 목록을 써요). 막대는 0 에서 자라요. */
 export function BarChart({ spec }: { spec: ChartSpec }): ReactNode {
   const [ref, width] = useWidth<HTMLDivElement>(520)
   const [active, setActive] = useState<number | null>(null)
@@ -53,7 +53,7 @@ export function BarChart({ spec }: { spec: ChartSpec }): ReactNode {
       <svg width={width} height={H} role="img" aria-label={`${spec.title}. 막대마다 Tab 키로 값을 읽을 수 있어요.`}>
         {axis.ticks.map((t) => (
           <g key={t} aria-hidden="true">
-            <line className={t === 0 ? 'viz-axis' : 'viz-grid'} x1={M.left} x2={M.left + plotW} y1={y(t)} y2={y(t)} />
+            <line className={t === 0 ? 'viz-axis' : 'viz-grid-line'} x1={M.left} x2={M.left + plotW} y1={y(t)} y2={y(t)} />
             <text className="viz-tick" x={M.left - 8} y={y(t)} textAnchor="end" dominantBaseline="middle">
               {axisTick(t, spec.y_format, maxAbs)}
             </text>

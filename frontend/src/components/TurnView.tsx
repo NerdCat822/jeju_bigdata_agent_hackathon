@@ -25,11 +25,12 @@ interface Props {
 export function TurnView({ turn, boot, latestYear, busy, cloudConsent, onRun, onEdit, onAsk, onReport, onPickPlace, onAgreeCloud }: Props): ReactNode {
   const running = turn.status === 'running'
   const titles = new Map(boot.options.stages.map((s) => [s.stage, s.title]))
+  const typeNames = new Map(boot.options.types.map((t) => [t.code, t.label]))
   const cloud = boot.status.llm_mode === 'anthropic'
   const isChain = turn.card?.query.intent === 'chain'
   return (
     <div className="turn">
-      <h1 className="turn-question">{turn.question}</h1>
+      <h1 className="turn-question">질문 · {turn.question}</h1>
       <ConfirmCard turn={turn} options={boot.options} places={boot.places} latestYear={latestYear} busy={busy} onRun={onRun} onEdit={onEdit} />
 
       {turn.status === 'error' && (
@@ -61,6 +62,7 @@ export function TurnView({ turn, boot, latestYear, busy, cloudConsent, onRun, on
           key={a.id}
           answer={a}
           stageTitle={a.stage ? (titles.get(a.stage) ?? null) : null}
+          typeNames={typeNames}
           busy={busy}
           needsConsent={cloud && !cloudConsent && a.explained_by === 'template'}
           onAsk={onAsk}
@@ -72,16 +74,16 @@ export function TurnView({ turn, boot, latestYear, busy, cloudConsent, onRun, on
 
       {turn.reportUrl && !running && (
         <aside className="report" id="report" aria-label="최종 제안서">
-          <img src={hello} alt="" width={56} height={56} />
+          <img src={hello} alt="" width={40} height={40} />
           <div className="report-text">
             <strong>최종 제안서가 준비됐어요</strong>
-            <p className="muted">세 단계의 결과와 근거표, SQL, 한계를 한 문서로 묶었어요.</p>
+            <p className="muted small">세 단계의 결과와 근거표, SQL, 한계를 한 문서로 묶었어요</p>
           </div>
           <a className="btn btn-dark" href={turn.reportUrl} target="_blank" rel="noreferrer">
-            제안서 열기 <Icon name="external" size={14} />
+            제안서 열기 <Icon name="external" />
           </a>
           <a className="btn btn-outline" href={`${turn.reportUrl}?download=true`}>
-            <Icon name="download" size={14} /> 내려받기
+            <Icon name="download" /> 내려받기
           </a>
         </aside>
       )}

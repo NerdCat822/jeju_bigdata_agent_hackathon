@@ -38,9 +38,9 @@ meomulmeong = ["agent/prompts/*.md", "report/templates/*.j2"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q -m 'not llm'"  # 로컬 LLM 왕복 테스트는 기본 제외 (pytest -m llm 으로 실행)
+addopts = "-q -m 'not cloud'"  # 실제 Claude API를 부르는 테스트는 기본 제외 (pytest -m cloud 로 실행, 요금이 나가요)
 markers = [
-    "llm: 로컬 Ollama 서버가 필요한 테스트 (기본 제외: pytest -m llm 으로 실행)",
+    "cloud: 실제 Claude API를 부르는 테스트 (ANTHROPIC_API_KEY 필요, 기본 제외)",
 ]
 
 [tool.ruff]

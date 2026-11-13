@@ -29,7 +29,7 @@ export function AskBar({ busy, busyLabel, chips, onAsk }: Props): ReactNode {
           className="ask-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="예: 성산읍 청년 인구 왜 줄었어?"
+          placeholder="성산읍 청년 인구 왜 줄었어?"
           maxLength={500}
           autoComplete="off"
         />
@@ -44,9 +44,9 @@ export function AskBar({ busy, busyLabel, chips, onAsk }: Props): ReactNode {
         </button>
       </form>
       {chips.length > 0 && (
-        <div className="chip-row" aria-label="이어서 물어볼 질문">
+        <div className="tag-row" aria-label="이어서 물어볼 질문">
           {chips.map((c) => (
-            <button key={c.question} type="button" className="chip chip-button" disabled={busy} onClick={() => onAsk(c.question, true)}>
+            <button key={c.question} type="button" className="chip-button" disabled={busy} onClick={() => onAsk(c.question, true)}>
               {c.label}
             </button>
           ))}

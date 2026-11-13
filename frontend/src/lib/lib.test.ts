@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bootstrap } from '../test/fixtures'
-import { axisTick, compact, formatCell, josa, pct, seconds, shortMonth, valueLabel } from './format'
+import { axisTick, caption, compact, formatCell, josa, pct, seconds, shortMonth, valueLabel } from './format'
 import { JEJU_OUTLINE, OFF_MAP_LAT, declutter, makeProjection } from './geo'
 import { niceAxis, thin } from './scale'
 import { SseParser } from './sse'
@@ -50,6 +50,12 @@ describe('숫자 표기 (백엔드와 같은 규칙)', () => {
     expect(josa('성산읍', '을를')).toBe('성산읍을')
     expect(josa('아라동', '을를')).toBe('아라동을')
     expect(josa('구좌', '을를')).toBe('구좌를')
+  })
+
+  it('한 문장짜리 설명은 마침표를 떼고, 여러 문장은 그대로 둬요', () => {
+    expect(caption('유동인구는 통신 데이터 추정치예요.')).toBe('유동인구는 통신 데이터 추정치예요')
+    expect(caption('임계값 τ = ±3%. 위에서부터 먼저 맞는 유형이에요.')).toBe('임계값 τ = ±3%. 위에서부터 먼저 맞는 유형이에요.')
+    expect(caption('탄력성 ε 1.0 가정')).toBe('탄력성 ε 1.0 가정')
   })
 })
 

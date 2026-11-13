@@ -15,7 +15,7 @@ export function DataInfo({ status, onClose }: { status: Status; onClose: () => v
       <div className="dialog-inner">
         <header className="dialog-head">
           <h2 id="data-info-title">
-            데이터 정보 <span className="badge badge-data">{status.data_badge}</span>
+            데이터 정보 <span className="tag">{status.data_badge}</span>
           </h2>
           <button type="button" className="icon-button" aria-label="닫기" onClick={onClose}>
             <Icon name="x" />
@@ -28,7 +28,7 @@ export function DataInfo({ status, onClose }: { status: Status; onClose: () => v
         )}
         {status.route_ref === 'sample' && (
           <p className="callout">
-            <Icon name="info" /> 버스 노선과 경유 읍면동은 샘플 참조표를 쓰고 있어요.
+            <Icon name="info" /> 버스 노선과 경유 읍면동은 샘플 참조표를 쓰고 있어요
           </p>
         )}
         <div className="table-scroll">
@@ -67,7 +67,7 @@ export function DataInfo({ status, onClose }: { status: Status; onClose: () => v
             </ul>
           </>
         )}
-        <p className="muted small">출처: 제주특별자치도, 제주데이터허브.{status.built_at ? ` 적재 시각 ${status.built_at.replace('T', ' ')}` : ''}</p>
+        <p className="muted small">출처 제주특별자치도, 제주데이터허브{status.built_at ? ` · 적재 ${status.built_at.replace('T', ' ')}` : ''}</p>
       </div>
     </dialog>
   )

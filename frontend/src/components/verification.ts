@@ -16,7 +16,7 @@ export const CHECK_LABEL: Record<string, string> = {
 
 export function explainedBy(a: Answer): string {
   if (a.explained_by === 'llm') {
-    const who = a.llm_mode === 'anthropic' ? '클라우드 LLM' : '로컬 LLM'
+    const who = a.llm_mode === 'anthropic' ? '클라우드 LLM' : 'LLM'
     const retry = a.verification.retries ? `, 다시 쓰기 ${a.verification.retries}회` : ''
     return `해설: ${who}${a.llm_model ? ` · ${a.llm_model}` : ''} (검증 통과${retry})`
   }

@@ -1,1 +1,1 @@
-"""LLM 연결: 로컬 Ollama(기본) · Anthropic Claude(선택) · 템플릿(LLM 없음)."""
+"""LLM 연결: Anthropic Claude(클라우드, 선택) · 템플릿(LLM 없음, 기본)."""

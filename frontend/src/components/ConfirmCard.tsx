@@ -35,6 +35,8 @@ export function ConfirmCard({ turn, options, places, latestYear, busy, onRun, on
   const running = turn.status === 'running'
   const ran = turn.status === 'done' || turn.status === 'error'
   const runLabel = running ? '실행 중' : turn.dirty || ran ? '다시 실행' : '실행'
+  // 아직 실행하지 않았거나 고친 뒤에는 이 단추가 다음 할 일이에요. 이미 본 답을 다시 돌리는 것은 조용한 단추로 둬요.
+  const primary = turn.status === 'confirm' || turn.dirty || running
 
   return (
     <section className={`confirm${card.runnable ? '' : ' is-blocked'}`} aria-labelledby={`confirm-${turn.id}`}>
@@ -43,7 +45,7 @@ export function ConfirmCard({ turn, options, places, latestYear, busy, onRun, on
           <h2 id={`confirm-${turn.id}`} className="confirm-title">
             이렇게 이해했어요
           </h2>
-          <ul className="chip-row" aria-label="질문 해석">
+          <ul className="tag-row" aria-label="질문 해석">
             {card.chips.map((c) => (
               <li key={c.label} className="chip">
                 <span className="chip-label">{c.label}</span> {c.value}
@@ -53,11 +55,11 @@ export function ConfirmCard({ turn, options, places, latestYear, busy, onRun, on
         </div>
         <div className="confirm-actions">
           <button type="button" className="btn btn-ghost" aria-expanded={editing} onClick={() => setEditing((v) => !v)}>
-            <Icon name="edit" size={14} /> {editing ? '닫기' : '고치기'}
+            <Icon name="edit" /> {editing ? '닫기' : '고치기'}
           </button>
           <button
             type="button"
-            className="btn btn-dark"
+            className={`btn ${primary ? 'btn-dark' : 'btn-outline'}`}
             disabled={busy || !card.runnable}
             onClick={onRun}
             autoFocus={turn.status === 'confirm' && card.runnable}
@@ -70,7 +72,7 @@ export function ConfirmCard({ turn, options, places, latestYear, busy, onRun, on
         <ul className="confirm-warnings">
           {card.warnings.map((w) => (
             <li key={w}>
-              <Icon name={card.runnable ? 'info' : 'alert'} size={14} /> {w}
+              <Icon name={card.runnable ? 'info' : 'alert'} /> {w}
             </li>
           ))}
         </ul>

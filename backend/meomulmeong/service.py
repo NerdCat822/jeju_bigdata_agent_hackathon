@@ -162,7 +162,7 @@ class AgentService:
         return {
             "data_mode": wh.data_mode, "data_badge": wh.data_badge, "built_at": wh.build_info().get("built_at"),
             "llm_mode": self.agent.llm_mode, "llm_model": llm.model if llm else None,
-            "llm_label": (f"로컬 · {llm.model}" if llm and not llm.is_cloud else f"클라우드 · {llm.model}" if llm else "템플릿 (LLM 없음)"),
+            "llm_label": f"클라우드 · {llm.model}" if llm else "템플릿 (LLM 없음)",
             "llm_note": self.llm_note,
             "tables": [{"table": m.table, "title": m.title, "rows": m.n_rows, "source": m.source,
                         "period": f"{m.min_date}~{m.max_date}" if m.min_date else "자료 없음"} for m in wh.meta().values()],

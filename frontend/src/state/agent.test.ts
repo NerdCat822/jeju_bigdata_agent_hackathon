@@ -134,8 +134,8 @@ describe('화면 상태', () => {
   it('LLM 모드만 바꾸면 대화를 이어 가고, 데이터 모드를 바꾸면 새로 시작해요', async () => {
     const { result } = await ready()
     await act(() => result.current.actions.ask('성산읍 청년 인구 진단', { autoRun: true }))
-    await act(() => result.current.actions.setModes({ llm_mode: 'ollama' }))
-    expect(result.current.state.boot?.status.llm_mode).toBe('ollama')
+    await act(() => result.current.actions.setModes({ llm_mode: 'anthropic' }))
+    expect(result.current.state.boot?.status.llm_mode).toBe('anthropic')
     expect(result.current.state.turns).toHaveLength(1)
     await act(() => result.current.actions.setModes({ data_mode: 'hub' }))
     expect(result.current.state.boot?.status.data_mode).toBe('hub')
@@ -144,10 +144,10 @@ describe('화면 상태', () => {
   })
 
   it('LLM을 쓸 수 없어 템플릿으로 내려가면 이유를 알려요', async () => {
-    const api = fakeApi({ setModes: vi.fn(async () => ({ ...bootstrap.status, llm_mode: 'template', llm_note: 'Ollama 서버에 연결할 수 없어요. 템플릿 모드로 실행해요.' })) })
+    const api = fakeApi({ setModes: vi.fn(async () => ({ ...bootstrap.status, llm_mode: 'template', llm_note: 'Anthropic 인증 정보를 찾지 못했어요. 템플릿 모드로 실행해요.' })) })
     const { result } = await ready(api)
-    await act(() => result.current.actions.setModes({ llm_mode: 'ollama' }))
+    await act(() => result.current.actions.setModes({ llm_mode: 'anthropic' }))
     expect(result.current.state.notice?.tone).toBe('warn')
-    expect(result.current.state.notice?.text).toContain('Ollama')
+    expect(result.current.state.notice?.text).toContain('Anthropic')
   })
 })

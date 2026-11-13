@@ -16,7 +16,7 @@ export function Toast({ notice, onClose }: { notice: Notice | null; onClose: () 
       <Icon name={notice.tone === 'warn' ? 'alert' : 'info'} />
       <span>{notice.text}</span>
       <button type="button" className="icon-button" aria-label="안내 닫기" onClick={onClose}>
-        <Icon name="x" size={14} />
+        <Icon name="x" />
       </button>
     </div>
   )

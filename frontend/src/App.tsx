@@ -37,7 +37,7 @@ export default function App({ api }: { api?: Api }): ReactNode {
   if (!boot) {
     return (
       <div className="boot">
-        <img src={hello} alt="" width={96} height={96} />
+        <img src={hello} alt="" width={72} height={72} />
         <h1>머물멍</h1>
         {state.bootError ? (
           <>
@@ -67,14 +67,14 @@ export default function App({ api }: { api?: Api }): ReactNode {
           <div className="topline">
             {active ? (
               <button type="button" className="link-button" onClick={() => actions.selectTurn(null)}>
-                <Icon name="home" size={14} /> 첫 화면
+                <Icon name="home" /> 첫 화면
               </button>
             ) : (
               <span />
             )}
-            <ul className="badge-row" aria-label="지금 쓰는 데이터와 LLM 모드">
-              <li className="badge badge-data">{boot.status.data_badge}</li>
-              <li className="badge badge-info">{boot.status.llm_label}</li>
+            <ul className="status-line" aria-label="지금 쓰는 데이터와 LLM 모드">
+              <li className="tag">{boot.status.data_badge}</li>
+              <li>{boot.status.llm_label}</li>
             </ul>
           </div>
           <AskBar busy={state.busy} busyLabel={state.busyLabel} chips={chips} onAsk={ask} />

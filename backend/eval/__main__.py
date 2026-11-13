@@ -1,7 +1,7 @@
 """골든셋 평가 실행기.
 
     python -m eval                      # 템플릿 모드 (LLM 없이, 완전 재현)
-    python -m eval --llm ollama         # 로컬 LLM 모드
+    python -m eval --llm anthropic      # 클라우드 LLM 모드 (API 요금이 나가요)
     python -m eval --category stage1    # 일부만
 """
 
@@ -145,7 +145,7 @@ def check_item(result: Answer | ChainResult, exp: dict[str, Any], refs: Refs) ->
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m eval", description="머물멍 골든셋 평가")
-    p.add_argument("--llm", choices=["template", "ollama", "anthropic"], default="template")
+    p.add_argument("--llm", choices=["template", "anthropic"], default="template")
     p.add_argument("--category", choices=list(LABEL), action="append")
     p.add_argument("--limit", type=int, default=0, help="범주마다 앞에서 N문항만")
     p.add_argument("--yes-cloud", action="store_true", help="클라우드 LLM 전송에 동의해요")

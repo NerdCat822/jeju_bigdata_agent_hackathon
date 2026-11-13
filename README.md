@@ -108,9 +108,8 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 
 | LLM 모드 | 모델 | 비고 |
 |---|---|---|
-| 템플릿 | 없음 | 밖으로 보내는 것이 없고, 같은 질문에 항상 같은 답 |
-| 로컬 | Ollama `qwen3:4b` | 센터 PC(오프라인)에서 쓰는 기본 모델 |
-| 클라우드 (선택) | Claude | 집계 지표만 보내고, 전송 미리보기와 동의를 거쳐요 |
+| 템플릿 (기본) | 없음 | 밖으로 보내는 것이 없고, 같은 질문에 항상 같은 답. 인터넷이 없는 센터 PC에서도 돌아가요 |
+| 클라우드 (선택) | Claude `claude-opus-5-5` | 집계 지표만 보내고, 전송 미리보기와 동의를 거쳐요. `backend/.env` 에 API 키가 있어야 해요 |
 
 ---
 
@@ -118,13 +117,13 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 
 | 항목 | 결과 |
 |---|---|
-| 백엔드 테스트 | 241개 (`cd backend && .venv/bin/python -m pytest`) |
-| 화면 테스트 | 65개 (`cd frontend && npm test`) |
+| 백엔드 테스트 | 243개 (`cd backend && .venv/bin/python -m pytest`) |
+| 화면 테스트 | 69개 (`cd frontend && npm test`) |
 | 골든셋 60문항 · 템플릿 모드 | 60 / 60. Stage 1·2·3, 연계, 인과 함정 모두 목표 달성 (`python -m eval`) |
-| 골든셋 15문항 · 로컬 LLM | 15 / 15. 답 하나에 중앙값 23초, 연계 실행 37~63초 (개발 PC 기준) |
+| 클라우드 LLM 실제 호출 · 5문항 | 5 / 5. 해설 5건 모두 첫 시도에 검증 통과, 답 하나에 2~9초 |
 
 골든셋의 기대값은 에이전트의 SQL과 다른 경로(pandas)로 계산해요. 모든 수치는 **샘플 데이터** 기준이에요.
-로컬 LLM 측정의 조건과 해설 품질에 대한 관찰은 [backend/README.md](backend/README.md) 10절에 적었어요.
+클라우드 LLM 확인의 조건과 검증기를 고친 내용은 [backend/README.md](backend/README.md) 10절에 적었어요.
 
 ---
 
@@ -142,8 +141,8 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 - 실데이터로는 아직 돌려 보지 못했어요. 허브 수집기는 가짜 서버 테스트만 통과했고, 센터 추출본의 컬럼 매핑은 명세만 보고 썼어요.
 - 버스 노선 참조표는 샘플이고, 카드 지구와 읍면동의 연결, 읍면동 좌표는 잠정값이에요.
 - 지도는 행정동 경계가 아니라, 본섬의 대략 윤곽 위에 읍면동을 점으로 찍은 그림이에요.
-- 소형 로컬 모델(`qwen3:4b`)의 해설은 규칙이 만든 문장보다 낫지 않았어요. 해설을 규칙 문장으로만 쓰는 설정(`llm.explain: false`)이 있어요.
-- 클라우드 LLM 모드는 가짜 응답으로만 시험했어요.
+- 로컬 LLM은 쓰지 않아요. 인터넷이 없는 센터 PC에서는 템플릿 모드로만 돌아가요. 기획서의 "로컬 LLM 기본" 문구와 다르니 제출 전에 맞춰야 해요.
+- 클라우드 LLM은 실제 질문 5개로만 확인했어요. 골든셋 전체를 클라우드 모드로 돌려 보지는 않았어요.
 - 센터 PC용 설치 스크립트(`install.bat`, `run.bat`)는 아직 없어요.
 - 기획서 5.2·5.4절에는 화면 기술이 Streamlit 으로 적혀 있지만, 구현은 React 웹이에요.
 
@@ -165,6 +164,6 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 
 ## 오픈소스와 AI 활용
 
-- 백엔드: DuckDB, pandas, PyArrow, pydantic, FastAPI, Uvicorn, Jinja2, httpx, Ollama, Qwen3. 화면: React, Vite, TypeScript, Vitest.
+- 백엔드: DuckDB, pandas, PyArrow, pydantic, FastAPI, Uvicorn, Jinja2, httpx, Anthropic Python SDK. 화면: React, Pretendard, Lucide, Vite, TypeScript, Vitest.
   라이선스와 버전은 각 폴더의 README와 `requirements.lock`, `package-lock.json` 에 있어요.
 - 이 저장소의 코드와 문서 초안은 Claude Code(Anthropic Claude)로 작성했어요.

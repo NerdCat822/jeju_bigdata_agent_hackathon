@@ -341,8 +341,22 @@ def free_payload(b: Bundle, max_rows: int = 40) -> str:
     ev = b.evidence()[0]
     lines = [f"질문: {b.query.question}", f"표 제목: {ev.title}", "컬럼: " + " | ".join(ev.columns), "결과:"]
     for r in ev.rows[:max_rows]:
-        lines.append("- " + " | ".join("-" if v is None else (f"{v:,.4g}" if isinstance(v, float) else str(v)) for v in r))
+        lines.append("- " + " | ".join(_free_cell(v) for v in r))
     return "\n".join(lines)
+
+
+def _free_cell(v: object) -> str:
+    """조회 결과 칸 하나. 큰 정수는 천 단위 쉼표를 붙여요 (모델이 '9730808명'처럼 그대로 옮겨 적지 않게).
+
+    연도(2025)나 노선 번호처럼 네 자리 이하인 정수는 그대로 둬요.
+    """
+    if v is None:
+        return "-"
+    if isinstance(v, float):
+        return f"{v:,.4g}"
+    if isinstance(v, int) and not isinstance(v, bool) and abs(v) >= 10_000:
+        return f"{v:,}"
+    return str(v)
 
 
 _SENTENCE = re.compile(r"(?<=[.!?])\s+")

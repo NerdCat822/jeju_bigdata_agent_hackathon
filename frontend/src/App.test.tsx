@@ -59,7 +59,7 @@ describe('머물멍 화면', () => {
     await userEvent.selectOptions(screen.getByLabelText('읍면동 목록에서 고르기'), '성산읍')
     const panel = screen.getByText('서귀포시 · 서귀포시 동부').closest('aside')!
     await userEvent.click(within(panel).getByRole('button', { name: /처음부터 끝까지/ }))
-    await waitFor(() => expect(screen.getAllByText('한 줄 결론')).toHaveLength(3))
+    await waitFor(() => expect(document.querySelectorAll('.headline-text')).toHaveLength(3))
     expect(api.chainStream).toHaveBeenCalledWith('성산읍', 'sess-1', expect.anything())
     const report = screen.getByRole('complementary', { name: '최종 제안서' })
     expect(within(report).getByRole('link', { name: /제안서 열기/ })).toHaveAttribute('href', '/api/reports/sample.html')
@@ -67,15 +67,21 @@ describe('머물멍 화면', () => {
     expect(screen.getByRole('navigation', { name: '단계로 이동' })).toBeInTheDocument()
   })
 
-  it('LLM 모드를 바꾸면 위쪽 배지도 바뀌어요', async () => {
+  it('LLM 모드는 템플릿과 클라우드 둘이고, 바꾸면 위쪽 배지도 바뀌어요', async () => {
+    // API 키가 있는 PC처럼 클라우드 모드를 고를 수 있게 해요
+    const llm = bootstrap.status.modes.llm.map((m) => (m.mode === 'anthropic' ? { ...m, available: true } : m))
+    const status = { ...bootstrap.status, modes: { ...bootstrap.status.modes, llm } }
     const api = fakeApi({
-      setModes: vi.fn(async () => ({ ...bootstrap.status, llm_mode: 'ollama', llm_label: '로컬 · qwen3:4b' })),
+      bootstrap: vi.fn(async () => ({ ...bootstrap, status })),
+      setModes: vi.fn(async () => ({ ...status, llm_mode: 'anthropic' as const, llm_label: '클라우드 · claude-opus-5-5' })),
     })
     await start(api)
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'LLM 모드' }), 'ollama')
+    const select = screen.getByRole('combobox', { name: 'LLM 모드' })
+    expect(within(select).getAllByRole('option').map((o) => o.getAttribute('value'))).toEqual(['template', 'anthropic'])
+    await userEvent.selectOptions(select, 'anthropic')
     const badges = screen.getByRole('list', { name: '지금 쓰는 데이터와 LLM 모드' })
-    expect(await within(badges).findByText('로컬 · qwen3:4b')).toBeInTheDocument()
-    expect(api.setModes).toHaveBeenCalledWith({ llm_mode: 'ollama' })
+    expect(await within(badges).findByText('클라우드 · claude-opus-5-5')).toBeInTheDocument()
+    expect(api.setModes).toHaveBeenCalledWith({ llm_mode: 'anthropic' })
   })
 
   it('데이터 창고가 없는 모드는 고를 수 없어요', async () => {
@@ -95,7 +101,7 @@ describe('머물멍 화면', () => {
 
   it('수록 기간과 출처를 볼 수 있어요', async () => {
     await start()
-    await userEvent.click(screen.getByRole('button', { name: /수록 기간과 출처 보기/ }))
+    await userEvent.click(screen.getByRole('button', { name: '수록 기간과 출처' }))
     const dialog = screen.getByRole('dialog', { hidden: true })
     expect(within(dialog).getByText('데이터 정보')).toBeInTheDocument()
     expect(within(dialog).getAllByRole('row', { hidden: true }).length).toBeGreaterThan(5)

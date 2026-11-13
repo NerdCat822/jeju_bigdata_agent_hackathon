@@ -44,11 +44,11 @@ python -m venv .venv
 
 Windows 에서는 `.venv/bin/python` 대신 `.venv\Scripts\python` 을 써요.
 
-로컬 LLM 으로 실행하려면 Ollama 를 띄우고 모델을 받은 뒤 `--llm ollama` 를 붙여요.
+클라우드 LLM(Claude)으로 실행하려면 `.env` 에 `ANTHROPIC_API_KEY` 를 넣고 `--llm anthropic` 을 붙여요.
+명령줄에서는 `--yes-cloud` 로 전송에 동의해야 LLM에 보내요. 동의하지 않으면 규칙 문장으로 답해요.
 
 ```bash
-ollama pull qwen3:4b
-.venv/bin/python -m meomulmeong ask "성산읍 청년 인구 진단" --llm ollama
+.venv/bin/python -m meomulmeong ask "성산읍 청년 인구 진단" --llm anthropic --yes-cloud
 ```
 
 환경변수는 `.env.example` 을 `.env` 로 복사해 채워요. `.env` 는 저장소에 올리지 않아요.
@@ -56,10 +56,7 @@ ollama pull qwen3:4b
 | 환경변수 | 기본값 | 뜻 |
 |---|---|---|
 | `MEOMUL_DATA_MODE` | `synthetic` | `synthetic`(샘플) · `hub`(허브 수집본) · `center`(센터 추출본) |
-| `MEOMUL_LLM_MODE` | `template` | `template`(LLM 없음) · `ollama`(로컬) · `anthropic`(클라우드, 선택) |
-| `MEOMUL_OLLAMA_HOST` | `http://127.0.0.1:11434` | Ollama 서버 주소 |
-| `MEOMUL_OLLAMA_MODEL` | `qwen3:4b` | 로컬 모델. 없으면 설치된 같은 계열 모델로 바꾸고 안내해요 |
-| `MEOMUL_OLLAMA_EXPLAIN_MODEL` | (없음) | 해설만 다른 모델로 쓸 때 (예: `exaone3.5:7.8b`) |
+| `MEOMUL_LLM_MODE` | `template` | `template`(LLM 없음) · `anthropic`(클라우드 Claude, 선택) |
 | `MEOMUL_ANTHROPIC_MODEL` | `claude-opus-5-5` | 클라우드 모델 |
 | `ANTHROPIC_API_KEY` | (없음) | 클라우드 모드에서만 필요 |
 | `MEOMUL_HUB_PROJECT_KEY` | (없음) | 제주데이터허브 프로젝트 키 (수집할 때만) |
@@ -91,10 +88,10 @@ backend/
 │  ├─ data/        refs(장소 표준화) · catalog · warehouse(적재·읽기 전용 조회) · periods · synthetic · hub_client
 │  ├─ tools/       common · stage1 · stage2 · stage3 · shared · output
 │  ├─ agent/       parser(해석기) · stages(계획·실행) · verifier(검증기) · explainer(해설기) · orchestrator · memory · prompts/
-│  ├─ llm/         base · ollama_provider · anthropic_provider · factory
+│  ├─ llm/         base · anthropic_provider · factory
 │  └─ report/      builder · svg · templates/proposal.html.j2
 ├─ eval/           golden.yaml(60문항) · make_golden · expected(pandas 기대값 계산) · __main__
-├─ tests/          pytest 241개
+├─ tests/          pytest 243개
 └─ outputs/        제안서(reports/) · 실행 기록(runs/*.jsonl) · 평가 보고서(eval/)
 ```
 
@@ -209,16 +206,17 @@ backend/
 
 | 모드 | 모델 | 쓰는 곳 | 비고 |
 |---|---|---|---|
-| `template` | 없음 | 규칙 파서 + SQL·문장 템플릿 | 외부 전송 0건, 완전 재현 |
-| `ollama` | `qwen3:4b` (기본) | 불확실한 질문 해석, 쉬운 해설, 자유 질문 SQL | JSON 스키마 강제 출력. GPU 메모리 3.5GB 미만이면 `exaone3.5:2.4b` 로 자동 전환 |
-| `anthropic` | `claude-opus-5-5` (기본) | 위와 같음 | 공식 SDK, 구조화 출력, 서버 측 거절 대체(`fallbacks="default"`). 전송 동의 뒤에만 사용 |
+| `template` (기본) | 없음 | 규칙 파서 + SQL·문장 템플릿 | 외부 전송 0건, 완전 재현 |
+| `anthropic` | `claude-opus-5-5` | 불확실한 질문 해석, 쉬운 해설, 자유 질문 SQL | 공식 SDK, 구조화 출력, 서버 측 거절 대체(`fallbacks="default"`). 집계 지표만 보내고, 전송 동의 뒤에만 써요 |
+
+로컬 LLM(Ollama · Qwen3)은 쓰지 않아요 (2026-11-13 팀 결정). 그래서 인터넷이 없는 센터 PC에서는 템플릿 모드로만 돌아가요.
 
 - `config/settings.yaml` 의 `llm.explain: false` 로 두면 해설은 항상 규칙 문장이고 LLM은 해석과 자유 질문에만 써요.
 - `llm.template_only_intents` 에 적은 답 종류는 LLM 모드에서도 규칙 문장을 써요. 기본값은 추천 순위(`recommend`), 코스(`courses`), Stage 3 전체 계획(`plan`: 시나리오·노선·코스를 함께 보여 주는 답, 연계 실행의 Stage 3 포함)이에요.
-  큰 모델을 쓸 때는 `plan` 을 빼고 10절의 측정을 다시 해 보세요.
-- `llm.explain_budget_seconds`(기본 45초)를 넘기면 더 다시 쓰지 않고 템플릿 해설로 대체해요. 느린 PC에서 답 하나가 몇 분씩 걸리지 않게 하는 장치예요.
-- 자유 질문(준비된 분석에 맞지 않는 조회)은 LLM이 SQL을 쓰고, "자유 질문 · SQL 검토 필요" 배지를 붙여요. 소형 모델에서는 정확도가 낮으니 실험 기능으로 봐 주세요.
-- LLM을 쓸 수 없으면(서버 없음, 모델 없음, 인증 실패) 템플릿 모드로 내려가고 `status().llm_note` 에 이유를 적어요.
+  Claude 에게 `plan` 해설도 맡기려면 목록에서 빼고 10절처럼 실제 호출로 다시 확인해 보세요.
+- `llm.explain_budget_seconds`(기본 45초)를 넘기면 더 다시 쓰지 않고 템플릿 해설로 대체해요. 답 하나가 몇 분씩 걸리지 않게 하는 장치예요.
+- 자유 질문(준비된 분석에 맞지 않는 조회)은 LLM이 SQL을 쓰고, "자유 질문 · SQL 검토 필요" 배지를 붙여요. LLM이 쓴 SQL이라 실험 기능으로 봐 주세요.
+- LLM을 쓸 수 없으면(API 키 없음, 인증 실패, 인터넷 연결 없음) 템플릿 모드로 내려가고 `status().llm_note` 에 이유를 적어요.
 
 ---
 
@@ -226,7 +224,7 @@ backend/
 
 ```bash
 .venv/bin/python -m meomulmeong serve                  # http://127.0.0.1:8501
-.venv/bin/python -m meomulmeong serve --llm ollama --open   # 로컬 LLM 모드로 띄우고 브라우저 열기
+.venv/bin/python -m meomulmeong serve --llm anthropic --open   # 클라우드 LLM 모드로 띄우고 브라우저 열기
 ```
 
 API 문서는 `/docs`, 명세는 `/openapi.json` 에 있어요. 화면 쪽 타입(`frontend/src/api/schema.d.ts`)은 이 명세에서 만들어요.
@@ -274,7 +272,7 @@ cd ../frontend && npm run gen:api      # 백엔드 모델을 바꾼 뒤에 실�
 |---|---|
 | `headline` · `explanation` | 한 줄 결론, 쉬운 해설 |
 | `badges` | 샘플 데이터 / 유형 C / 가정 같은 배지 (`tone`: type · assumption · data · warn · info) |
-| `charts` | 차트 사양: `kind`(line · bar · hbar), `x`, `series[{name, y}]`, `y_format`(num · pct · index · won) |
+| `charts` | 차트 사양: `kind`(line · bar · hbar), `x`, `series[{name, y}]`, `y_format`(num · pct · index · won), `highlight`(화면에서 강조할 가로축 항목) |
 | `maps` | 지도 사양: `points[{name, lat, lon, category, role}]`, `lines`(코스), `legend` |
 | `evidence` | 근거표: `columns`, `rows`, `formats`, `sql`(접어서 보여 줘요), `period` |
 | `suggestions` | 규칙이 만든 제안: `rule_id`, `text`, `evidence_text` |
@@ -286,7 +284,7 @@ cd ../frontend && npm run gen:api      # 백엔드 모델을 바꾼 뒤에 실�
 
 ### 8.3 진행 상황 받기 (SSE)
 
-로컬 LLM 모드에서는 답 하나에 20초 안팎, 연계 실행은 1분 안팎이 걸려요. 스트리밍 경로를 쓰면 그동안 무엇을 하는지 보여 줄 수 있어요.
+클라우드 LLM 모드에서는 답 하나에 3~9초가 걸려요 (10절). 스트리밍 경로를 쓰면 그동안 무엇을 하는지 보여 줄 수 있어요.
 
 | event | data |
 |---|---|
@@ -347,10 +345,10 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 ## 9. 테스트와 평가
 
 ```bash
-.venv/bin/python -m pytest -q              # 241개 (로컬 LLM 왕복 1개는 기본 제외), 약 15초. 임시 폴더에 합성 데이터를 새로 만들어 써요
-.venv/bin/python -m pytest -m llm          # 로컬 Ollama 왕복 시험 (서버가 있을 때)
+.venv/bin/python -m pytest -q              # 243개 (실제 Claude 호출 1개는 기본 제외), 약 15초. 임시 폴더에 합성 데이터를 새로 만들어 써요
+.venv/bin/python -m pytest -m cloud        # 실제 Claude API 왕복 시험 (API 키 필요, 요금이 나가요)
 .venv/bin/python -m eval                   # 골든셋 60문항 (템플릿 모드)
-.venv/bin/python -m eval --llm ollama      # 로컬 LLM 모드
+.venv/bin/python -m eval --llm anthropic   # 클라우드 LLM 모드 (요금이 나가요)
 .venv/bin/python -m eval.make_golden       # 기대값 다시 만들기 (같은 시드면 같은 파일)
 ```
 
@@ -366,66 +364,48 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 | 연계 | 5 | 100% | 80% |
 | 인과 함정 | 5 | 100% | 100% |
 
-응답 시간은 문항당 평균 0.05초 안팎, 연계 3단계는 0.1초 안팎이었어요. 로컬 LLM 모드의 측정값은 10절에 적었어요.
+응답 시간은 문항당 평균 0.05초 안팎, 연계 3단계는 0.1초 안팎이었어요. 클라우드 LLM 모드의 확인 결과는 10절에 적었어요.
 
 ---
 
-## 10. 로컬 LLM 측정 (개발 PC 기준)
+## 10. 클라우드 LLM 확인 (Claude)
 
-개발 PC(RTX 2050 4GB, WSL2, Ollama 0.6.7)에서 `qwen3:4b` 로 잰 값이에요. 센터 PC(GTX 1060 6GB)에서 다시 재야 해요.
-골든셋에서 구분마다 3문항씩 15문항을 돌렸어요 (`python -m eval --llm ollama --limit 3`, 2026-11-13, 샘플 데이터).
+`claude-opus-5-5` 로 실제 질문 다섯 개를 돌려 확인했어요 (2026-11-13, 샘플 데이터, 전송 동의 상태).
+질문은 Stage 1 진단, Stage 2 타깃, Stage 3 감편 시나리오, 지명을 줄여 쓴 질문("애월 쪽 젊은 사람들 요즘 어때?"), 자유 질문(버스 노선 상위 5개)이에요.
 
-| 항목 | 값 |
-|---|---:|
-| 정답 | 15 / 15 |
-| LLM에 해설을 맡긴 답 | 15건 |
-| 검증을 통과해 채택 | 14건 (93%) |
-| 첫 시도에 통과 | 13건 (87%) |
-| 템플릿 해설로 대체 | 1건 |
-| LLM 호출 | 16회, 중앙값 22.4초, 최대 32.3초 |
-| 단일 질문 응답 (9문항) | 중앙값 22.8초, 최대 45.7초 |
-| 연계 실행 Stage 1→2→3 (3문항) | 37~63초 |
+| 항목 | 처음 | 검증기를 고친 뒤 |
+|---|---:|---:|
+| 정답 (해석·수치) | 5 / 5 | 5 / 5 |
+| LLM 해설 채택 | 4건 | 5건 |
+| 첫 시도에 검증 통과 | 1건 | 5건 |
+| 템플릿 해설로 대체 | 1건 | 0건 |
+| LLM 호출 | 12회 | 7회 |
+| 답 하나에 걸린 시간 | 3.0~15.4초 | 2.3~8.7초 |
+| 보낸 · 받은 토큰 | 24,326 · 2,260 | 14,033 · 1,252 |
 
-구분별 정확도는 Stage 1·2·3, 연계, 인과 함정 모두 3문항 중 3문항이에요. 보고서는 `outputs/eval/eval_ollama_*.md` 에, 답마다의 해설과 시도 기록은 `outputs/runs/*.jsonl` 에 남아요.
-프롬프트와 검증기를 조정하기 전 첫 측정에서는 해설 18건 중 16건 채택, 첫 시도 통과 12건, 연계 실행 65~262초였어요.
+**처음에 걸린 이유** — Claude 의 해설은 틀린 곳이 없었는데, 검증기가 맞는 문장을 떨어뜨렸어요.
 
-**읽는 법**
+- "성산읍에 사는 20·30대는 … 1,589명" → 검증기가 "사는"을 거주인구로 알아보지 못했어요.
+- "성산읍 거주인구 가운데 20·30대 비중은 17.5%" → 비중의 정의를 풀어 쓴 "거주"를 다른 대상으로 봤어요.
+- "국내선 좌석이 10% 줄고" → "좌석"을 국내선 공급으로 알아보지 못했어요.
 
-- 정답은 질문 해석(단계·의도·장소·기간), 유형·수치·규칙, 검증 통과 여부를 기대값과 견줘 채점해요. 수치는 SQL과 규칙이 만들어서 LLM 모드에서도 템플릿 모드와 같아요.
-  해설 문장이 얼마나 읽기 좋은지는 채점하지 않아요. 그 부분은 아래 "해설 품질에서 본 것"에 따로 적었어요.
-- 인과 함정 3문항과 Stage 3 전체 계획은 LLM을 부르지 않아요. 그래서 연계 실행은 Stage 1·2에서만 LLM을 불러요.
-- 이 PC에서는 모델이 GPU 메모리에 다 올라가지 않아(`ollama ps` 기준 CPU 10% / GPU 90%) 호출 시간이 고르지 않았어요.
-  측정하는 동안 같은 PC에서 다른 프로젝트의 개발 서버와 테스트가 돌고 있어서, 위 시간은 조금 길게 나왔을 수 있어요.
-  CPU를 많이 쓰는 작업이 겹친 앞선 측정에서는 호출 한 번이 2분까지 늘어났어요.
+그래서 지표를 가리키는 낱말에 "사는 · 살고"(거주), "좌석 · 국내선"(공급)을 더하고, 비중 · 정주비의 정의를 풀어 쓸 때 나오는 낱말은 같은 대상으로 보게 했어요.
+낱말을 넓혀도 다른 지표에 숫자를 붙이면 여전히 걸러요 (`tests/test_verifier.py`).
 
-**해설 품질에서 본 것**
+**함께 고친 것**
 
-- 채택된 해설 14건 가운데 Stage 1은 6건 중 5건이 초안의 앞 문장을 그대로 옮긴 것이었어요. Stage 2·3은 문장을 줄이거나 순서를 바꾼 정도였어요.
-  더 짧아진 답은 있었지만, 템플릿 해설보다 뚜렷이 쉬워진 답은 없었어요.
-- 다시 쓰게 한 1건: "주말 소비는 평일의 0.89배예요"에 누구의 소비인지가 빠져 숫자-지표 짝 검사에서 떨어졌고, 두 번째에 통과했어요.
-- 템플릿으로 대체한 1건: 한 줄 결론을 그대로 되풀이한 답이었어요.
-- 채택된 14건에 숫자나 대상이 틀린 문장은 없었어요. "늘어난 국적입니다"처럼 말투가 섞이거나 조사가 어색한 문장은 있었어요.
-- 조정하는 동안의 앞선 측정에서는 검증을 통과한 문장 가운데 뜻이 바뀐 것이 있었어요. 예: "성산읍은 Stage 1에서 중국인 카드 소비가 늘어난 읍면동이에요."
-  초안을 손봐서 최종 측정에서는 나오지 않았지만, 숫자가 없는 문장의 뜻 바뀜은 검증기가 잡지 못해요.
-- 측정 뒤 화면에서 돌려 보다가 검증을 통과한 틀린 문장을 하나 더 봤어요: "주말에 비해 평일 소비가 0.89배예요" (방향이 뒤바뀜),
-  "중국인 개별관광객이 가장 많아요" (근거에 없는 말). 앞의 것은 배율 방향 검사를 더해 막았고, 뒤의 것 같은 문장은 여전히 통과할 수 있어요.
-- 그래서 4B 모델에서는 LLM 해설이 답마다 20초 안팎을 더 쓰고도 템플릿 해설보다 나아지지 않았어요. 기본값을 어떻게 둘지는 11절의 "팀에서 정할 것"에 적었어요.
+- 자유 질문의 조회 결과에서 큰 정수에 천 단위 쉼표를 붙여 넘겨요. 전에는 모델이 "9730808명"처럼 그대로 옮겨 적었어요.
+- 정주비에 정의를 붙였어요: "정주비 (거주 ÷ 거주·근무·방문 합)". 정의가 없을 때는 모델이 뜻을 짐작해 풀어 썼어요.
 
-**측정하면서 프롬프트와 검증기에 반영한 것**
+**설계에 남아 있는 것** — 소형 로컬 모델로 시험하던 때 만든 장치예요. Claude 에서도 그대로 둬요.
 
-- 프롬프트를 지시문으로 끝내면 모델이 시스템 지시문을 답으로 되받아 적었어요. 그래서 프롬프트는 근거 목록으로 끝내요.
-  다시 쓰게 할 때의 고칠 점도 같은 이유로 맨 앞에 붙여요.
-- "처음부터 끝까지"처럼 질문 꼴이 아닌 요청을 그대로 넘겨도 같은 일이 생겼어요. 연계 실행은 단계마다 물을 질문을 따로 만들어 넘겨요.
-- 코스 목록이 들어가는 Stage 3 전체 계획은 "다른 코스는 환승이 필요해요"처럼 틀리게 옮기는 일이 잦았어요. 그래서 규칙 문장을 그대로 써요 (`llm.template_only_intents`).
-- Stage 2 초안에 앞 단계를 잇는 문장을 넣으면 한 줄 결론과 섞어 "성산읍은 Stage 1에서 중국인 개별관광객을 먼저 볼 만해요" 같은 문장을 만들었어요. LLM에 주는 초안에서는 그 문장을 빼요.
-- 한 줄 결론만 되풀이한 해설은 다시 쓰게 해도 나아지지 않고 1분 가까이 걸렸어요. 그래서 바로 템플릿 해설로 대체해요.
-- 검증기에 더한 것: 나눠 쓰거나 붙여 쓴 큰 수 읽기("10만 493명", "24만명"), 초안에 없는 최상급 표현, 지역 단위 값을 읍면동 값처럼 쓴 문장, 가정을 밝히지 않은 "예상되는 수치" 같은 예측 표현.
-- 검증기에서 푼 것: 지표 낱말이 없는 문장은 앞 문장의 주어를 이어받은 것으로 봐요. 맞는 문장을 떨어뜨려 다시 쓰게 하던 경우예요.
+- 프롬프트는 근거 목록으로 끝내고, 다시 쓰게 할 때의 고칠 점은 맨 앞에 붙여요.
+- 연계 실행은 단계마다 물을 질문을 따로 만들어 넘겨요.
+- 한 줄 결론만 되풀이한 해설은 다시 쓰게 하지 않고 바로 템플릿 해설로 바꿔요.
+- 목록이 들어가는 답(추천 순위, 코스, Stage 3 전체 계획)은 규칙 문장을 써요 (`llm.template_only_intents`).
+- 검증기가 잡지 못하는 것: 숫자가 없는 문장의 뜻 바뀜, "가장 많아요"처럼 근거 없이 덧붙인 평가 가운데 최상급 낱말이 없는 것.
 
-**다른 모델**
-
-- `exaone3.5` 7.8B 는 이 PC의 GPU 메모리(4GB)에 올라가지 않아 너무 느렸고, 비교 측정을 끝내지 못했어요. 센터 PC(6GB)에서 다시 재 볼 만해요.
-- Claude(클라우드) 모드는 가짜 서버로 요청 형식만 시험했어요. 실제 호출은 비용이 들어 하지 않았어요.
+골든셋 15문항 같은 큰 측정은 요금이 나가서 아직 하지 않았어요 (`python -m eval --llm anthropic --limit 3`).
 
 ---
 
@@ -447,14 +427,14 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 
 **팀에서 정할 것**
 
-- [ ] LLM 해설의 기본값: `qwen3:4b` 의 해설은 초안을 거의 그대로 옮기는 경우가 많고 답마다 20초 안팎이 더 걸려요 (10절).
-      데모에서 `llm.explain: true`(기획서대로 LLM 해설 + 검증)로 둘지, `false`(규칙 문장 해설, LLM은 질문 해석과 자유 질문만)로 둘지 정해 주세요.
+- [ ] 센터 PC는 인터넷이 없어 클라우드 LLM을 쓸 수 없어요. 로컬 LLM을 쓰지 않기로 해서 센터에서는 템플릿 모드로만 돌아가요.
+      기획서의 "로컬 LLM 기본" 문구와 다르니, 제출 전에 기획서와 발표 자료를 맞춰야 해요.
 
 **구현**
 
 - [x] React 화면(`frontend/`). 실행과 구성은 [../frontend/README.md](../frontend/README.md)에 있어요.
 - [ ] Docker 에서 실데이터(허브 · 센터)를 쓰려면 `data/` 폴더와 데이터 창고를 볼륨으로 연결해야 해요. 지금 이미지는 샘플 데이터만 담고 있어요 (12절).
-- [ ] `install.bat` / `run.bat`, 오프라인 설치 꾸러미(wheelhouse + 빌드한 화면). `run.bat` 은 Ollama 확인 뒤 `python -m meomulmeong serve --open` 을 부르면 돼요.
+- [ ] `install.bat` / `run.bat`, 오프라인 설치 꾸러미(wheelhouse + 빌드한 화면). `run.bat` 은 `python -m meomulmeong serve --open` 을 부르면 돼요.
 - [ ] 기획서 5.2·5.4절에는 화면 기술이 Streamlit 으로 적혀 있어요. React 웹으로 가므로 제출 전에 기획서 문구도 맞춰야 해요.
 - [ ] 센터 모드: `4-11 유동인구 v02`, `3-02 버스 노선별 이용` 변환식은 명세서만 보고 썼어요. 실제 추출본으로 검증해야 해요. `1-08 카드 v02`(읍면동 × 업종 42개)는 아직 연결하지 않았어요.
 - [ ] 반출 신청 패키지, PDF 제안서 (기획서의 탑재 후 확장 항목).
@@ -465,7 +445,7 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 ## 12. Docker 로 띄우기 (선택)
 
 센터 PC는 기획서대로 Docker 없이 실행해요. Docker 는 개발 PC나 데모 서버에서 한 번에 띄울 때 써요.
-파일은 저장소 맨 위에 있어요: `Dockerfile`, `docker-compose.yml`, `docker-compose.local-llm.yml`, `.dockerignore`.
+파일은 저장소 맨 위에 있어요: `Dockerfile`, `docker-compose.yml`, `.dockerignore`.
 
 ```bash
 # 저장소 맨 위 폴더에서
@@ -484,15 +464,8 @@ docker compose down -v              # 볼륨까지 지우기
 | 결과물 | 제안서 · 실행 기록은 `meomulmeong_outputs` 볼륨(`/app/backend/outputs`)에 남아요 |
 | 상태 확인 | 30초마다 `/api/health` 를 불러요 (`docker ps` 의 healthy) |
 
-**이 PC의 Ollama(로컬 LLM)를 쓸 때** — Ollama 는 보통 `127.0.0.1` 에서만 들어서 일반 컨테이너에서는 닿지 않아요.
-리눅스(WSL2 포함)에서는 겹침 파일로 호스트 네트워크를 같이 쓰게 하면 돼요. 이때도 서버는 `127.0.0.1:3000` 에서만 들어요.
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.local-llm.yml up -d --build
-```
-
-Docker Desktop(Windows · macOS)에서는 겹침 파일을 쓰지 말고, Ollama 가 컨테이너에서 닿는 주소로 듣게 한 뒤 기본 파일만 쓰세요.
-로컬 LLM에 닿지 못하면 화면이 이유를 알려 주고 템플릿 모드로 답해요.
+**클라우드 LLM(Claude)을 쓸 때** — `backend/.env` 에 `ANTHROPIC_API_KEY` 를 넣고 다시 띄우면 화면의 LLM 모드에서 클라우드를 고를 수 있어요.
+키는 실행할 때만 컨테이너에 넘기고 이미지에는 들어가지 않아요. 컨테이너가 인터넷에 닿아야 해요.
 
 **이미지에 넣지 않는 것** — `.dockerignore` 가 모두 빼고 필요한 것만 담아요. `.env`, 센터 · 허브 원자료, 데이터 창고, 실행 결과, xlsx · pdf 는 들어가지 않아요.
 `tests/test_deploy_files.py` 가 이 규칙과 포트 범위를 확인해요.
@@ -501,10 +474,9 @@ Docker Desktop(Windows · macOS)에서는 겹침 파일을 쓰지 말고, Ollama
 
 ## 13. 외부 서비스·오픈소스·AI 활용
 
-- 외부 서비스 의존성: 로컬·템플릿 모드는 없음. 선택 기능으로 Anthropic API(클라우드 LLM), 제주데이터허브 Open API(데이터 갱신 때만).
+- 외부 서비스 의존성: 템플릿 모드는 없음. 선택 기능으로 Anthropic API(클라우드 LLM), 제주데이터허브 Open API(데이터 갱신 때만).
 - 오픈소스: DuckDB(MIT), pandas(BSD-3), NumPy(BSD-3), PyArrow(Apache-2.0), pydantic·pydantic-settings(MIT), PyYAML(MIT),
-  Jinja2(BSD-3), httpx(BSD-3), FastAPI(MIT), Uvicorn(BSD-3), Starlette(BSD-3), Anthropic Python SDK(MIT), pytest(MIT), ruff(MIT),
-  Ollama(MIT), Qwen3(Apache-2.0).
-  EXAONE 3.5 는 비상업 조건이 붙은 별도 라이선스라 사용 전에 조건을 확인해야 해요. 버전은 `requirements.lock` 에 고정했어요.
+  Jinja2(BSD-3), httpx(BSD-3), FastAPI(MIT), Uvicorn(BSD-3), Starlette(BSD-3), Anthropic Python SDK(MIT), pytest(MIT), ruff(MIT).
+  버전은 `requirements.lock` 에 고정했어요.
 - AI 활용: 이 백엔드 코드와 문서의 초안은 Claude Code(Anthropic Claude)로 작성했어요. 대회 규칙에 따라 최종 제출물에 사용 모델과 범위를 밝혀야 해요.
 - 데이터 출처: 제주특별자치도, 제주데이터허브. 대회 제공 데이터 목록·명세서 xlsx 와 센터 추출본은 저장소에 올리지 않아요.

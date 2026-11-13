@@ -142,7 +142,7 @@ def _core_facts(row: dict[str, Any], period: PeriodPair, ages: list[int]) -> lis
              text=fmt.pct(row["visit_chg"]), period=pl),
         Fact(key="youth_share", label=f"{lab} 비중 (거주 기준)", value=row["youth_share"], unit="pct",
              text=fmt.pct(row["youth_share"], signed=False), period=period.p1_label),
-        Fact(key="settle_ratio", label="정주비", value=row["settle_ratio"], unit="pct",
+        Fact(key="settle_ratio", label="정주비 (거주 ÷ 거주·근무·방문 합)", value=row["settle_ratio"], unit="pct",
              text=fmt.pct(row["settle_ratio"], signed=False), period=period.p1_label),
     ]
     if row["small"]:
@@ -459,7 +459,7 @@ def s1_peers(ctx: ToolContext, emd_cd: str, ages: list[int] | None = None,
         id="s1_peers", kind="bar", title=f"{lab} 거주 변화율 비교",
         x=[me["emd_nm"], *names], series=[Series(name=f"{lab} 거주 변화율", y=[_r4(me["youth_resd_chg"]),
                                                                         *[_r4(r["youth_resd_chg"]) for _, r in peers]])],
-        y_title="변화율", y_format="pct")
+        y_title="변화율", y_format="pct", highlight=me["emd_nm"])
     return ToolResult(tool="s1_peers", facts=facts, evidence=[ev], charts=[chart], tables=[POP], period=period.label,
                       data={"peers": [{"emd_cd": r["emd_cd"], "emd_nm": r["emd_nm"], "type": r["type"]} for _, r in peers]})
 

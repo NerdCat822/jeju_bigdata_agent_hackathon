@@ -255,3 +255,23 @@ def test_reversed_ratio_is_rejected(agent, b2):
     assert v.check_fidelity(f"중국인 소비는 주말 하루 소비가 평일 하루의 {ratio}예요.", full, b2).passed
     assert v.check_fidelity(f"중국인 소비는 평일에 비해 주말 소비가 {ratio}예요.", full, b2).passed
     assert v.check_fidelity(draft, full, b2).passed
+
+
+def test_plain_words_for_the_same_metric_are_accepted(agent, b1, b3):
+    """'사는 20·30대'는 거주인구, '국내선 좌석'은 국내선 공급이에요. 지표의 정의를 풀어 쓴 문장도 같은 대상이에요.
+
+    클라우드 LLM(Claude)이 맞게 쓴 해설을 이 표현 때문에 다시 쓰게 하던 일을 막아요.
+    """
+    v = agent.verifier
+    p1, chg = b1.text("youth_resd_p1"), b1.text("youth_resd_chg").lstrip("-+")
+    assert v.check_pairing(f"성산읍에 사는 20·30대는 하루 평균 {p1}으로, 직전 기간보다 {chg} 줄었어요.", b1).passed
+    assert not v.check_pairing(f"성산읍을 찾은 방문자는 하루 평균 {p1}이에요.", b1).passed  # 다른 지표에 붙이면 여전히 걸러요
+
+    headline, draft = explainer.template_text(b1)
+    share, settle = b1.text("youth_share"), b1.text("settle_ratio")
+    assert v.check_fidelity(f"성산읍 거주인구 가운데 20·30대 비중은 {share}예요.", f"{headline}. {draft}", b1).passed
+    assert v.check_fidelity(f"거주·근무·방문 인구를 합친 것 가운데 거주인구의 몫인 정주비는 {settle}예요.",
+                            f"{headline}. {draft}", b1).passed
+
+    supply = b3.text("supply_change").lstrip("-+")
+    assert v.check_pairing(f"국내선 좌석이 {supply} 줄어든다고 가정하면 입도객이 줄어드는 것으로 계산돼요.", b3).passed

@@ -9,11 +9,11 @@ export function VerificationPanel({ answer: a }: { answer: Answer }): ReactNode 
   const v = a.verification
   const failed = v.checks.filter((c) => !c.passed)
   return (
-    <details className="fold verify">
+    <details className="fold">
       <summary>
-        <Icon name="chevron" size={14} />
-        <span className={`verify-pill${v.passed ? ' is-ok' : ' is-fail'}`}>
-          <Icon name={v.passed ? 'check' : 'alert'} size={14} />
+        <Icon name="chevron" />
+        <span className={`verify-state${v.passed ? ' is-ok' : ' is-fail'}`}>
+          <Icon name={v.passed ? 'check' : 'alert'} />
           {v.passed ? `검증 통과 · ${v.checks.length}개 항목` : `검증 실패 · ${failed.length}개 항목`}
         </span>
         <span className="muted">
@@ -24,7 +24,7 @@ export function VerificationPanel({ answer: a }: { answer: Answer }): ReactNode 
         <ul className="check-list">
           {v.checks.map((c) => (
             <li key={c.name} className={c.passed ? 'is-ok' : 'is-fail'}>
-              <Icon name={c.passed ? 'check' : 'x'} size={14} />
+              <Icon name={c.passed ? 'check' : 'x'} />
               <strong>{CHECK_LABEL[c.name] ?? c.name}</strong>
               <span>{c.detail}</span>
             </li>

@@ -288,7 +288,6 @@ class Agent:
         schema = FreeExplainOut if free else ExplainOut
         template_headline, draft = explainer.template_text(b)
         draft_all = "" if free else f"{template_headline}. {draft}"
-        model = (self.settings.ollama_explain_model or None) if self.llm_mode == "ollama" else None
         steps: list[StepLog] = []
         feedback = ""
         max_retries = self.config.verify.max_retries
@@ -302,8 +301,7 @@ class Agent:
                 return {"text": None, "retries": attempt - 1, "fallback": True, "steps": steps, "error": None}
             progress.emit("llm", purpose="explain", label=progress.LLM_LABEL["explain"], attempt=attempt + 1)
             try:
-                out = self.llm.generate(system, feedback + payload_txt, schema, purpose="explain", model=model,  # type: ignore[union-attr]
-                                        temperature=0.0 if attempt == 0 else 0.4)
+                out = self.llm.generate(system, feedback + payload_txt, schema, purpose="explain")  # type: ignore[union-attr]
             except LLMFormatError as e:  # 잘렸거나 형식이 틀린 답: 짧게 다시 쓰게 해요
                 steps.append(StepLog(tool="llm:explain", ok=False, seconds=round(time.perf_counter() - t0, 2), note=str(e)))
                 feedback = "다시 쓰기 요청: 이전 답은 너무 길거나 형식이 맞지 않았어요. 3문장 이내의 한 문단으로 짧게 써 주세요.\n\n"

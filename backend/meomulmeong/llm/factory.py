@@ -10,10 +10,6 @@ def make_llm(settings: Settings, mode: str | None = None) -> LLMProvider | None:
     mode = mode or settings.llm_mode
     if mode == "template":
         return None
-    if mode == "ollama":
-        from .ollama_provider import OllamaProvider
-
-        return OllamaProvider(settings.ollama_host, settings.ollama_model, settings.ollama_timeout)
     if mode == "anthropic":
         from .anthropic_provider import AnthropicProvider
 

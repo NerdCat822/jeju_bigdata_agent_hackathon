@@ -4,7 +4,7 @@
   "place_name": "성산읍",
   "answers": [
    {
-    "id": "0b0f9353de",
+    "id": "cc3526c245",
     "ok": true,
     "message": null,
     "stage": 1,
@@ -148,7 +148,7 @@
      },
      {
       "key": "settle_ratio",
-      "label": "정주비",
+      "label": "정주비 (거주 ÷ 거주·근무·방문 합)",
       "value": 0.3328106972856928,
       "unit": "pct",
       "text": "33.3%",
@@ -930,7 +930,8 @@
       ],
       "y_title": "지수 (첫 달 = 100)",
       "y_format": "index",
-      "note": "각 계열의 첫 달 값을 100으로 놓은 지수예요."
+      "note": "각 계열의 첫 달 값을 100으로 놓은 지수예요.",
+      "highlight": null
      },
      {
       "id": "s1_peers",
@@ -955,7 +956,8 @@
       ],
       "y_title": "변화율",
       "y_format": "pct",
-      "note": null
+      "note": null,
+      "highlight": "성산읍"
      }
     ],
     "maps": [
@@ -1464,7 +1466,7 @@
      {
       "tool": "s1_trend",
       "ok": true,
-      "seconds": 0.023,
+      "seconds": 0.021,
       "note": ""
      },
      {
@@ -1482,10 +1484,10 @@
     ],
     "llm_payload": null,
     "notices": [],
-    "elapsed": 0.028
+    "elapsed": 0.025
    },
    {
-    "id": "c3731b2bed",
+    "id": "3644bc610f",
     "ok": true,
     "message": null,
     "stage": 2,
@@ -2390,7 +2392,8 @@
       ],
       "y_title": "증가율",
       "y_format": "pct",
-      "note": "2025-11~2026-10 vs 2024-11~2025-10"
+      "note": "2025-11~2026-10 vs 2024-11~2025-10",
+      "highlight": "식음료"
      }
     ],
     "maps": [],
@@ -2540,7 +2543,7 @@
      {
       "tool": "s2_shift",
       "ok": true,
-      "seconds": 0.015,
+      "seconds": 0.014,
       "note": ""
      },
      {
@@ -2552,10 +2555,10 @@
     ],
     "llm_payload": null,
     "notices": [],
-    "elapsed": 0.018
+    "elapsed": 0.017
    },
    {
-    "id": "9170ae1a2a",
+    "id": "91ac7ee56b",
     "ok": true,
     "message": null,
     "stage": 3,
@@ -3135,7 +3138,8 @@
       ],
       "y_title": "명",
       "y_format": "num",
-      "note": "가정: 국내선 공급 -10% · 탄력성 ε 1.0"
+      "note": "가정: 국내선 공급 -10% · 탄력성 ε 1.0",
+      "highlight": "ε 1.0"
      }
     ],
     "maps": [
@@ -3313,7 +3317,7 @@
      {
       "tool": "s3_forecast",
       "ok": true,
-      "seconds": 0.004,
+      "seconds": 0.003,
       "note": ""
      },
      {
@@ -3331,11 +3335,11 @@
     ],
     "llm_payload": null,
     "notices": [],
-    "elapsed": 0.014
+    "elapsed": 0.012
    }
   ],
   "report_path": null,
-  "elapsed": 0.073
+  "elapsed": 0.057
  },
  "report_url": "/api/reports/sample.html"
 }

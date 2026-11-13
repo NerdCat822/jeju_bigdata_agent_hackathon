@@ -80,3 +80,18 @@ def test_courses_with_transfer_and_gap(ctx, refs):
 def test_courses_from_given_hub(ctx, refs):
     c = stage3.s3_courses(ctx, refs.find_emd("한경면").emd_cd, hub_id="JEJU_AIRPORT")
     assert [x["hub_id"] for x in c.data["courses"]] == ["JEJU_AIRPORT"] * len(c.data["courses"]) and c.data["courses"]
+
+
+def test_charts_name_the_bar_that_matters(agent):
+    """화면이 강조할 막대를 알 수 있게, 차트 사양에 주인공 항목을 적어 둬요."""
+    chain = agent.ask("성산읍 처음부터 끝까지", agent.session())
+    by_id = {c.id: c for a in chain.answers for c in a.charts}
+    assert by_id["s1_peers"].highlight == "성산읍" and by_id["s1_peers"].x[0] == "성산읍"
+    growth = by_id["s2_cn_growth"]
+    assert growth.highlight == growth.x[max(range(len(growth.x)), key=lambda i: growth.series[0].y[i])]
+    assert by_id["s3_scenario"].highlight == "ε 1.0" and "ε 1.0" in by_id["s3_scenario"].x
+    assert by_id["s1_trend"].highlight is None  # 선 차트는 첫 계열이 주인공이에요
+    asked = agent.ask("성산읍 숙박 중국인 소비 변화", agent.session())
+    assert next(c for c in asked.charts if c.id == "s2_cn_growth").highlight == "숙박"
+    eps = agent.ask("성산읍 감편 10% 탄력성 1.5면?", agent.session())
+    assert next(c for c in eps.charts if c.id == "s3_scenario").highlight == "ε 1.5"

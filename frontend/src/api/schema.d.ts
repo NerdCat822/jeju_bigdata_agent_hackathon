@@ -529,6 +529,8 @@ export interface components {
         };
         /** ChartSpec */
         ChartSpec: {
+            /** Highlight */
+            highlight: string | null;
             /** Id */
             id: string;
             /**
@@ -746,9 +748,9 @@ export interface components {
         ModeOption: {
             /**
              * Available
-             * @description null 이면 바꿔 봐야 알 수 있어요 (로컬 LLM)
+             * @description 지금 고를 수 있는지 (클라우드 LLM은 API 키가 있어야 해요)
              */
-            available: boolean | null;
+            available: boolean;
             /** Current */
             current: boolean;
             /** Label */
@@ -761,7 +763,7 @@ export interface components {
             /** Data Mode */
             data_mode?: ("synthetic" | "hub" | "center") | null;
             /** Llm Mode */
-            llm_mode?: ("template" | "ollama" | "anthropic") | null;
+            llm_mode?: ("template" | "anthropic") | null;
         };
         /** ModesOut */
         ModesOut: {

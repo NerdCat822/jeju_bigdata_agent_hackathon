@@ -7,8 +7,8 @@ import { useWidth } from '../../lib/useSize'
 import { seriesColor } from './palette'
 import { Tooltip } from './Tooltip'
 
-const H = 236
-const M = { top: 14, right: 54, bottom: 30, left: 46 }
+const H = 260
+const M = { top: 12, right: 56, bottom: 28, left: 44 }
 
 /** 선 차트. 포인터나 화살표 키로 가로축 위치를 고르면 그 달의 모든 계열 값을 보여 줘요. */
 export function LineChart({ spec }: { spec: ChartSpec }): ReactNode {
@@ -88,7 +88,7 @@ export function LineChart({ spec }: { spec: ChartSpec }): ReactNode {
       <svg width={width} height={H} aria-hidden="true">
         {axis.ticks.map((t) => (
           <g key={t}>
-            <line className="viz-grid" x1={M.left} x2={M.left + plotW} y1={y(t)} y2={y(t)} />
+            <line className="viz-grid-line" x1={M.left} x2={M.left + plotW} y1={y(t)} y2={y(t)} />
             <text className="viz-tick" x={M.left - 8} y={y(t)} textAnchor="end" dominantBaseline="middle">
               {axisTick(t, spec.y_format, maxAbs)}
             </text>

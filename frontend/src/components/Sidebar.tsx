@@ -5,6 +5,8 @@ import { josa } from '../lib/format'
 import type { AgentActions, AgentState } from '../state/agent'
 import { currentPlace, findStageTurn } from '../state/agent'
 import { Icon } from './Icon'
+import { TypeMark } from './TypeMark'
+import { isTypeCode } from './viz/palette'
 
 interface Props {
   state: AgentState
@@ -13,11 +15,26 @@ interface Props {
   onDataInfo: () => void
 }
 
-const CIRCLED = ['', '①', '②', '③']
+const LLM_HINT: Record<string, string> = {
+  template: '숫자는 SQL, 문장은 규칙이 만들어요',
+  anthropic: '집계한 지표만 보내고, 보내기 전에 미리 보여 줘요',
+}
+
+/** 그 읍면동의 활력 유형 (이미 진단한 적이 있을 때만 알아요). */
+function placeType(state: AgentState, place: string): string | null {
+  for (let i = state.turns.length - 1; i >= 0; i--) {
+    for (const a of state.turns[i].answers) {
+      const t = a.stage_output.type
+      if (a.ok && a.query.place_name === place && isTypeCode(t)) return t
+    }
+  }
+  return null
+}
 
 export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode {
   const { status, options } = boot
   const place = currentPlace(state)
+  const type = place ? placeType(state, place) : null
   const active = state.turns.find((t) => t.id === state.activeId) ?? null
   const activeStages = new Set(active?.answers.map((a) => a.stage) ?? [])
   const report = active?.reportUrl ?? null
@@ -26,7 +43,7 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
   return (
     <aside className="side" aria-label="머물멍 메뉴">
       <button type="button" className="brand" onClick={() => actions.selectTurn(null)} aria-label="머물멍 첫 화면으로">
-        <img src={mascot} alt="" width={44} height={44} />
+        <img src={mascot} alt="" width={28} height={28} />
         <span>머물멍</span>
       </button>
 
@@ -50,7 +67,7 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
           ))}
         </div>
         <button type="button" className="link-button" onClick={onDataInfo}>
-          <Icon name="info" size={14} /> 수록 기간과 출처 보기
+          수록 기간과 출처
         </button>
       </section>
 
@@ -63,7 +80,7 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
           aria-labelledby="side-llm"
           value={status.llm_mode}
           disabled={state.busy}
-          onChange={(e) => void actions.setModes({ llm_mode: e.target.value as 'template' | 'ollama' | 'anthropic' })}
+          onChange={(e) => void actions.setModes({ llm_mode: e.target.value as 'template' | 'anthropic' })}
         >
           {status.modes.llm.map((m) => (
             <option key={m.mode} value={m.mode} disabled={m.available === false}>
@@ -72,13 +89,7 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
             </option>
           ))}
         </select>
-        <p className="side-hint">
-          {status.llm_mode === 'template'
-            ? '숫자는 SQL, 문장은 규칙이 만들어요. 밖으로 보내는 것이 없어요.'
-            : status.llm_mode === 'ollama'
-              ? '이 PC 안의 모델이 쉬운 해설을 쓰고, 검증을 통과한 것만 보여 줘요.'
-              : '집계된 지표만 클라우드로 보내요. 보내기 전에 미리보기로 확인해요.'}
-        </p>
+        <p className="side-hint">{LLM_HINT[status.llm_mode] ?? ''}</p>
       </section>
 
       <nav className="side-block" aria-labelledby="side-stage">
@@ -87,10 +98,11 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
         </h2>
         {place && (
           <p className="place-now">
-            <Icon name="pin" size={14} /> {place}
+            {type ? <TypeMark code={type} size={16} /> : <Icon name="pin" />}
+            {place}
           </p>
         )}
-        <ul className="stage-nav">
+        <ul className="nav-list">
           {options.stages.map((s) => {
             const here = activeStages.has(s.stage)
             const done = !!place && !!findStageTurn(state, place, s.stage)
@@ -98,26 +110,28 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
               <li key={s.stage}>
                 <button
                   type="button"
-                  className={`stage-item${here ? ' is-on' : ''}`}
+                  className={`nav-row${here ? ' is-on' : ''}`}
                   aria-current={here ? 'step' : undefined}
                   disabled={state.busy}
                   onClick={() => actions.openStage(s.stage)}
                 >
-                  <span aria-hidden="true">{CIRCLED[s.stage]}</span>
-                  <span className="stage-title">{s.title}</span>
-                  {done && !here && <Icon name="check" size={14} />}
+                  <span className="step-no" aria-hidden="true">
+                    {s.stage}
+                  </span>
+                  <span className="nav-label">{s.title}</span>
+                  {done && !here && <Icon name="check" />}
                 </button>
               </li>
             )
           })}
           <li>
             {report ? (
-              <a className="stage-item" href={report} target="_blank" rel="noreferrer">
-                <Icon name="doc" /> <span className="stage-title">최종 제안서 열기</span> <Icon name="external" size={14} />
+              <a className="nav-row" href={report} target="_blank" rel="noreferrer">
+                <Icon name="doc" /> <span className="nav-label">최종 제안서 열기</span> <Icon name="external" />
               </a>
             ) : (
-              <button type="button" className="stage-item" disabled={state.busy} onClick={() => void actions.makeReport()}>
-                <Icon name="doc" /> <span className="stage-title">최종 제안서</span>
+              <button type="button" className="nav-row" disabled={state.busy} onClick={() => void actions.makeReport()}>
+                <Icon name="doc" /> <span className="nav-label">최종 제안서</span>
               </button>
             )}
           </li>
@@ -129,11 +143,11 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
           <h2 id="side-history" className="side-label">
             지난 질문
           </h2>
-          <ul>
+          <ul className="nav-list">
             {history.map((t) => (
               <li key={t.id}>
-                <button type="button" className={`history-item${t.id === state.activeId ? ' is-on' : ''}`} onClick={() => actions.selectTurn(t.id)}>
-                  {t.question}
+                <button type="button" className={`nav-row is-small${t.id === state.activeId ? ' is-on' : ''}`} onClick={() => actions.selectTurn(t.id)}>
+                  <span className="nav-label">{t.question}</span>
                 </button>
               </li>
             ))}
@@ -143,9 +157,9 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
 
       <div className="side-foot">
         <button type="button" className="btn btn-dark btn-wide" disabled={state.busy} onClick={() => actions.runChain()}>
-          처음부터 끝까지 <Icon name="play" size={14} />
+          처음부터 끝까지
         </button>
-        <p className="side-hint">{place ? `${josa(place, '을를')} 세 단계로 한 번에 봐요.` : '읍면동 하나를 세 단계로 한 번에 봐요.'}</p>
+        <p className="side-hint">{place ? `${josa(place, '을를')} 세 단계로 한 번에 봐요` : '읍면동 하나를 세 단계로 한 번에 봐요'}</p>
       </div>
     </aside>
   )

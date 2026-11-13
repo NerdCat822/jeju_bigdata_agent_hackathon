@@ -13,7 +13,8 @@ import { ChartCard } from './viz/ChartCard'
 import { MapCard } from './viz/MapCard'
 
 const noop = (): void => {}
-const answerProps = { busy: false, needsConsent: false, onAsk: noop, onReport: noop, onPickPlace: noop, onAgreeCloud: noop }
+const typeNames = new Map(bootstrap.options.types.map((t) => [t.code, t.label]))
+const answerProps = { typeNames, busy: false, needsConsent: false, onAsk: noop, onReport: noop, onPickPlace: noop, onAgreeCloud: noop }
 
 const turn = (patch: Partial<Turn> = {}): Turn => ({
   id: 't1',
@@ -36,11 +37,13 @@ describe('답 화면', () => {
     render(<AnswerView answer={stage1} stageTitle="청년이 머무는 동네" {...answerProps} />)
     expect(screen.getByRole('heading', { level: 2, name: stage1.headline })).toBeInTheDocument()
     expect(screen.getByText(stage1.explanation)).toBeInTheDocument()
-    expect(screen.getByText('유형 C')).toBeInTheDocument()
+    const meta = screen.getByText('Stage 1 · 청년이 머무는 동네').parentElement as HTMLElement
+    expect(within(meta).getByText('C 방문 의존형')).toBeInTheDocument() // 유형 표식과 이름
     expect(screen.getByText('Stage 1 · 청년이 머무는 동네')).toBeInTheDocument()
+    expect(screen.queryByText('샘플 데이터')).toBeNull() // 데이터 배지는 화면 위쪽에만 둬요
     expect(screen.getByText(/검증 통과 · 7개 항목/)).toBeInTheDocument()
     const next = screen.getByRole('navigation', { name: '다음 질문' })
-    expect(within(next).getAllByRole('button').map((b) => b.textContent)).toEqual(stage1.next_questions.map((n) => n.label))
+    expect(within(next).getAllByRole('button').map((b) => b.textContent)).toEqual(['이 동네에 누가 올까?', '비슷한 읍면과 비교', '30대만 보기'])
   })
 
   it('다음 질문을 누르면 그 질문을 묻고, 제안서 단추는 제안서를 만들어요', async () => {
@@ -51,6 +54,7 @@ describe('답 화면', () => {
     expect(onAsk).toHaveBeenCalledWith('성산읍 감편 20%면?')
     await userEvent.click(screen.getByRole('button', { name: '최종 제안서 받기' }))
     expect(onReport).toHaveBeenCalledOnce()
+    expect(screen.queryByText(/→ Stage/)).toBeNull() // 화살표 글자는 떼고 아이콘으로 보여 줘요
     expect(within(screen.getByRole('list', { name: '표시' })).getByText(/가정: 국내선 공급 -10%/)).toBeInTheDocument() // 가정 배지
   })
 
@@ -84,8 +88,8 @@ describe('답 화면', () => {
 
   it('해설을 누가 썼는지 밝혀요', () => {
     expect(explainedBy(stage1)).toBe('해설: 규칙 문장')
-    expect(explainedBy({ ...stage1, explained_by: 'llm', llm_mode: 'ollama', llm_model: 'qwen3:4b', verification: { ...stage1.verification, retries: 1 } })).toBe(
-      '해설: 로컬 LLM · qwen3:4b (검증 통과, 다시 쓰기 1회)',
+    expect(explainedBy({ ...stage1, explained_by: 'llm', llm_mode: 'anthropic', llm_model: 'claude-opus-5-5', verification: { ...stage1.verification, retries: 1 } })).toBe(
+      '해설: 클라우드 LLM · claude-opus-5-5 (검증 통과, 다시 쓰기 1회)',
     )
     expect(explainedBy({ ...stage1, verification: { ...stage1.verification, fallback: true } })).toContain('대체')
   })
@@ -104,6 +108,22 @@ describe('근거표', () => {
     await userEvent.click(more)
     expect(within(screen.getAllByRole('table')[1]).getAllByRole('row')).toHaveLength(ranking.rows.length + 1)
     expect(screen.getAllByText('SQL').length).toBe(2)
+  })
+
+  it('지금 보는 읍면동의 행과 충족한 판정 행을 눈에 띄게 하고, 유형은 표식으로 적어요', () => {
+    const rule = stage1.evidence.find((e) => e.id === 's1_type_rule')!
+    const peers = stage1.evidence.find((e) => e.id === 's1_peers')!
+    render(<EvidencePanel tables={[rule, peers]} place="성산읍" />)
+    const [ruleTable, peerTable] = screen.getAllByRole('table')
+    const met = within(ruleTable).getByText('예').closest('tr') as HTMLElement
+    expect(met).toHaveClass('is-current')
+    expect(within(met).getByText('방문 의존형')).toBeInTheDocument()
+    expect(met.querySelector('.type-mark')).toHaveTextContent('C')
+    expect(ruleTable.querySelectorAll('tr.is-current')).toHaveLength(1)
+    const mine = within(peerTable).getByText('성산읍 (대상)').closest('tr') as HTMLElement
+    expect(mine).toHaveClass('is-current')
+    expect(peerTable.querySelectorAll('tr.is-current')).toHaveLength(1)
+    expect(peerTable.querySelectorAll('.type-mark')).toHaveLength(peers.rows.length)
   })
 })
 
@@ -127,28 +147,55 @@ describe('차트', () => {
     expect(container.querySelector('.viz-tip')).toBeNull()
   })
 
-  it('막대 차트는 계열이 하나면 범례 없이 그리고, 막대마다 값을 읽어 줘요', () => {
+  it('항목 비교는 막대 목록으로 보여 주고, 주인공 한 줄만 강조해요', () => {
     const { container } = render(<ChartCard spec={bar} />)
-    expect(container.querySelectorAll('path.viz-bar')).toHaveLength(bar.x.length)
+    const rows = [...container.querySelectorAll('.bar-row')]
+    expect(rows).toHaveLength(bar.x.length)
+    expect(rows.filter((r) => r.classList.contains('is-lead')).map((r) => r.querySelector('.bar-name')?.textContent)).toEqual(['성산읍'])
+    expect(rows.map((r) => r.querySelector('.bar-value')?.textContent)).toContain('-5.5%') // 값은 줄마다 적혀 있어요
+    expect(screen.getByLabelText('성산읍: -5.5% (지금 보는 항목)')).toBeInTheDocument()
     expect(screen.queryByRole('list', { name: '범례' })).toBeNull()
-    expect(screen.getByRole('img', { name: `${bar.x[0]}: -5.5%` })).toBeInTheDocument()
-    expect(new Set([...container.querySelectorAll('path.viz-bar')].map((p) => p.getAttribute('fill'))).size).toBe(1) // 한 계열은 한 색
+    expect(container.querySelectorAll('.bar-fill')).toHaveLength(bar.x.length)
   })
 
-  it('막대가 많으면 값을 다 적지 않고, 눈금과 툴팁에 맡겨요', () => {
-    const many: ChartSpec = { ...bar, x: Array.from({ length: 9 }, (_, i) => `항목${i}`), series: [{ name: '값', y: Array.from({ length: 9 }, (_, i) => i / 100) }] }
+  it('막대 목록은 0 에서 자라고, 음수와 양수가 섞이면 0 자리를 표시해요', () => {
+    const mixed: ChartSpec = { ...bar, x: ['가', '나', '다'], highlight: '나', series: [{ name: '변화율', y: [-0.02, 0.04, null] }] }
+    const { container } = render(<ChartCard spec={mixed} />)
+    const fills = [...container.querySelectorAll<HTMLElement>('.bar-fill')]
+    expect(fills).toHaveLength(2) // 값이 없는 줄은 막대를 그리지 않아요
+    expect(fills[0].style.left).toBe('0%')
+    expect(parseFloat(fills[0].style.width)).toBeCloseTo(33.33, 1)
+    expect(parseFloat(fills[1].style.left)).toBeCloseTo(33.33, 1)
+    expect(container.querySelectorAll('.bar-zero')).toHaveLength(3)
+    expect(container.querySelector('.bar-row.is-lead .bar-name')?.textContent).toBe('나')
+  })
+
+  it('계열이 둘 이상인 막대는 세로 막대로 그리고, 막대가 많으면 값을 다 적지 않아요', () => {
+    const two: ChartSpec = { ...bar, x: ['가', '나'], series: [{ name: '올해', y: [0.1, 0.2] }, { name: '작년', y: [0.05, 0.1] }] }
+    const few = render(<ChartCard spec={two} />)
+    expect(few.container.querySelectorAll('path.viz-bar')).toHaveLength(4)
+    expect(few.container.querySelectorAll('.viz-value')).toHaveLength(4)
+    expect(screen.getByRole('list', { name: '범례' })).toBeInTheDocument()
+    few.unmount()
+    const many: ChartSpec = { ...two, x: ['가', '나', '다', '라'] , series: two.series.map((s) => ({ ...s, y: [0.1, 0.2, 0.3, 0.4] })) }
     const { container } = render(<ChartCard spec={many} />)
+    expect(container.querySelectorAll('path.viz-bar')).toHaveLength(8)
     expect(container.querySelectorAll('.viz-value')).toHaveLength(0)
-    expect(container.querySelectorAll('path.viz-bar')).toHaveLength(9)
   })
 
   it('표로 보기를 누르면 같은 값을 표로 보여 줘요', async () => {
-    render(<ChartCard spec={bar} />)
+    render(<ChartCard spec={line} />)
     await userEvent.click(screen.getByRole('button', { name: '표로 보기' }))
     const table = screen.getByRole('table')
-    expect(within(table).getAllByRole('row')).toHaveLength(bar.x.length + 1)
-    expect(within(table).getByText('-5.5%')).toBeInTheDocument()
+    expect(within(table).getAllByRole('row')).toHaveLength(line.x.length + 1)
+    expect(within(table).getAllByText('100.0').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: '차트로 보기' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('선 차트는 첫 계열만 강조색이고 나머지는 중립색이에요', () => {
+    const { container } = render(<ChartCard spec={line} />)
+    const strokes = [...container.querySelectorAll('path.viz-line')].map((p) => p.getAttribute('stroke'))
+    expect(strokes).toEqual(['var(--series-1)', 'var(--series-2)'])
   })
 
   it('값이 빈 달은 선을 끊어 그려요', () => {
@@ -171,7 +218,7 @@ describe('지도', () => {
     expect(lettered.length).toBe(typeMap.points.filter((p) => p.category !== '유지').length) // 색만으로 구분하지 않아요
     const legend = screen.getByRole('list', { name: '유형 범례' })
     expect(within(legend).getByText(/C 방문 의존형/)).toBeInTheDocument()
-    expect(within(legend).getByText('18곳')).toBeInTheDocument()
+    expect(within(legend).getByText('18')).toBeInTheDocument()
   })
 
   it('점을 누르면 그 동네를 고르고, 키보드로도 고를 수 있어요', async () => {

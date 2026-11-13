@@ -4,7 +4,7 @@
 #   docker compose logs -f           로그 보기
 #   docker compose down              내리기 (제안서와 실행 기록은 볼륨에 남아요)
 #
-# 이 PC의 Ollama(로컬 LLM)를 쓰려면 docker-compose.local-llm.yml 을 겹쳐서 띄워요.
+# 클라우드 LLM(Claude)을 쓰려면 backend/.env 에 ANTHROPIC_API_KEY 를 넣고 다시 띄워요.
 name: meomulmeong
 
 services:
@@ -20,11 +20,6 @@ services:
         required: false
     environment:
       TZ: Asia/Seoul
-      # 컨테이너 안의 127.0.0.1 은 컨테이너 자신이라, 호스트의 Ollama 는 이 주소로 불러요.
-      # 호스트의 Ollama 가 127.0.0.1 에서만 듣고 있으면 닿지 않아요 (docker-compose.local-llm.yml 참고).
-      MEOMUL_OLLAMA_HOST: http://host.docker.internal:11434
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - outputs:/app/backend/outputs # 최종 제안서, 실행 기록, 평가 보고서
 

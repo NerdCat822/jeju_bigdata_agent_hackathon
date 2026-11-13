@@ -65,8 +65,8 @@ class AnthropicProvider(LLMProvider):
         return self.client.messages.create(**kwargs)
 
     def generate(self, system: str, user: str, out: type[T], *, purpose: str = "", model: str | None = None,
-                 effort: str = "low", temperature: float = 0.0) -> T:
-        # temperature 는 보내지 않아요: 최신 Claude 모델은 샘플링 값을 받지 않고 effort 로 깊이를 조절해요.
+                 effort: str = "low") -> T:
+        # 샘플링 값(temperature)은 보내지 않아요: 최신 Claude 모델은 effort 로 깊이를 조절해요.
         sdk = self._sdk
         use = model or self.model
         t0 = time.perf_counter()
