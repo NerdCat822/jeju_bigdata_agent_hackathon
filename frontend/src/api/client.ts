@@ -32,6 +32,20 @@ export class ApiError extends Error {
 
 const OFFLINE = '백엔드 서버에 연결하지 못했어요. `python -m meomulmeong serve` 가 켜져 있는지 확인해 주세요.'
 
+// 화면이 놓인 자리. 주소 맨 위에 있으면 '' 이고, 상대 경로로 빌드한 배포본에서는 '.' 이에요.
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
+
+/**
+ * 서버 경로(/api/...)를 화면이 놓인 자리 기준 주소로 바꿔요.
+ * 화면이 게이트웨이 뒤 하위 경로(예: /meomulmeong/)에 걸려 있어도 API 를 그 아래에서 찾아요.
+ */
+export const apiUrl = (path: string): string => `${BASE}${path}`
+
+/** 서버가 준 제안서 주소도 같은 기준으로 바꿔요. 화면은 받은 주소를 그대로 링크에 써요. */
+function located<T extends { report_url?: string | null }>(out: T): T {
+  return out.report_url ? { ...out, report_url: apiUrl(out.report_url) } : out
+}
+
 async function toError(res: Response): Promise<ApiError> {
   let code = 'http_error'
   let message = `요청을 처리하지 못했어요. (HTTP ${res.status})`
@@ -57,7 +71,7 @@ async function toError(res: Response): Promise<ApiError> {
 async function call<T>(path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   let res: Response
   try {
-    res = await fetch(path, {
+    res = await fetch(apiUrl(path), {
       method: body === undefined ? 'GET' : 'POST',
       headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -75,7 +89,7 @@ async function call<T>(path: string, body?: unknown, signal?: AbortSignal): Prom
 async function stream(path: string, body: unknown, on: StreamHandlers, signal?: AbortSignal): Promise<StreamDone> {
   let res: Response
   try {
-    res = await fetch(path, {
+    res = await fetch(apiUrl(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       body: JSON.stringify(body),
@@ -104,7 +118,7 @@ async function stream(path: string, body: unknown, on: StreamHandlers, signal?: 
     }
   }
   if (!done) throw new ApiError('응답이 중간에 끊겼어요. 다시 시도해 주세요.', 'stream_closed', 200)
-  return done
+  return located(done)
 }
 
 export const api = {
@@ -117,16 +131,18 @@ export const api = {
   confirm: (query: QueryInput, session_id: string | null): Promise<CardOut> =>
     call('/api/confirm', { query, session_id }),
   run: (query: QueryInput, session_id: string | null): Promise<AnswerOut> => call('/api/run', { query, session_id }),
-  ask: (question: string, session_id: string | null): Promise<AskOut> => call('/api/ask', { question, session_id }),
+  ask: (question: string, session_id: string | null): Promise<AskOut> =>
+    call<AskOut>('/api/ask', { question, session_id }).then(located),
   chain: (place: string, session_id: string | null, with_report = true): Promise<ChainOut> =>
-    call('/api/chain', { place, session_id, with_report }),
+    call<ChainOut>('/api/chain', { place, session_id, with_report }).then(located),
   runStream: (query: QueryInput, session_id: string | null, on: StreamHandlers, signal?: AbortSignal) =>
     stream('/api/run/stream', { query, session_id }, on, signal),
   askStream: (question: string, session_id: string | null, on: StreamHandlers, signal?: AbortSignal) =>
     stream('/api/ask/stream', { question, session_id }, on, signal),
   chainStream: (place: string, session_id: string | null, on: StreamHandlers, signal?: AbortSignal) =>
     stream('/api/chain/stream', { place, session_id, with_report: true }, on, signal),
-  report: (session_id: string, place: string | null): Promise<ReportOut> => call('/api/reports', { session_id, place }),
+  report: (session_id: string, place: string | null): Promise<ReportOut> =>
+    call<ReportOut>('/api/reports', { session_id, place }).then((out) => ({ ...out, url: apiUrl(out.url) })),
   consent: (session_id: string, consent: boolean): Promise<{ session_id: string; consent: boolean }> =>
     call(`/api/sessions/${encodeURIComponent(session_id)}/cloud-consent`, { consent }),
 }

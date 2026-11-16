@@ -1,0 +1,37 @@
+# 머물멍을 서버의 공용 인프라에 붙일 때만 docker-compose.yml 위에 겹쳐 써요. 둘 다 Docker 네트워크 shared-network 에 있어요.
+#   - nginx 게이트웨이(nginx-gateway): 하위 경로(예: /meomulmeong/)로 들어온 요청을 앱에 넘겨줘요.
+#   - 공용 PostgreSQL(postgres-db): 데이터 창고를 따로 띄우지 않고, 여기의 meomul 데이터베이스를 써요.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.shared.yml up -d --build
+#
+# 이 폴더의 .env (저장소에 올라가지 않아요) 에 아래 두 줄을 두면 -f 없이 docker compose up -d 만 해도 돼요.
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.shared.yml
+#   MEOMUL_PG_PASSWORD=<공용 PostgreSQL 의 meomul 계정 암호>
+#
+# 공용 PostgreSQL 에는 계정과 데이터베이스를 한 번 만들어 둬야 해요. 글자 정렬이 어느 서버에서나 같게 로케일은 C 로 해요.
+#   CREATE ROLE meomul LOGIN PASSWORD '...';
+#   CREATE DATABASE meomul OWNER meomul TEMPLATE template0 ENCODING 'UTF8' LC_COLLATE 'C' LC_CTYPE 'C';
+#
+# shared-network 가 없는 PC 에서는 이 파일을 쓰지 않아요. docker-compose.yml 만으로 http://localhost:3000 에 떠요.
+# 게이트웨이 뒤에 두면 로그인 없이 바깥에서 들어올 수 있으니, 모드 전환처럼 서버 전체에 걸리는 기능은 게이트웨이에서 막아 두세요.
+
+services:
+  db:
+    profiles: ["own-db"] # 공용 PostgreSQL 을 쓰니 띄우지 않아요 (그래도 띄우려면 --profile own-db)
+
+  app:
+    restart: unless-stopped # 서버가 다시 켜져도 바깥 주소가 살아 있게 해요
+    depends_on: !reset [] # 띄우지 않는 db 를 기다리지 않아요
+    environment:
+      MEOMUL_PG_HOST: postgres-db # 공용 PostgreSQL 의 컨테이너 이름
+      MEOMUL_PG_PORT: "5432"
+      MEOMUL_PG_DB: meomul
+      MEOMUL_PG_USER: meomul
+      MEOMUL_PG_PASSWORD: ${MEOMUL_PG_PASSWORD:?이 폴더의 .env 에 MEOMUL_PG_PASSWORD 를 넣어 주세요}
+    networks:
+      - default
+      - shared-network
+
+networks:
+  shared-network:
+    external: true

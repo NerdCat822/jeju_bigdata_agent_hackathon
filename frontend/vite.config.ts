@@ -6,6 +6,9 @@ import { defineConfig } from 'vite'
 const backend = process.env.MEOMUL_API ?? 'http://127.0.0.1:8501'
 
 export default defineConfig({
+  // 빌드한 화면이 자기 파일을 상대 경로로 찾게 해요. 그래야 같은 빌드가 http://localhost:3000/ 에서도,
+  // 게이트웨이 뒤 하위 경로(예: /meomulmeong/)에서도 열려요. 개발 서버와 테스트에서는 '/' 로 동작해요.
+  base: './',
   plugins: [react()],
   server: { port: 5173, proxy: { '/api': backend } },
   preview: { proxy: { '/api': backend } },
