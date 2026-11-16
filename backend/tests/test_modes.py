@@ -1,4 +1,4 @@
-"""데이터 모드: 원본이 없을 때와 센터 추출본(CP949 CSV)을 넣었을 때의 동작."""
+"""데이터 모드: 원본이 없을 때, 센터 추출본(CP949 CSV)을 넣었을 때, 내보낸 표(CSV)를 넣었을 때의 동작."""
 
 import shutil
 
@@ -6,7 +6,7 @@ import pytest
 from conftest import make_settings
 
 from meomulmeong.data.catalog import Catalog
-from meomulmeong.data.warehouse import Warehouse, build_warehouse
+from meomulmeong.data.warehouse import Warehouse, build_warehouse, export_csv
 from meomulmeong.service import AgentService
 from meomulmeong.settings import BACKEND_DIR, load_config
 
@@ -71,3 +71,51 @@ def test_center_csv_is_loaded_with_column_mapping(empty_home):
     assert meta["pop_kor_emd_daily"].source == "center" and meta["bus_route_daily"].source == "center"
     assert wh.data_badge == "센터 데이터" and wh.data_mode == "center"
     wh.close()
+
+
+def test_exported_tables_are_loaded_as_they_are(empty_home, settings, manifest):
+    """다른 PC 에서 export-csv 로 내보낸 폴더(data/export/hub/)를 그대로 옮기면, 수집본 없이도 같은 창고가 만들어져요."""
+    export_csv(settings, "synthetic", empty_home / "data" / "export" / "hub")
+    hub_settings, report = _build(empty_home, "hub")
+    assert report.issues == [] and len(report.tables) == 8
+    assert all(t.source == "hub" and t.n_rows > 0 and "내보낸 표" in t.note for t in report.tables)
+    src, dst = Warehouse(settings, "synthetic"), Warehouse(hub_settings, "hub")
+    try:
+        for table in src.meta():  # 표준 테이블은 값 하나까지 같아요
+            sql = f"SELECT COUNT(*), SUM(hashtext(t::text)::bigint) FROM {table} AS t"  # 행 순서와 상관없는 지문
+            assert dst.query(sql).rows == src.query(sql).rows, table
+        # 월 집계는 올린 표에서 다시 계산해요. 실수는 더하는 순서에 따라 끝자리가 달라질 수 있어 합계는 근삿값으로 봐요.
+        for mart, cols in (("m_pop_kor_emd_month", "resd_sum, work_sum, visit_sum, n_days"),
+                           ("m_pop_for_long_emd_month", "resd_sum, work_sum, visit_sum, n_days"),
+                           ("m_bus_route_month", "riders, n_days")):
+            sql = f"SELECT COUNT(*), {', '.join(f'SUM({c})' for c in cols.split(', '))} FROM {mart}"
+            assert dst.query(sql).rows[0] == pytest.approx(src.query(sql).rows[0], rel=1e-9), mart
+        assert dst.meta()["pop_kor_emd_daily"].max_date == src.meta()["pop_kor_emd_daily"].max_date
+        assert dst.data_badge == "실데이터" and dst.data_mode == "hub"
+    finally:
+        src.close()
+        dst.close()
+
+
+def test_collected_data_wins_over_exported_tables(empty_home):
+    """수집본과 내보낸 표가 둘 다 있으면 수집본을 써요."""
+    out = empty_home / "data" / "export" / "hub"
+    out.mkdir(parents=True)
+    (out / "arrivals_purpose_monthly.csv").write_text("month,purpose,visitors\n2025-06-01,내보낸표,99\n", encoding="utf-8")
+    raw = empty_home / "data" / "hub" / "arrivals_purpose"
+    raw.mkdir(parents=True)
+    (raw / "part.csv").write_text("dtYearMonth,visitPurpose,visitorCnt\n202506,관광,3\n202506,관광,4\n", encoding="utf-8")
+    settings, report = _build(empty_home, "hub")
+    meta = {t.table: t for t in report.tables}["arrivals_purpose_monthly"]
+    assert meta.n_rows == 1 and meta.note == ""
+    wh = Warehouse(settings, "hub")
+    assert wh.query("SELECT purpose, visitors FROM arrivals_purpose_monthly").rows == [("관광", 7)]
+    wh.close()
+
+
+def test_exported_table_with_wrong_columns_is_rejected(empty_home):
+    out = empty_home / "data" / "export" / "hub"
+    out.mkdir(parents=True)
+    (out / "arrivals_purpose_monthly.csv").write_text("month,purpose\n2025-06-01,관광\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="표준 컬럼이 빠졌어요.*visitors"):
+        _build(empty_home, "hub")

@@ -429,6 +429,12 @@ def _raw_frame(base: Path, src: SourceSpec) -> pd.DataFrame | None:
     return frames[0] if len(frames) == 1 else pd.concat(frames, ignore_index=True, sort=False)
 
 
+def _exported_frame(export_dir: Path, spec: TableSpec) -> pd.DataFrame | None:
+    """`export-csv` 로 내보낸 표(data/export/<모드>/<테이블>.csv)를 읽어요. 이미 표준 컬럼이라 변환 없이 올려요. 없으면 None."""
+    path = export_dir / f"{spec.table}.csv"
+    return _read_csv(path) if path.is_file() else None
+
+
 def _copy_frame(cur: psycopg.Cursor, table: str, df: pd.DataFrame) -> list[str]:
     """표를 글자(TEXT) 컬럼 테이블로 올려요. 컬럼 이름은 소문자로 바꿔요 (select 식에서 따옴표 없이 쓰려고요)."""
     cols = [str(c).strip().lower() for c in df.columns]
@@ -589,12 +595,15 @@ def build_warehouse(settings: Settings, config: AppConfig, catalog: Catalog, mod
         order = {"synthetic": [("synthetic", "hub")], "hub": [("hub", "hub")],
                  "center": [("center", "center"), ("hub", "hub")]}[mode]
         for spec in catalog.tables.values():
-            used, frame, src = None, None, None
+            used, frame, src, exported = None, None, None, False
             for base_mode, src_key in order:
                 cand = spec.sources.get(src_key)
                 if not cand:
                     continue
                 df = _raw_frame(settings.raw_dir(base_mode), cand)
+                if df is None:  # 수집본이 없으면 export-csv 로 내보낸 표를 찾아요 (다른 PC 에서 만든 창고를 옮길 때)
+                    df = _exported_frame(settings.export_dir(base_mode), spec)
+                    exported = df is not None
                 if df is not None:
                     used, frame, src = base_mode, df, cand
                     break
@@ -608,11 +617,19 @@ def build_warehouse(settings: Settings, config: AppConfig, catalog: Catalog, mod
                 cols = _copy_frame(cur, raw, frame)
                 del frame
                 loader = _LOADERS.get(src.loader or "")
-                if loader:
+                if exported:
+                    names = [c.name for c in spec.columns]
+                    missing = [n for n in names if n not in cols]
+                    if missing:
+                        raise ValueError(f"{settings.export_dir(used)}/{spec.table}.csv 에 표준 컬럼이 빠졌어요: {missing}. "
+                                         "export-csv 로 내보낸 파일인지 확인해 주세요.")
+                    _create_table(cur, spec, f"SELECT {', '.join(names)} FROM {raw}", names)
+                    note = "내보낸 표(CSV)에서 올렸어요"
+                elif loader:
                     loader(cur, spec, src, raw, cols, fmt)
                 else:
                     _create_table(cur, spec, *_select_sql(spec, src, raw, fmt))
-                if src.place:  # 행정동으로 연결하지 못한 이름 보고
+                if src.place and not exported:  # 행정동으로 연결하지 못한 이름 보고
                     city, emd = src.place["city"], src.place["emd"]
                     cur.execute(f"""
                         SELECT trim(CAST(r.{city} AS VARCHAR)) || ' ' || trim(CAST(r.{emd} AS VARCHAR)) AS nm, COUNT(*) AS n

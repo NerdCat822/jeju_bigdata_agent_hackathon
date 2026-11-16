@@ -87,7 +87,7 @@ backend/
 ├─ data/
 │  ├─ ref/                 참조표 CSV (읍면동 43개, 지구, 테마, 거점, 노선, 방문목적, 국적)
 │  ├─ synthetic/ hub/ center/   원본 (합성 · 허브 수집본 · 센터 추출본), 저장소에 올리지 않음
-│  └─ export/              export-csv 로 내보낸 CSV, 저장소에 올리지 않음
+│  └─ export/              export-csv 로 내보낸 CSV, 저장소에 올리지 않음 (다른 PC 로 옮겨 build-data 로 다시 올릴 수 있어요)
 │                          (데이터 창고는 파일이 아니라 PostgreSQL 에 있어요. 모드마다 스키마 하나)
 ├─ meomulmeong/
 │  ├─ settings.py  schemas.py  fmt.py  service.py  cli.py  progress.py(진행 알림)
@@ -184,6 +184,10 @@ backend/
 새 스키마를 다 만든 뒤 한 번에 바꿔치기해서, 만드는 동안에도 기존 데이터로 답할 수 있어요. 분석할 때는 읽기 전용으로만 붙어요.
 받은 자료를 파일로 보고 싶으면 `python -m meomulmeong export-csv --mode hub` 로 `data/export/hub/` 에 CSV 를 내보내요.
 허브 · 센터 자료는 재배포할 수 없어서 이 폴더는 저장소에 올리지 않아요.
+
+내보낸 CSV 는 다른 PC 로 창고를 옮길 때도 써요. `data/export/hub/` 폴더를 그 PC 의 같은 자리에 그대로 복사하고
+`build-data --mode hub` 를 실행하면, 수집본(`data/hub/<폴더>/`)이 없는 테이블은 `data/export/hub/<테이블>.csv` 에서 변환 없이 올려요.
+수집본이 있으면 수집본을 먼저 써요. 월 집계 테이블(`m_*.csv`)은 읽지 않고 올린 표에서 다시 계산해요. 허브 API 를 다시 부르지 않아도 돼요.
 
 합성 데이터는 허브 API 응답과 같은 컬럼으로 만들어져 실데이터와 같은 적재 경로를 지나요. 읍면동마다 숨은 유형을 심어 두어서
 세 단계가 끝까지 이어지는지 시험할 수 있어요. 실제 통계가 아니므로 화면과 제안서에 "샘플 데이터" 배지가 붙어요.
@@ -522,6 +526,13 @@ docker compose down -v              # 볼륨까지 지우기 (넣어 둔 데이�
 
 ```bash
 cd backend && .venv/bin/python -m meomulmeong build-data --mode hub
+```
+
+이 PC 에 Python 을 따로 설치하지 않았으면 컨테이너로 실행해도 돼요. 허브 자료는 이미지에 없으니 실행할 때만 폴더를 붙여요.
+수집본이면 `data/hub`, 다른 PC 에서 내보낸 표(6.1절)이면 `data/export/hub` 를 붙여요.
+
+```bash
+docker compose run --rm -v ./backend/data/export/hub:/app/backend/data/export/hub:ro app build-data --mode hub
 ```
 
 **이미지에 넣지 않는 것** — `.dockerignore` 가 모두 빼고 필요한 것만 담아요. `.env`, 센터 · 허브 원자료, CSV 내보내기, 실행 결과, xlsx · pdf 는 들어가지 않아요.
