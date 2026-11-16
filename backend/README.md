@@ -188,11 +188,32 @@ backend/
 
 ```bash
 # .env 에 MEOMUL_HUB_PROJECT_KEY 를 넣은 뒤 (허브에서 데이터마다 '프로젝트 담기' 필요)
-.venv/bin/python -m meomulmeong fetch-hub --start 20241101 --end 20261031
+# 월 단위 5종은 전 기간을 한 번에 받아요
+.venv/bin/python -m meomulmeong fetch-hub --table arrivals_purpose_monthly --table foreign_visitors_monthly \
+    --table card_cn_area_monthly --table card_zone_dow_monthly --table spend_tour_type_monthly
+# 일 단위 유동인구는 비교할 24개월을, 달마다 나흘만 받아요 (쿼터 절약)
+.venv/bin/python -m meomulmeong fetch-hub --table pop_kor_emd_daily --table pop_for_long_emd_daily \
+    --start 20240901 --end 20260831 --days 1,9,17,25
+# 버스는 입도객 자료와 겹치는 12개월을, 달마다 이틀만 받아요
+.venv/bin/python -m meomulmeong fetch-hub --table bus_route_daily --start 20240801 --end 20250731 --days 9,25
 .venv/bin/python -m meomulmeong build-data --mode hub
 ```
 
 받은 쪽은 `data/hub/_raw/` 에 남겨 두고, 다음 실행 때 없는 쪽부터 이어 받아요. API별 호출 상한(`--max-calls`, 기본 900)에 닿으면 멈추고 안내해요.
+
+실제 호출로 확인한 것 (2026-11-16)
+
+| 항목 | 내용 |
+|---|---|
+| 응답 형식 | `{"totCnt": N, "hasMore": true, "data": [...]}`. 컬럼 이름은 카탈로그 변환식과 8종 모두 같아요 |
+| 쪽 나누기 | `number`(1부터), `limit`. `limit` 은 100이 상한이고 더 크게 주면 실패해요 |
+| 불안정 | 허브 프록시가 요청 두 번에 한 번꼴로 502(가끔 403)를 돌려줘요. 수집기는 한 쪽에 10번까지 다시 보내요 |
+| 쿼터 | API별 하루 1,000건이고 실패한 요청도 세요. 차면 403 과 "Today's quota is full" 이 와요. 수집기는 멈추고 다음 날 이어 받으라고 알려요 |
+| 하루 행 수 | 내국인 유동인구 688행, 외국인 장기체류 600행 안팎, 버스 노선별 2천 행 안팎 |
+| 최신 자료 | 일 단위 3종은 2026-08 까지, 입도객 2종은 2025-07 까지, 카드 3종은 2016~2018년 |
+
+일 단위 자료를 다 받으면 쿼터(API별 하루 1,000건)로 며칠이 걸려요. 그래서 `--days` 로 달마다 며칠만 받고, 분석은 받은 날의 하루 평균으로 해요.
+허브 모드에서는 "한 달에 며칠 이상 있어야 지표에 넣는다"는 기준을 `analysis.min_month_days_hub`(기본 2일)로 따로 둬요.
 파일 데이터 `외국인관광객현황_20251231` 은 CSV 로 내려받아 `data/hub/foreign_visitors/` 에 넣으면 돼요 (세로형·가로형 모두 읽어요).
 
 ### 6.4 새 데이터 붙이기
@@ -413,9 +434,9 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 
 **실데이터로 확인해야 하는 가정**
 
-- [ ] 허브 유동인구 값의 단위: 하루 24개 시각 값의 합으로 보고 `sources.pop_scale = 1/24` 로 환산했어요. 다르면 `settings.yaml` 을 고치고 다시 적재해요.
-- [ ] 허브 API의 쪽 매개변수(`number`, `limit`)와 응답 형식(`totCnt`, `hasMore`, `data`): 프로젝트 키가 없어 실제 호출로 확인하지 못했어요. 가짜 서버 테스트만 통과한 상태예요.
-- [ ] 일 단위 데이터의 쿼터: 유동인구는 하루 약 690행이라 24개월이면 5천 쪽이 넘어요. `limit` 상향 가능 여부나 쿼터 증량을 허브에 확인해야 해요.
+- [x] 허브 유동인구 값의 단위: 하루 24개 시각 값의 합이 맞아요. 24로 나눈 읍면동 거주인구가 주민등록 인구의 75~100% 수준이에요 (2026-11-16 확인, 제주 전체 약 49만 명).
+- [x] 허브 API의 쪽 매개변수(`number`, `limit` 100 상한)와 응답 형식(`totCnt`, `hasMore`, `data`): 2026-11-16 실제 호출로 확인했어요 (6.3절).
+- [ ] 일 단위 데이터의 쿼터: 다 받으면 며칠이 걸려서 달마다 며칠만 받아요 (`--days`). 더 촘촘히 받으려면 쿼터 증량을 허브에 문의해야 해요.
 - [ ] 허브 카드 데이터의 수록 기간(2016-09~2018-12)이 유동인구·입도객과 겹치지 않아요. 실데이터 모드에서는 Stage 2 규칙이 "기간이 겹치지 않아 함께 볼 수 없음"으로 빠질 수 있어요.
 - [ ] `외국인관광객현황_20251231` 파일의 실제 컬럼 구성.
 
@@ -433,7 +454,7 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 **구현**
 
 - [x] React 화면(`frontend/`). 실행과 구성은 [../frontend/README.md](../frontend/README.md)에 있어요.
-- [ ] Docker 에서 실데이터(허브 · 센터)를 쓰려면 `data/` 폴더와 데이터 창고를 볼륨으로 연결해야 해요. 지금 이미지는 샘플 데이터만 담고 있어요 (12절).
+- [x] Docker 에서 허브 실데이터 쓰기: `docker-compose.hub.yml` 로 만든 창고 파일만 읽기 전용으로 연결해요 (12절). 센터 데이터는 센터 PC 에서만 쓸 수 있어요.
 - [ ] `install.bat` / `run.bat`, 오프라인 설치 꾸러미(wheelhouse + 빌드한 화면). `run.bat` 은 `python -m meomulmeong serve --open` 을 부르면 돼요.
 - [x] 기획서 PDF 의 Streamlit · 로컬 LLM 문구를 React 웹 · 템플릿 + Claude 로 고쳤어요 (2026-11-13).
 - [ ] 센터 모드: `4-11 유동인구 v02`, `3-02 버스 노선별 이용` 변환식은 명세서만 보고 썼어요. 실제 추출본으로 검증해야 해요. `1-08 카드 v02`(읍면동 × 업종 42개)는 아직 연결하지 않았어요.
@@ -445,7 +466,7 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 ## 12. Docker 로 띄우기 (선택)
 
 센터 PC는 기획서대로 Docker 없이 실행해요. Docker 는 개발 PC나 데모 서버에서 한 번에 띄울 때 써요.
-파일은 저장소 맨 위에 있어요: `Dockerfile`, `docker-compose.yml`, `.dockerignore`.
+파일은 저장소 맨 위에 있어요: `Dockerfile`, `docker-compose.yml`, `docker-compose.hub.yml`(실데이터 창고 연결), `.dockerignore`.
 
 ```bash
 # 저장소 맨 위 폴더에서
@@ -466,6 +487,13 @@ docker compose down -v              # 볼륨까지 지우기
 
 **클라우드 LLM(Claude)을 쓸 때** — `backend/.env` 에 `ANTHROPIC_API_KEY` 를 넣고 다시 띄우면 화면의 LLM 모드에서 클라우드를 고를 수 있어요.
 키는 실행할 때만 컨테이너에 넘기고 이미지에는 들어가지 않아요. 컨테이너가 인터넷에 닿아야 해요.
+
+**허브 실데이터로 띄울 때** — 6.3절대로 받아 `build-data --mode hub` 로 창고를 만든 뒤 겹침 파일을 함께 써요.
+창고 파일 하나만 읽기 전용으로 연결하고, 화면의 데이터 모드에서 "실데이터"를 고르면 돼요.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.hub.yml up -d --build
+```
 
 **이미지에 넣지 않는 것** — `.dockerignore` 가 모두 빼고 필요한 것만 담아요. `.env`, 센터 · 허브 원자료, 데이터 창고, 실행 결과, xlsx · pdf 는 들어가지 않아요.
 `tests/test_deploy_files.py` 가 이 규칙과 포트 범위를 확인해요.

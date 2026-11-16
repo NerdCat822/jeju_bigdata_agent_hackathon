@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 
 from meomulmeong.data.catalog import Catalog
-from meomulmeong.data.hub_client import HubClient, HubError, _rows, month_windows
+from meomulmeong.data.hub_client import HubClient, HubError, _rows, month_windows, parse_days, sample_dates
 from meomulmeong.settings import Settings
 
 
@@ -21,7 +21,7 @@ def make_client(tmp_path, home, handler, max_calls=900, limit=100) -> tuple[HubC
         return handler(request)
 
     http = httpx.Client(transport=httpx.MockTransport(wrapped))
-    client = HubClient(settings, max_calls=max_calls, limit=limit, pause=0, client=http)
+    client = HubClient(settings, max_calls=max_calls, limit=limit, pause=0, client=http, retry_pause=0)
     return client, Catalog.load(home / "config" / "catalog"), seen
 
 
@@ -78,6 +78,58 @@ def test_daily_table_windows_and_resume(tmp_path, home):
     assert st2.windows_skipped == 1 and st2.windows_done == 2 and st2.calls == 3  # 1월은 건너뛰고 2월의 남은 쪽부터
     assert sorted(p.name for p in (tmp_path / "data" / "hub" / "bus_route").glob("*.parquet")) == [
         "202501.parquet", "202502.parquet", "202503.parquet"]
+
+
+def test_flaky_proxy_is_retried_and_only_successes_count(tmp_path, home):
+    """허브 프록시는 502·403 을 섞어 돌려줘요. 다시 보내서 받고, 쿼터에는 성공한 호출만 세요."""
+    row = lambda i: {"dtYearMonth": "202501", "visitPurpose": f"목적{i}", "visitorCnt": i}  # noqa: E731
+    ok = paged(150, 100, row)
+    flips = iter([502, 403, 200, 502, 200])
+
+    def handler(request):
+        code = next(flips, 200)
+        return ok(request) if code == 200 else httpx.Response(code, text="Internal Server Error")
+
+    client, catalog, seen = make_client(tmp_path, home, handler)
+    st = client.fetch_table(catalog.get("arrivals_purpose_monthly"), end=date(2025, 7, 31))
+    assert (st.calls, st.failed, st.rows) == (2, 3, 150) and len(seen) == 5
+
+
+def test_full_quota_stops_with_resume_hint(tmp_path, home):
+    """쿼터가 차면 허브는 403 과 'Today's quota is full' 을 돌려줘요. 인증 실패가 아니라 내일 이어 받으라고 알려요."""
+    client, catalog, seen = make_client(tmp_path, home, lambda r: httpx.Response(403, text="Today's quota is full"))
+    st = client.fetch_table(catalog.get("bus_route_daily"), date(2025, 1, 1), date(2025, 1, 31), days=[9, 25])
+    assert "쿼터" in st.stopped and "이어서" in st.stopped and len(seen) == 1
+
+
+def test_sampled_days(tmp_path, home):
+    assert parse_days("1,9,17,25") == [1, 9, 17, 25] and parse_days("1-3, 9") == [1, 2, 3, 9] and parse_days("") is None
+    with pytest.raises(ValueError):
+        parse_days("0,40")
+    got = sample_dates(date(2025, 1, 5), date(2025, 2, 28), [1, 9, 30])
+    assert got == [date(2025, 1, 9), date(2025, 1, 30), date(2025, 2, 1), date(2025, 2, 9)]  # 2월 30일은 없어요
+    row = lambda i: {"baseDate": "20250109", "routeName": "111-1", "routeSubName": "x", "moveType": "승차",  # noqa: E731
+                     "priceType": "일반", "payType": "카드", "userCount": i}
+    client, catalog, seen = make_client(tmp_path, home, paged(5, 100, row))
+    st = client.fetch_table(catalog.get("bus_route_daily"), date(2025, 1, 1), date(2025, 2, 28), days=[9])
+    assert [(x["startDate"], x["endDate"]) for x in seen] == [("20250109", "20250109"), ("20250209", "20250209")]
+    assert st.files == ["20250109.parquet", "20250209.parquet"]
+
+
+def test_one_broken_day_does_not_stop_the_rest(tmp_path, home):
+    """허브가 특정 날짜만 계속 500 을 내면 그날만 건너뛰고 나머지는 받아요."""
+    row = lambda i: {"baseDate": "x", "routeName": "111-1", "routeSubName": "x", "moveType": "승차",  # noqa: E731
+                     "priceType": "일반", "payType": "카드", "userCount": i}
+    ok = paged(3, 100, row)
+
+    def handler(request):
+        if request.url.params["startDate"] == "20250109":
+            return httpx.Response(500, text="Internal Server Error")
+        return ok(request)
+
+    client, catalog, _ = make_client(tmp_path, home, handler)
+    st = client.fetch_table(catalog.get("bus_route_daily"), date(2025, 1, 1), date(2025, 2, 28), days=[9, 25])
+    assert st.errors == ["20250109"] and st.files == ["20250125.parquet", "20250209.parquet", "20250225.parquet"]
 
 
 def test_auth_error_message(tmp_path, home):

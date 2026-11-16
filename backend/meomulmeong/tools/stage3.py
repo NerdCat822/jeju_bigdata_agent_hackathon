@@ -109,13 +109,12 @@ def route_betas(ctx: ToolContext, routes: list[str]) -> tuple[dict[str, dict[str
     key = "s3:betas:" + ",".join(sorted(routes))
     if key in ctx.cache:
         return ctx.cache[key]
-    a = ctx.config.analysis
     sql = f"""
 WITH bus AS (
   SELECT month, route_no,
          riders * 1.0 / n_days * date_part('day', last_day(month)) AS riders_month
   FROM m_bus_route_month
-  WHERE n_days >= {a.min_month_days} AND route_no IN ({sql_in(sorted(routes))})
+  WHERE n_days >= {ctx.min_month_days} AND route_no IN ({sql_in(sorted(routes))})
 ),
 arr AS (
   SELECT month, SUM(visitors) AS visitors

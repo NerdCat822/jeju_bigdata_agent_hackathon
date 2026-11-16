@@ -184,7 +184,7 @@ def run_stage1(ctx: ToolContext, q: ParsedQuery) -> Bundle:
             "place_key": emd, "place_name": q.place_name, "type": c.data.get("type") if c.ok else None,
             "near_type": c.data.get("near_type") if c.ok else None, "small": c.data.get("small", False) if c.ok else False,
             "ages": q.ages, "period": c.period if c.ok else None, "peers": [x["emd_nm"] for x in peers],
-            "foreign_resd_chg": ff.value if ff else None,
+            "foreign_resd_chg": ff.value if ff else None, "tau": ctx.config.analysis.tau,
             **{k: row.get(k) for k in ("youth_resd_chg", "youth_work_chg", "visit_chg", "youth_share", "settle_ratio")},
         }
         return b
@@ -194,7 +194,8 @@ def run_stage1(ctx: ToolContext, q: ParsedQuery) -> Bundle:
             b.ok, b.message = False, z.message
             return b
         b.stage_output = {"place_key": q.place_key, "place_name": q.place_name, "type": z.data["type"],
-                          "near_type": z.data.get("near_type"), "period": z.period, **z.data["row"]}
+                          "near_type": z.data.get("near_type"), "period": z.period, "tau": ctx.config.analysis.tau,
+                          **z.data["row"]}
         return b
     # 추천 순위 / 전체 비교
     city = q.place_key if q.place_kind == "city" else None

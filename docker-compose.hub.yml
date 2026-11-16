@@ -1,0 +1,12 @@
+# 실데이터(제주데이터허브) 창고를 컨테이너에 읽기 전용으로 연결하는 겹침 파일이에요.
+#
+#   cd backend
+#   .venv/bin/python -m meomulmeong fetch-hub ...        # backend/README.md 6.3절
+#   .venv/bin/python -m meomulmeong build-data --mode hub
+#   cd .. && docker compose -f docker-compose.yml -f docker-compose.hub.yml up -d --build
+#
+# 원자료는 이미지에 넣지 않아요. 만든 데이터 창고 파일 하나만 실행할 때 연결하고, 화면의 데이터 모드에서 "실데이터"를 고르면 돼요.
+services:
+  app:
+    volumes:
+      - ./backend/data/warehouse/meomul_hub.duckdb:/app/backend/data/warehouse/meomul_hub.duckdb:ro

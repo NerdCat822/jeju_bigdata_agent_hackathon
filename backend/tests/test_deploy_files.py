@@ -53,3 +53,11 @@ def test_no_local_llm_setup_is_left():
     for name in ("docker-compose.yml", "backend/.env.example"):
         text = _read(name).lower()
         assert "ollama" not in text and "qwen" not in text, f"{name} 에 로컬 LLM 설정이 남았어요"
+
+
+def test_hub_override_mounts_only_the_warehouse_read_only():
+    """실데이터는 이미지에 넣지 않고, 만든 창고 파일 하나만 읽기 전용으로 연결해요."""
+    doc = yaml.safe_load(_read("docker-compose.hub.yml"))
+    app = doc["services"]["app"]
+    assert set(app) == {"volumes"}  # 포트나 환경변수는 건드리지 않아요
+    assert app["volumes"] == ["./backend/data/warehouse/meomul_hub.duckdb:/app/backend/data/warehouse/meomul_hub.duckdb:ro"]

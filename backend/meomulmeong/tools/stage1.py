@@ -53,6 +53,10 @@ def nearest_type(resd: float, work: float, visit: float, tau: float) -> str:
     return min(gap, key=lambda k: (gap[k], k))
 
 
+def _min_days(ctx: ToolContext) -> int:
+    return ctx.min_month_days
+
+
 def _req(last_n_months: int | None, year: int | None) -> PeriodRequest:
     return PeriodRequest(last_n_months=last_n_months, year=year)
 
@@ -74,7 +78,7 @@ WITH m AS (
          SUM(resd_sum) AS resd_all, SUM(work_sum) AS work_all, SUM(visit_sum) AS visit_all
   FROM m_pop_kor_emd_month
   GROUP BY month, emd_cd
-  HAVING MAX(n_days) >= {a.min_month_days}
+  HAVING MAX(n_days) >= {_min_days(ctx)}
 ),
 p AS (
   SELECT emd_cd,
@@ -174,7 +178,7 @@ SELECT month,
 FROM m_pop_kor_emd_month
 WHERE emd_cd = {sql_str(emd_cd)} AND month BETWEEN DATE '{start}' AND DATE '{end}'
 GROUP BY month
-HAVING MAX(n_days) >= {a.min_month_days}
+HAVING MAX(n_days) >= {_min_days(ctx)}
 ORDER BY month"""
     res = ctx.wh.query(sql)
     x = [fmt.month_label(r[0]) for r in res.rows]
@@ -196,7 +200,7 @@ ORDER BY month"""
         rows=[[m, round(r, 1), round(w, 1), round(v, 1)] for m, r, w, v in zip(x, resd, work, visit, strict=True)],
         formats={f"{lab} 거주": "num1", f"{lab} 근무": "num1", "방문자(전체 연령)": "num1"},
         sql=res.sql, tables=[POP], period=f"{x[0]}~{x[-1]}" if x else None,
-        note=f"월 일수 {a.min_month_days}일 미만인 달은 제외해요. 값은 시간 평균 인구(명)예요.",
+        note=f"월 일수 {_min_days(ctx)}일 미만인 달은 제외해요. 값은 시간 평균 인구(명)예요.",
     )
     ev_sum = EvidenceTable(
         id="s1_summary", title=f"{row['emd_nm']} 핵심 지표",
@@ -226,7 +230,7 @@ WITH m AS (
   FROM m_pop_for_long_emd_month
   WHERE emd_cd = {sql_str(emd_cd)}
   GROUP BY month
-  HAVING MAX(n_days) >= {a.min_month_days}
+  HAVING MAX(n_days) >= {_min_days(ctx)}
 )
 SELECT SUM(resd) FILTER (WHERE {pf.sql_p1()}) / SUM(n_days) FILTER (WHERE {pf.sql_p1()}) AS resd_p1,
        SUM(resd) FILTER (WHERE {pf.sql_p0()}) / SUM(n_days) FILTER (WHERE {pf.sql_p0()}) AS resd_p0
@@ -486,7 +490,7 @@ WITH m AS (
   FROM m_pop_kor_emd_month
   WHERE emd_cd IN ({sql_in(emd_cds)})
   GROUP BY month, emd_cd
-  HAVING MAX(n_days) >= {a.min_month_days}
+  HAVING MAX(n_days) >= {_min_days(ctx)}
 ),
 g AS (
   SELECT month, MAX(n_days) AS n_days, SUM(resd_y / n_days) AS resd_y, SUM(work_y / n_days) AS work_y,

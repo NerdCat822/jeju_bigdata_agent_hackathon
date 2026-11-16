@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 
 from .. import fmt
 from ..schemas import STAGE_TITLE, TYPE_LABEL, NextQuestion, ParsedQuery
@@ -42,7 +43,8 @@ CAUSE_NOTE = ("원인은 이 자료만으로 단정할 수 없어요. 함께 움
 
 
 # =========================================================================== Stage 1
-def _s1_headline(lab: str, t: str | None, near: str | None, visit: float | None) -> str:
+def _s1_headline(lab: str, t: str | None, near: str | None, visit: float | None,
+                 resd: float | None = None, tau: float | None = None) -> str:
     visit_word = "방문은 늘어" if (visit or 0) >= FLAT else "방문은 줄지 않아"
     if t == "A":
         return f"{lab} 거주와 근무가 함께 늘어 「A 정착 성장형」으로 분류돼요"
@@ -53,8 +55,11 @@ def _s1_headline(lab: str, t: str | None, near: str | None, visit: float | None)
     if t == "D":
         return f"{lab} 거주와 방문이 함께 줄어 「D 활력 저하형」으로 분류돼요"
     if t == "유지":
+        # 유지형은 두 경우예요: 청년 거주 변화가 기준(±τ) 안이거나, 거주는 기준만큼 늘었는데 근무가 줄었거나
         tail = f" (가장 가까운 유형은 {_type_text(near)})" if near else ""
-        return f"{lab} 거주와 방문의 변화가 작아 「유지형」으로 분류돼요{tail}"
+        if fmt.is_num(resd) and fmt.is_num(tau) and resd >= tau:
+            return f"{lab} 거주는 늘었지만 근무가 줄어 「유지형」으로 분류돼요{tail}"
+        return f"{lab} 거주의 변화가 작아 「유지형」으로 분류돼요{tail}"
     return f"{lab} 인구 흐름을 정리했어요"
 
 
@@ -69,7 +74,7 @@ def _s1_emd(b: Bundle) -> tuple[str, str]:
     elif q.intent == "trend" and fmt.is_num(resd):
         headline = f"{place} {lab_full} 거주인구는 {_chg(resd)}"
     else:
-        headline = _s1_headline(lab, t, near, visit)
+        headline = _s1_headline(lab, t, near, visit, resd, b.stage_output.get("tau"))
     s: list[str] = []
     if b.fact("youth_resd_p1"):
         s.append(f"{place}의 {lab_full} 거주인구는 최근 기간({_p1(b)}) 하루 평균 {b.text('youth_resd_p1')}으로, "
@@ -96,7 +101,7 @@ def _s1_zone(b: Bundle) -> tuple[str, str]:
     q = b.query
     lab, lab_full = _youth(q), fmt.ages_label(q.ages)
     t = b.value("type")
-    headline = _s1_headline(lab, t, None, b.value("visit_chg"))
+    headline = _s1_headline(lab, t, None, b.value("visit_chg"), b.value("youth_resd_chg"), b.stage_output.get("tau"))
     s = [f"{b.text('place')}({b.text('members')})의 {lab_full} 거주인구는 {_chg(b.value('youth_resd_chg'), end=False)}, "
          f"근무인구는 {_chg(b.value('youth_work_chg'), end=False)}, 방문자는 {_chg(b.value('visit_chg'))}."]
     if q.wants_cause:
@@ -143,6 +148,18 @@ def _s1_recommend(b: Bundle) -> tuple[str, str]:
 
 
 # =========================================================================== Stage 2
+STALE_YEARS = 3  # 자료의 마지막 해가 올해보다 이만큼 이상 앞서면 해설에 기간을 밝혀요
+
+
+def _old_period(b: Bundle, key: str) -> str:
+    """오래된 자료(예: 허브 카드 2016~2018)로 쓴 문장 끝에 붙일 '(2018-01~2018-12 vs … 자료)'. 최근 자료면 빈 문자열."""
+    f = b.fact(key)
+    years = [int(y) for y in re.findall(r"(\d{4})-\d{2}", (f.period or "") if f else "")]
+    if not years or max(years) > date.today().year - STALE_YEARS:
+        return ""
+    return f" ({f.period} 자료)"
+
+
 def _s2(b: Bundle) -> tuple[str, str]:
     q = b.query
     out = b.stage_output
@@ -159,21 +176,25 @@ def _s2(b: Bundle) -> tuple[str, str]:
     if t:
         s.append(f"{fmt.josa(place, '은는')} Stage 1에서 「{_type_text(t)}」으로 분류됐어요.")
     if t == "유지" and b.fact("near_type"):
-        s.append(f"변화가 작아 가장 가까운 유형인 {b.text('near_type')}의 규칙을 참고로 적용했어요.")
+        s.append(f"정해진 유형에 들지 않아 가장 가까운 유형인 {b.text('near_type')}의 규칙을 참고로 적용했어요.")
     top, total = out.get("top_theme"), b.value("cn_growth:전체")
+    when = _old_period(b, "cn_growth:전체")
     if top and fmt.is_num(out.get("top_theme_growth")) and out["top_theme_growth"] > 0:
-        s.append(f"{area}의 중국인 카드 소비는 {top}에서 {fmt.pct_abs(out['top_theme_growth'])} 늘었고, 전체로는 {_chg(total)}.")
+        s.append(f"{area}의 중국인 카드 소비는 {top}에서 {fmt.pct_abs(out['top_theme_growth'])} 늘었고, "
+                 f"전체로는 {_chg(total)}{when}.")
     elif fmt.is_num(total):
-        s.append(f"{area}의 중국인 카드 소비는 전체로 {_chg(total)}.")
+        s.append(f"{area}의 중국인 카드 소비는 전체로 {_chg(total)}{when}.")
     th = q.theme
     if th and b.fact(f"cn_growth:{th}") and th != top:
         extra = f", 개별여행 인당 배율은 {b.text(f'indiv_ratio_cn:{th}')}예요" if b.fact(f"indiv_ratio_cn:{th}") else ""
         s.append(f"질문하신 {th}의 중국인 소비는 {_chg(b.value(f'cn_growth:{th}'), end=not extra)}{extra}.")
     # '주말 소비비'는 낯선 말이라 풀어서 써요: 주말 하루 소비가 평일 하루의 몇 배인지
     if b.fact("peak_dow_cn") and b.fact("weekend_ratio_cn"):
-        s.append(f"중국인 소비는 {b.text('peak_dow_cn')}에 가장 많고, 주말 하루 소비는 평일 하루의 {b.text('weekend_ratio_cn')}예요.")
+        s.append(f"중국인 소비는 {b.text('peak_dow_cn')}에 가장 많고, 주말 하루 소비는 평일 하루의 {b.text('weekend_ratio_cn')}예요"
+                 f"{_old_period(b, 'weekend_ratio_cn')}.")
     if b.fact("peak_dow_kr") and b.fact("weekend_ratio_kr"):
-        s.append(f"내국인 소비는 {b.text('peak_dow_kr')}에 가장 많고, 주말 하루 소비는 평일 하루의 {b.text('weekend_ratio_kr')}예요.")
+        s.append(f"내국인 소비는 {b.text('peak_dow_kr')}에 가장 많고, 주말 하루 소비는 평일 하루의 {b.text('weekend_ratio_kr')}예요"
+                 f"{_old_period(b, 'weekend_ratio_kr')}.")
     if b.fact("nat_top") and fmt.is_num(b.value("nat_growth_top")) and b.value("nat_growth_top") > 0:
         s.append(f"외국인 방문자 가운데 {b.text('nat_top')} 방문자가 {fmt.pct_abs(b.value('nat_growth_top'))} 늘어 증가 폭이 가장 컸어요.")
     if b.fact("n_rules"):

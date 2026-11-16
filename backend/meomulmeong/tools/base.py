@@ -29,12 +29,18 @@ class ToolContext:
     cache: dict[str, Any] = field(default_factory=dict)
     _playbook: list[dict] | None = None
 
+    @property
+    def min_month_days(self) -> int:
+        """한 달을 지표에 넣는 최소 일수. 허브 자료는 쿼터 때문에 달마다 며칠만 받아서(fetch-hub --days) 기준을 따로 둬요."""
+        a = self.config.analysis
+        return a.min_month_days_hub if self.wh.data_mode == "hub" else a.min_month_days
+
     def period(self, table: str, request: PeriodRequest | None = None) -> PeriodPair:
         """테이블의 수록 기간 안에서 비교 기간을 정해요."""
         a = self.config.analysis
         key = f"period:{table}:{request}"
         if key not in self.cache:
-            months = self.wh.valid_months(table, a.min_month_days)
+            months = self.wh.valid_months(table, self.min_month_days)
             self.cache[key] = resolve_period(months, request, a.period_months, a.min_period_months)
         return self.cache[key]
 

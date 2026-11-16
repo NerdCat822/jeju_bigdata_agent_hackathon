@@ -7,6 +7,7 @@ analysis:
   tau: 0.03                   # 유형 분류 임계값 (±3%)
   period_months: 12           # 비교 기간: 최근 12개월(P1) vs 직전 12개월(P0)
   min_month_days: 20          # 월 일수가 이보다 적은 달은 지표에서 제외
+  min_month_days_hub: 2       # 허브 자료는 하루 쿼터 때문에 달마다 며칠만 받아서(fetch-hub --days) 기준을 낮춰요
   min_period_months: 9        # P1·P0 각각 유효한 달이 이보다 적으면 전년 동월 비교로 전환
   min_base_pop: 100           # 기준 인구(P0 청년 거주 일평균)가 이보다 작으면 '작은 표본'
   peers_k: 3                  # 유사 읍면 개수

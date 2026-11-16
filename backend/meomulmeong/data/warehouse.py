@@ -51,8 +51,11 @@ _MACROS = [
          ELSE trim(CAST(x AS VARCHAR)) END""",
     """CREATE OR REPLACE MACRO std_theme(x) AS COALESCE(
          (SELECT theme FROM ref_theme WHERE raw = trim(CAST(x AS VARCHAR)) LIMIT 1), '기타')""",
+    # 허브 실데이터는 '201-12' 처럼 갈래 번호까지 붙어 와요. 참조표에 큰 번호(201)가 있으면 그 노선으로 묶어요.
     """CREATE OR REPLACE MACRO std_route(x) AS COALESCE(
          (SELECT route_no FROM ref_route_alias WHERE alias = trim(CAST(x AS VARCHAR)) LIMIT 1),
+         (SELECT route_no FROM ref_route
+           WHERE route_no = regexp_extract(trim(CAST(x AS VARCHAR)), '^([0-9]+)-', 1) LIMIT 1),
          trim(CAST(x AS VARCHAR)))""",
     """CREATE OR REPLACE MACRO std_nationality(x) AS COALESCE(
          (SELECT nationality FROM ref_nationality_alias

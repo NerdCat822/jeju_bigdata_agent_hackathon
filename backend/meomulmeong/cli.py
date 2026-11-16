@@ -77,6 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     f.add_argument("--start", help="시작일 YYYYMMDD (일 단위 데이터)")
     f.add_argument("--end", help="종료일 YYYYMMDD")
     f.add_argument("--max-calls", type=int, default=900, help="API별 호출 상한 (기본 900, 허브 쿼터 1,000)")
+    f.add_argument("--days", help="일 단위 자료를 달마다 이 날짜만 받아요. 예: 1,9,17,25 또는 1-7 (쿼터 절약)")
     args = p.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")  # Windows 콘솔에서 한글이 깨지지 않게
@@ -98,7 +99,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "fetch-hub":
         from .data.hub_client import fetch_all
 
-        return fetch_all(settings, tables=args.table, start=args.start, end=args.end, max_calls=args.max_calls)
+        return fetch_all(settings, tables=args.table, start=args.start, end=args.end, max_calls=args.max_calls,
+                         days=args.days)
 
     if args.cmd == "serve":
         import threading

@@ -44,6 +44,7 @@ class AnalysisCfg(BaseModel):
     tau: float = 0.03
     period_months: int = 12
     min_month_days: int = 20
+    min_month_days_hub: int = 2  # 허브는 쿼터 때문에 달마다 며칠만 받아요 (fetch-hub --days)
     min_period_months: int = 9
     min_base_pop: float = 100.0
     peers_k: int = 3
