@@ -31,9 +31,9 @@ sources:
       base_date: "std_date(baseDate)"
       sex: "std_sex(gender)"
       age_band: "std_age(ageGroup)"
-      resd_pop: "TRY_CAST(resdPop AS DOUBLE) * {pop_scale}"
-      work_pop: "TRY_CAST(workPop AS DOUBLE) * {pop_scale}"
-      visit_pop: "TRY_CAST(visitPop AS DOUBLE) * {pop_scale}"
+      resd_pop: "to_double(resdPop) * {pop_scale}"
+      work_pop: "to_double(workPop) * {pop_scale}"
+      visit_pop: "to_double(visitPop) * {pop_scale}"
     aggregate: {resd_pop: sum, work_pop: sum, visit_pop: sum}
   center:
     spec_no: "4-11"
@@ -45,7 +45,7 @@ sources:
       emd_cd: "CAST(emd_cd AS VARCHAR)"
       sex: "std_sex(sex)"
       age_band: "std_age_code(age)"
-      resd_pop: "TRY_CAST(resd_pop_cnt AS DOUBLE) / 24"
-      work_pop: "TRY_CAST(work_pop_cnt AS DOUBLE) / 24"
-      visit_pop: "TRY_CAST(visit_pop_cnt AS DOUBLE) / 24"
+      resd_pop: "to_double(resd_pop_cnt) / 24"
+      work_pop: "to_double(work_pop_cnt) / 24"
+      visit_pop: "to_double(visit_pop_cnt) / 24"
     aggregate: {resd_pop: sum, work_pop: sum, visit_pop: sum}

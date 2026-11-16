@@ -32,7 +32,7 @@ sources:
       move_type: "trim(CAST(moveType AS VARCHAR))"
       price_type: "trim(CAST(priceType AS VARCHAR))"
       pay_type: "trim(CAST(payType AS VARCHAR))"
-      user_cnt: "TRY_CAST(userCount AS BIGINT)"
+      user_cnt: "to_bigint(userCount)"
     aggregate: {user_cnt: sum}
   center:
     spec_no: "3-02"
@@ -41,10 +41,10 @@ sources:
     note: 시간대·이용자구분을 하루 단위로 올려 적재해요. 실제 추출본으로 검증이 필요해요.
     select:
       base_date: "std_date(base_date)"
-      route_no: "std_route(regexp_extract(CAST(bus_route_name AS VARCHAR), '^([0-9A-Za-z-]+)', 1))"
+      route_no: "std_route(COALESCE(substring(bus_route_name from '^([0-9A-Za-z-]+)'), ''))"
       route_nm: "trim(CAST(bus_route_name AS VARCHAR))"
       move_type: "trim(CAST(get_on_off_type AS VARCHAR))"
       price_type: "trim(CAST(user_category AS VARCHAR))"
       pay_type: "trim(CAST(pay_type AS VARCHAR))"
-      user_cnt: "TRY_CAST(user_count AS BIGINT)"
+      user_cnt: "to_bigint(user_count)"
     aggregate: {user_cnt: sum}

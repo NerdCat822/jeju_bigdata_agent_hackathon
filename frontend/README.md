@@ -9,7 +9,7 @@
 
 ## 1. 실행
 
-Node 20.19 이상이 필요해요. 백엔드를 먼저 준비해요 ([../backend/README.md](../backend/README.md) 1절).
+Node 20.19 이상이 필요해요. 백엔드와 데이터 창고(PostgreSQL)를 먼저 준비해요 ([../backend/README.md](../backend/README.md) 1절).
 
 ### 개발할 때
 

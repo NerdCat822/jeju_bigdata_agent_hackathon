@@ -25,5 +25,5 @@ sources:
     select:
       month: "std_month(dtYearMonth)"
       purpose: "replace(trim(CAST(visitPurpose AS VARCHAR)), ' ', '')"
-      visitors: "TRY_CAST(visitorCnt AS BIGINT)"
+      visitors: "to_bigint(visitorCnt)"
     aggregate: {visitors: sum}

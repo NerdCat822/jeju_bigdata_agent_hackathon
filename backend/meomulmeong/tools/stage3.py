@@ -112,7 +112,7 @@ def route_betas(ctx: ToolContext, routes: list[str]) -> tuple[dict[str, dict[str
     sql = f"""
 WITH bus AS (
   SELECT month, route_no,
-         riders * 1.0 / n_days * date_part('day', last_day(month)) AS riders_month
+         riders * 1.0 / n_days * date_part('day', month + INTERVAL '1 month' - INTERVAL '1 day') AS riders_month
   FROM m_bus_route_month
   WHERE n_days >= {ctx.min_month_days} AND route_no IN ({sql_in(sorted(routes))})
 ),

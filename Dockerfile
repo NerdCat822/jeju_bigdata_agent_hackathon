@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-# 머물멍을 이미지 하나로 만들어요: 백엔드(웹 API) + 빌드한 React 화면 + 샘플 데이터.
+# 머물멍 앱 이미지를 만들어요: 백엔드(웹 API) + 빌드한 React 화면.
+# 데이터 창고는 PostgreSQL 컨테이너(docker-compose.yml 의 db)에 있고, 처음 뜰 때 샘플 데이터를 거기에 넣어요.
 #
 #   docker compose up -d --build      →  http://localhost:3000
 #
@@ -38,17 +39,17 @@ COPY backend/meomulmeong ./meomulmeong
 COPY backend/eval ./eval
 COPY --from=web /web/dist /app/frontend/dist
 
-# 루트가 아닌 사용자로 실행해요. 샘플(합성) 데이터 창고는 이미지에 미리 만들어 둬요 (시드 고정이라 늘 같은 값이에요).
+# 루트가 아닌 사용자로 실행해요.
 RUN useradd --create-home --uid 10001 meomul \
     && mkdir -p outputs \
     && chown -R meomul:meomul /app/backend
 USER meomul
-RUN python -m meomulmeong build-data --mode synthetic
 
 EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+# 처음 뜰 때는 샘플 데이터를 PostgreSQL 에 넣느라 1~2분 걸려요 (시드 고정이라 늘 같은 값이에요).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --retries=3 \
     CMD python -c "import json,urllib.request,sys; sys.exit(0 if json.load(urllib.request.urlopen('http://127.0.0.1:3000/api/health', timeout=4))['ok'] else 1)"
 
 ENTRYPOINT ["python", "-m", "meomulmeong"]
 # 컨테이너 안에서는 모든 주소로 듣고, 밖으로 여는 범위는 docker-compose.yml 의 ports 가 정해요.
-CMD ["serve", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["serve", "--prepare", "--host", "0.0.0.0", "--port", "3000"]

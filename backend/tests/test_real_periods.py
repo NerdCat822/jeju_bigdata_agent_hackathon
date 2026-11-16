@@ -8,6 +8,7 @@ import shutil
 
 import pandas as pd
 import pytest
+from conftest import make_settings
 
 from meomulmeong.data import synthetic
 from meomulmeong.data.catalog import Catalog
@@ -15,7 +16,7 @@ from meomulmeong.data.refs import Refs
 from meomulmeong.data.warehouse import build_warehouse
 from meomulmeong.schemas import ChainResult
 from meomulmeong.service import AgentService
-from meomulmeong.settings import BACKEND_DIR, Settings, load_config
+from meomulmeong.settings import BACKEND_DIR, load_config
 
 
 def _shift(path, col: str, first: str, keep: int) -> None:
@@ -37,7 +38,7 @@ def hub_svc(tmp_path_factory):
     home = tmp_path_factory.mktemp("hub_home")
     shutil.copytree(BACKEND_DIR / "config", home / "config")
     shutil.copytree(BACKEND_DIR / "data" / "ref", home / "data" / "ref")
-    settings = Settings(home=home, data_mode="hub", llm_mode="template", outputs=home / "outputs")
+    settings = make_settings(home, data_mode="hub", llm_mode="template", outputs=home / "outputs")
     hub = settings.raw_dir("hub")
     synthetic.generate(hub, Refs(settings.ref_dir))
     _shift(hub / "card_cn_area" / "synthetic.parquet", "dtYearMonth", "201609", 28)     # 2016-09~2018-12
@@ -92,7 +93,7 @@ def sampled_svc(tmp_path_factory):
     home = tmp_path_factory.mktemp("hub_sampled")
     shutil.copytree(BACKEND_DIR / "config", home / "config")
     shutil.copytree(BACKEND_DIR / "data" / "ref", home / "data" / "ref")
-    settings = Settings(home=home, data_mode="hub", llm_mode="template", outputs=home / "outputs")
+    settings = make_settings(home, data_mode="hub", llm_mode="template", outputs=home / "outputs")
     hub = settings.raw_dir("hub")
     synthetic.generate(hub, Refs(settings.ref_dir))
     for folder, days in (("pop_kor_emd", "01|09|17|25"), ("pop_for_long_emd", "01|09|17|25"), ("bus_route", "09|25")):

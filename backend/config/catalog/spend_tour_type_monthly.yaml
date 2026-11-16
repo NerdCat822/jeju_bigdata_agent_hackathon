@@ -32,5 +32,5 @@ sources:
       theme: "std_theme(marketType)"
       user_type: "std_user_type(userType)"
       tour_type: "trim(CAST(individualGroup AS VARCHAR))"
-      amt_per_tx: "TRY_CAST(eventSum AS DOUBLE)"
-      amt_per_person: "TRY_CAST(costOfPerson AS DOUBLE)"
+      amt_per_tx: "to_double(eventSum)"
+      amt_per_person: "to_double(costOfPerson)"

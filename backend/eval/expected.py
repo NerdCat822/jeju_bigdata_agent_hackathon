@@ -1,6 +1,6 @@
 """기대값 계산기: 에이전트의 SQL과 다른 경로(pandas, 원본 Parquet)로 같은 지표를 다시 계산해요.
 
-에이전트가 쓰는 DuckDB 테이블·SQL 템플릿을 전혀 거치지 않으므로, 두 값이 같으면 계산식이 맞다는 뜻이에요.
+에이전트가 쓰는 PostgreSQL 테이블·SQL 템플릿을 전혀 거치지 않으므로, 두 값이 같으면 계산식이 맞다는 뜻이에요.
 """
 
 from __future__ import annotations

@@ -3,11 +3,12 @@
 import shutil
 
 import pytest
+from conftest import make_settings
 
 from meomulmeong.data.catalog import Catalog
 from meomulmeong.data.warehouse import Warehouse, build_warehouse
 from meomulmeong.service import AgentService
-from meomulmeong.settings import BACKEND_DIR, Settings, load_config
+from meomulmeong.settings import BACKEND_DIR, load_config
 
 
 @pytest.fixture()
@@ -18,7 +19,7 @@ def empty_home(tmp_path):
 
 
 def _build(home, mode):
-    settings = Settings(home=home, data_mode=mode, llm_mode="template", outputs=home / "outputs")
+    settings = make_settings(home, data_mode=mode, llm_mode="template", outputs=home / "outputs")
     report = build_warehouse(settings, load_config(settings.config_dir), Catalog.load(settings.catalog_dir), mode)
     return settings, report
 
@@ -41,9 +42,9 @@ def test_hub_mode_without_data_explains_itself(empty_home):
 def test_missing_warehouse_message(empty_home):
     from meomulmeong.data.warehouse import WarehouseMissing
 
-    settings = Settings(home=empty_home, data_mode="synthetic")
+    settings = make_settings(empty_home, data_mode="synthetic")
     with pytest.raises(WarehouseMissing, match="build-data"):
-        Warehouse(settings.warehouse_path("synthetic"))
+        Warehouse(settings, "synthetic")
 
 
 def test_center_csv_is_loaded_with_column_mapping(empty_home):
@@ -62,7 +63,7 @@ def test_center_csv_is_loaded_with_column_mapping(empty_home):
            "20250601,2025,6,일,09,21279999,999-1(없는 노선),환승,경로,카드,2"]
     (center / "tb_bus_route_usage_202506.csv").write_text("\n".join(bus), encoding="cp949")
     settings, report = _build(empty_home, "center")
-    wh = Warehouse(settings.warehouse_path("center"))
+    wh = Warehouse(settings, "center")
     rows = wh.query("SELECT sex, age_band, resd_pop, work_pop, visit_pop FROM pop_kor_emd_daily ORDER BY sex, age_band").rows
     assert rows == [("남", 30, 60.0, 12.0, 0.0), ("여", 20, 360.0, 24.0, 48.0)]  # 시간대 → 하루 평균, 5세 단위 → 10세 단위
     assert wh.query("SELECT route_no, SUM(user_cnt) FROM bus_route_daily GROUP BY 1 ORDER BY 1").rows == [("111", 12), ("999-1", 2)]

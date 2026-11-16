@@ -112,6 +112,14 @@ class Settings(BaseSettings):
     hub_project_key: str = ""
     hub_base_url: str = "https://open.jejudatahub.net/api/proxy"
 
+    # 데이터 창고 (PostgreSQL). 기본값은 docker-compose.yml 의 db 서비스에 맞춰 두었어요.
+    pg_host: str = "127.0.0.1"
+    pg_port: int = 5434
+    pg_db: str = "meomul"
+    pg_user: str = "meomul"
+    pg_password: str = "meomul"  # 이 PC 안에서만 여는 개발·시연용 기본값이에요. 바꾸려면 MEOMUL_PG_PASSWORD
+    pg_schema_prefix: str = ""  # 스키마 이름 앞에 붙여요 (테스트가 개발용 데이터를 건드리지 않게)
+
     # 웹 API 서버 (React 화면이 붙는 곳). 기본은 이 PC 안에서만 열려요.
     api_host: str = "127.0.0.1"
     api_port: int = 8501
@@ -138,8 +146,26 @@ class Settings(BaseSettings):
     def raw_dir(self, mode: DataMode | None = None) -> Path:
         return self.home / "data" / (mode or self.data_mode)
 
-    def warehouse_path(self, mode: DataMode | None = None) -> Path:
-        return self.home / "data" / "warehouse" / f"meomul_{mode or self.data_mode}.duckdb"
+    def export_dir(self, mode: DataMode | None = None) -> Path:
+        """export-csv 가 CSV 를 내보내는 폴더 (저장소에 올리지 않아요)."""
+        return self.home / "data" / "export" / (mode or self.data_mode)
+
+    # ---- 데이터 창고 ----
+    def pg_schema(self, mode: DataMode | None = None) -> str:
+        """데이터 모드마다 스키마 하나를 써요: synthetic · hub · center."""
+        return f"{self.pg_schema_prefix}{mode or self.data_mode}"
+
+    @property
+    def pg_conninfo(self) -> str:
+        from psycopg.conninfo import make_conninfo
+
+        return make_conninfo(host=self.pg_host, port=self.pg_port, dbname=self.pg_db, user=self.pg_user,
+                             password=self.pg_password, connect_timeout=5, application_name="meomulmeong")
+
+    @property
+    def pg_label(self) -> str:
+        """화면과 안내 문구에 쓰는 접속 위치 (암호는 넣지 않아요)."""
+        return f"PostgreSQL {self.pg_host}:{self.pg_port}/{self.pg_db}"
 
     @property
     def outputs_dir(self) -> Path:

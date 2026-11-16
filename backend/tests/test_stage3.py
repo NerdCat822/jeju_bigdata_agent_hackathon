@@ -43,12 +43,12 @@ def test_route_beta(ctx, refs):
 
 
 def test_route_beta_matches_numpy(ctx):
-    """DuckDB 회귀(regr_slope) 결과를 numpy 로 다시 계산해 대조해요."""
+    """PostgreSQL 회귀(regr_slope) 결과를 numpy 로 다시 계산해 대조해요."""
     import numpy as np
 
     betas, _ = stage3.route_betas(ctx, ["111"])
     rows = ctx.wh.query("""
-        SELECT b.riders * 1.0 / b.n_days * date_part('day', last_day(b.month)), a.visitors
+        SELECT b.riders * 1.0 / b.n_days * date_part('day', b.month + INTERVAL '1 month' - INTERVAL '1 day'), a.visitors
         FROM m_bus_route_month b JOIN arrivals_purpose_monthly a ON a.month = b.month AND a.purpose = '개별여행'
         WHERE b.route_no = '111' ORDER BY b.month""").rows
     y, x = np.log([r[0] for r in rows]), np.log([float(r[1]) for r in rows])

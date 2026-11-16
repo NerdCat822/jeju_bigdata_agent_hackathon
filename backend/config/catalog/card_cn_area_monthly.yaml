@@ -34,7 +34,7 @@ sources:
       city: "trim(CAST(sigungu AS VARCHAR))"
       area_type: "trim(CAST(cityGubun AS VARCHAR))"
       theme: "std_theme(marketType)"
-      user_cnt: "TRY_CAST(userCount AS BIGINT)"
-      use_cnt: "TRY_CAST(useCount AS BIGINT)"
-      use_amt: "TRY_CAST(useCost AS BIGINT)"
+      user_cnt: "to_bigint(userCount)"
+      use_cnt: "to_bigint(useCount)"
+      use_amt: "to_bigint(useCost)"
     aggregate: {user_cnt: sum, use_cnt: sum, use_amt: sum}

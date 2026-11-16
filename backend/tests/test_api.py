@@ -3,6 +3,7 @@
 import json
 
 import pytest
+from conftest import make_settings
 from fastapi.testclient import TestClient
 from test_llm import FakeLLM
 
@@ -232,7 +233,7 @@ def test_missing_warehouse_is_reported_not_crashed(tmp_path, home):
 
     shutil.copytree(home / "config", tmp_path / "config")
     shutil.copytree(home / "data" / "ref", tmp_path / "data" / "ref")
-    c = TestClient(create_app(settings=Settings(home=tmp_path, data_mode="synthetic", llm_mode="template")))
+    c = TestClient(create_app(settings=make_settings(tmp_path, data_mode="synthetic", llm_mode="template")))
     h = c.get("/api/health").json()
     assert h["ok"] and h["ready"] is False and "build-data" in h["message"]
     r = c.post("/api/ask", json={"question": "성산읍 청년 인구 진단"})

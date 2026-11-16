@@ -6,6 +6,7 @@ from datetime import date
 import httpx
 import pandas as pd
 import pytest
+from conftest import make_settings
 
 from meomulmeong.data.catalog import Catalog
 from meomulmeong.data.hub_client import HubClient, HubError, _rows, month_windows, parse_days, sample_dates
@@ -155,9 +156,9 @@ def test_fetched_files_load_into_warehouse(tmp_path, home):
              "resdPop": 1, "workPop": 1, "visitPop": 1}]
     client, catalog, _ = make_client(tmp_path, home, lambda r: httpx.Response(200, text=json.dumps({"totCnt": 3, "data": rows})))
     client.fetch_table(catalog.get("pop_kor_emd_daily"), date(2025, 1, 1), date(2025, 1, 31))
-    settings = Settings(home=tmp_path, data_mode="hub")
+    settings = make_settings(tmp_path, data_mode="hub")
     report = build_warehouse(settings, load_config(settings.config_dir), catalog, "hub")
-    wh = Warehouse(settings.warehouse_path("hub"))
+    wh = Warehouse(settings, "hub")
     got = wh.query("SELECT emd_cd, sex, age_band, resd_pop FROM pop_kor_emd_daily ORDER BY emd_cd").rows
     assert [(r[0], r[1], r[2], round(r[3])) for r in got] == [("50110620", "남", 0, 10), ("50130259", "여", 20, 100)]
     assert wh.data_badge == "실데이터"

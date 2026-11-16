@@ -26,5 +26,5 @@ sources:
     select:
       month: "std_month(dtYearMonth)"
       nationality: "std_nationality(nationality)"
-      visitors: "TRY_CAST(visitorCnt AS BIGINT)"
+      visitors: "to_bigint(visitorCnt)"
     aggregate: {visitors: sum}

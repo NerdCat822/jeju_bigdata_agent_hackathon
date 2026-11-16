@@ -21,7 +21,7 @@ import yaml
 from meomulmeong.data import synthetic
 from meomulmeong.data.catalog import Catalog
 from meomulmeong.data.refs import Refs
-from meomulmeong.data.warehouse import build_warehouse
+from meomulmeong.data.warehouse import build_warehouse, warehouse_exists
 from meomulmeong.schemas import Answer, ChainResult
 from meomulmeong.service import AgentService
 from meomulmeong.settings import get_settings, load_config
@@ -38,7 +38,7 @@ def ensure_data(golden: dict[str, Any]) -> None:
     raw = settings.raw_dir("synthetic")
     manifest = raw / "MANIFEST.json"
     seed = json.loads(manifest.read_text(encoding="utf-8"))["seed"] if manifest.exists() else None
-    if seed != golden["meta"]["seed"] or not settings.warehouse_path("synthetic").exists():
+    if seed != golden["meta"]["seed"] or not warehouse_exists(settings, ["synthetic"])["synthetic"]:
         synthetic.generate(raw, Refs(settings.ref_dir), seed=golden["meta"]["seed"])
         build_warehouse(settings, load_config(settings.config_dir), Catalog.load(settings.catalog_dir), "synthetic")
 

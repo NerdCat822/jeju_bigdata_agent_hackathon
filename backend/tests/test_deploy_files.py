@@ -19,7 +19,7 @@ def test_dockerignore_keeps_secrets_and_raw_data_out_of_the_image():
     lines = [x.strip() for x in _read(".dockerignore").splitlines() if x.strip() and not x.startswith("#")]
     assert lines[0] == "*"  # 모두 빼고, 넣을 것만 골라 담아요
     for must in ("backend/.env", "backend/.env.*", "backend/data/center/", "backend/data/hub/", "backend/data/warehouse/",
-                 "backend/outputs/", "**/*.xlsx", "**/*.pdf", "**/*.key", "**/*.pem"):
+                 "backend/data/export/", "backend/outputs/", "**/*.xlsx", "**/*.pdf", "**/*.key", "**/*.pem"):
         assert must in lines, f".dockerignore 에 {must} 가 빠졌어요"
     allowed = {x for x in lines if x.startswith("!")}
     assert allowed == {"!backend/", "!frontend/", "!backend/.env.example"}
@@ -34,7 +34,8 @@ def test_dockerfile_runs_as_a_normal_user_and_copies_only_what_it_needs():
     assert copies and all(c[1] != "." for c in copies), "COPY . 처럼 통째로 넣지 않아요"
     assert not any(".env" in " ".join(c) for c in copies)
     assert "ARG " not in text  # 빌드 인자로 비밀값을 넘기지 않아요
-    assert 'CMD ["serve", "--host", "0.0.0.0", "--port", "3000"]' in text
+    assert 'CMD ["serve", "--prepare", "--host", "0.0.0.0", "--port", "3000"]' in text
+    assert "build-data" not in text  # 데이터는 이미지에 굽지 않고, 처음 뜰 때 PostgreSQL 에 넣어요
 
 
 def test_compose_opens_the_port_on_this_pc_only():
@@ -45,6 +46,19 @@ def test_compose_opens_the_port_on_this_pc_only():
     env = app.get("environment", {})
     assert not any("KEY" in k for k in env), "API 키는 compose 파일에 적지 않아요"
     assert "restart" not in app  # PC를 켤 때 저절로 뜨지 않게 해요
+    assert app["depends_on"] == {"db": {"condition": "service_healthy"}}  # 데이터 창고가 준비된 뒤에 떠요
+
+
+def test_compose_database_is_open_on_this_pc_only():
+    """데이터 창고(PostgreSQL)도 이 PC 안에서만 열고, 데이터는 이름 붙인 볼륨에 둬요."""
+    doc = yaml.safe_load(_read("docker-compose.yml"))
+    db = doc["services"]["db"]
+    assert db["image"].startswith("postgres:")
+    assert db["ports"] == ["127.0.0.1:5434:5432"]
+    assert db["volumes"] == ["pgdata:/var/lib/postgresql/data"] and "pgdata" in doc["volumes"]
+    assert "restart" not in db
+    env = doc["services"]["app"]["environment"]
+    assert env["MEOMUL_PG_HOST"] == "db" and str(env["MEOMUL_PG_PORT"]) == "5432"
 
 
 def test_no_local_llm_setup_is_left():
@@ -55,9 +69,8 @@ def test_no_local_llm_setup_is_left():
         assert "ollama" not in text and "qwen" not in text, f"{name} 에 로컬 LLM 설정이 남았어요"
 
 
-def test_hub_override_mounts_only_the_warehouse_read_only():
-    """실데이터는 이미지에 넣지 않고, 만든 창고 파일 하나만 읽기 전용으로 연결해요."""
-    doc = yaml.safe_load(_read("docker-compose.hub.yml"))
-    app = doc["services"]["app"]
-    assert set(app) == {"volumes"}  # 포트나 환경변수는 건드리지 않아요
-    assert app["volumes"] == ["./backend/data/warehouse/meomul_hub.duckdb:/app/backend/data/warehouse/meomul_hub.duckdb:ro"]
+def test_no_duckdb_setup_is_left():
+    """데이터 창고는 PostgreSQL 하나만 써요. 창고 파일을 끼워 넣던 겹침 파일과 DuckDB 의존성이 남지 않게 해요."""
+    assert not (ROOT / "docker-compose.hub.yml").exists()
+    for name in ("backend/pyproject.toml", "backend/requirements.txt", "backend/requirements.lock"):
+        assert "duckdb" not in _read(name).lower(), f"{name} 에 DuckDB 가 남았어요"

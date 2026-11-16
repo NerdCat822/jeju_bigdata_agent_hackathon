@@ -14,6 +14,7 @@ backend/data/synthetic/
 backend/data/hub/
 backend/data/center/
 backend/data/warehouse/
+backend/data/export/
 backend/outputs/
 backend/tests/
 backend/**/__pycache__/
@@ -33,8 +34,7 @@ frontend/.env.*
 **/*.xls
 **/*.hwp
 **/*.pdf
-**/*.duckdb
-**/*.duckdb.wal
+**/*.csv.gz
 **/*.key
 **/*.pem
 **/.git/

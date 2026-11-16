@@ -33,14 +33,18 @@ docker compose up -d --build      # 처음에는 이미지를 만들어요 (2~3�
 ```
 
 브라우저에서 http://localhost:3000 을 열어요. 내릴 때는 `docker compose down` 이에요.
-이미지에는 시드를 고정한 샘플 데이터가 들어 있어서 다른 준비 없이 바로 써 볼 수 있어요.
+컨테이너 둘이 떠요. 화면과 API 를 맡는 앱, 데이터 창고인 PostgreSQL 이에요.
+처음 뜰 때 시드를 고정한 샘플 데이터를 PostgreSQL 에 넣어서(1~2분) 다른 준비 없이 바로 써 볼 수 있어요.
 
 ### 직접 실행
 
-Python 3.11 과 Node 20.19 이상이 필요해요.
+Python 3.11, Node 20.19 이상, PostgreSQL 이 필요해요. PostgreSQL 은 Docker 로 창고만 띄우면 돼요.
 
 ```bash
-# 1) 백엔드 준비와 샘플 데이터 만들기
+# 0) 데이터 창고(PostgreSQL)만 띄우기 (127.0.0.1:5434)
+docker compose up -d db
+
+# 1) 백엔드 준비와 샘플 데이터 넣기
 cd backend
 uv venv --python 3.11 .venv
 uv pip install --python .venv/bin/python -r requirements-dev.txt -e .
@@ -98,10 +102,10 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 
 ```
 .
-├─ backend/     에이전트 코어와 웹 API (Python · DuckDB · FastAPI)      → backend/README.md
+├─ backend/     에이전트 코어와 웹 API (Python · PostgreSQL · FastAPI)  → backend/README.md
 ├─ frontend/    웹 화면 (React · TypeScript)                            → frontend/README.md
 ├─ docs/        조사 노트와 화면 사진
-├─ Dockerfile · docker-compose.yml · docker-compose.local-llm.yml
+├─ Dockerfile · docker-compose.yml   (앱 + PostgreSQL)
 ├─ 머물멍_AI_Agent_기획서.pdf
 └─ 제주_AI빅데이터_활용_AI_Agent_개발_챌린지.pdf   (대회 안내문)
 ```
@@ -117,7 +121,7 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 
 | 항목 | 결과 |
 |---|---|
-| 백엔드 테스트 | 243개 (`cd backend && .venv/bin/python -m pytest`) |
+| 백엔드 테스트 | 254개 (`cd backend && .venv/bin/python -m pytest`, PostgreSQL 이 떠 있어야 해요) |
 | 화면 테스트 | 69개 (`cd frontend && npm test`) |
 | 골든셋 60문항 · 템플릿 모드 | 60 / 60. Stage 1·2·3, 연계, 인과 함정 모두 목표 달성 (`python -m eval`) |
 | 클라우드 LLM 실제 호출 · 5문항 | 5 / 5. 해설 5건 모두 첫 시도에 검증 통과, 답 하나에 2~9초 |
@@ -131,7 +135,9 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 
 - 기본은 **샘플(합성) 데이터**예요. 시드를 고정해서 누구나 같은 값을 다시 만들 수 있고, 화면과 제안서에 "샘플 데이터" 배지가 붙어요.
 - 실데이터는 제주데이터허브 Open API 수집본(`hub` 모드)과 제주빅데이터센터 추출본(`center` 모드)을 같은 경로로 적재해요.
-- 저장소에는 원자료를 넣지 않아요. 센터 추출본, 허브 수집본, 대회 제공 데이터 목록·명세서 xlsx, API 키는 올리지 않아요.
+- 데이터 창고는 PostgreSQL 이에요. 데이터 모드마다 스키마 하나(`synthetic` · `hub` · `center`)를 쓰고, 데이터 종류마다 테이블 하나를 둬요.
+- 저장소에는 원자료를 넣지 않아요. 센터 추출본, 허브 수집본과 그 CSV 내보내기, 대회 제공 데이터 목록·명세서 xlsx, API 키는 올리지 않아요.
+  허브 이용약관은 받은 자료를 사전 승낙 없이 다른 사람에게 주지 못하게 해요. 필요한 사람은 각자 프로젝트 키로 받아요.
 - 출처: 제주특별자치도, 제주데이터허브.
 
 ---
@@ -144,7 +150,7 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 - 지도는 행정동 경계가 아니라, 본섬의 대략 윤곽 위에 읍면동을 점으로 찍은 그림이에요.
 - 로컬 LLM은 쓰지 않아요. 인터넷이 없는 센터 PC에서는 템플릿 모드로만 돌아가요.
 - 클라우드 LLM은 실제 질문 5개로만 확인했어요. 골든셋 전체를 클라우드 모드로 돌려 보지는 않았어요.
-- 센터 PC용 설치 스크립트(`install.bat`, `run.bat`)는 아직 없어요.
+- 센터 PC용 설치 스크립트(`install.bat`, `run.bat`)는 아직 없어요. 데이터 창고는 센터 PC에 설치된 PostgreSQL 을 쓰고, 접속 정보는 `backend/.env` 의 `MEOMUL_PG_*` 로 줘요.
 
 남은 일의 목록은 [backend/README.md](backend/README.md) 11절과 [frontend/README.md](frontend/README.md) 8절에 있어요.
 
@@ -164,6 +170,6 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 
 ## 오픈소스와 AI 활용
 
-- 백엔드: DuckDB, pandas, PyArrow, pydantic, FastAPI, Uvicorn, Jinja2, httpx, Anthropic Python SDK. 화면: React, Pretendard, Lucide, Vite, TypeScript, Vitest.
+- 백엔드: PostgreSQL, psycopg, pandas, PyArrow, pydantic, FastAPI, Uvicorn, Jinja2, httpx, Anthropic Python SDK. 화면: React, Pretendard, Lucide, Vite, TypeScript, Vitest.
   라이선스와 버전은 각 폴더의 README와 `requirements.lock`, `package-lock.json` 에 있어요.
 - 이 저장소의 코드와 문서 초안은 Claude Code(Anthropic Claude)로 작성했어요.

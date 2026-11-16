@@ -32,7 +32,7 @@ sources:
       zone: "trim(CAST(districtType AS VARCHAR))"
       user_type: "std_user_type(userType)"
       dow: "trim(CAST(dtWeek AS VARCHAR))"
-      user_cnt: "TRY_CAST(userCount AS BIGINT)"
-      use_cnt: "TRY_CAST(useCount AS BIGINT)"
-      use_amt: "TRY_CAST(useCost AS BIGINT)"
+      user_cnt: "to_bigint(userCount)"
+      use_cnt: "to_bigint(useCount)"
+      use_amt: "to_bigint(useCost)"
     aggregate: {user_cnt: sum, use_cnt: sum, use_amt: sum}

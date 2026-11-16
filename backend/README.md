@@ -17,9 +17,12 @@
 
 ## 1. 빠른 시작
 
-Python 3.11 이 필요해요. 아래는 `backend/` 폴더에서 실행해요.
+Python 3.11 과 PostgreSQL 이 필요해요. 아래는 `backend/` 폴더에서 실행해요.
 
 ```bash
+# 0) 데이터 창고(PostgreSQL) 띄우기. 저장소 맨 위의 docker-compose.yml 에 들어 있어요 (127.0.0.1:5434)
+docker compose -f ../docker-compose.yml up -d db
+
 # 1) 설치 (uv 사용)
 uv venv --python 3.11 .venv
 uv pip install --python .venv/bin/python -r requirements-dev.txt -e .
@@ -29,7 +32,7 @@ python -m venv .venv
 .venv/bin/python -m pip install -r requirements.lock pytest ruff
 .venv/bin/python -m pip install -e . --no-deps
 
-# 2) 샘플(합성) 데이터와 데이터 창고 만들기 (약 3초)
+# 2) 샘플(합성) 데이터를 만들어 PostgreSQL 에 넣기 (약 25초)
 .venv/bin/python -m meomulmeong build-data
 
 # 3) 질문하기 (LLM 없이 동작하는 템플릿 모드)
@@ -43,6 +46,9 @@ python -m venv .venv
 ```
 
 Windows 에서는 `.venv/bin/python` 대신 `.venv\Scripts\python` 을 써요.
+
+Docker 없이 따로 설치한 PostgreSQL 을 쓰려면 `.env` 에 `MEOMUL_PG_HOST`, `MEOMUL_PG_PORT`, `MEOMUL_PG_DB`, `MEOMUL_PG_USER`,
+`MEOMUL_PG_PASSWORD` 를 넣어요. 데이터베이스와 사용자는 미리 만들어 두고, 사용자에게 스키마를 만들 권한을 줘요.
 
 클라우드 LLM(Claude)으로 실행하려면 `.env` 에 `ANTHROPIC_API_KEY` 를 넣고 `--llm anthropic` 을 붙여요.
 명령줄에서는 `--yes-cloud` 로 전송에 동의해야 LLM에 보내요. 동의하지 않으면 규칙 문장으로 답해요.
@@ -81,7 +87,8 @@ backend/
 ├─ data/
 │  ├─ ref/                 참조표 CSV (읍면동 43개, 지구, 테마, 거점, 노선, 방문목적, 국적)
 │  ├─ synthetic/ hub/ center/   원본 (합성 · 허브 수집본 · 센터 추출본), 저장소에 올리지 않음
-│  └─ warehouse/           DuckDB 데이터 창고 (모드마다 파일 하나)
+│  └─ export/              export-csv 로 내보낸 CSV, 저장소에 올리지 않음
+│                          (데이터 창고는 파일이 아니라 PostgreSQL 에 있어요. 모드마다 스키마 하나)
 ├─ meomulmeong/
 │  ├─ settings.py  schemas.py  fmt.py  service.py  cli.py  progress.py(진행 알림)
 │  ├─ api/         app(웹 API 서버, FastAPI). React 화면이 부르는 곳
@@ -91,7 +98,7 @@ backend/
 │  ├─ llm/         base · anthropic_provider · factory
 │  └─ report/      builder · svg · templates/proposal.html.j2
 ├─ eval/           golden.yaml(60문항) · make_golden · expected(pandas 기대값 계산) · __main__
-├─ tests/          pytest 243개
+├─ tests/          pytest 254개
 └─ outputs/        제안서(reports/) · 실행 기록(runs/*.jsonl) · 평가 보고서(eval/)
 ```
 
@@ -165,6 +172,19 @@ backend/
 | `hub` | `data/hub/` | `fetch-hub` 로 허브 Open API 를 받은 뒤 `build-data --mode hub` | 실데이터 |
 | `center` | `data/center/` | 센터 추출 CSV 를 넣고 `build-data --mode center` (센터 자료가 없는 테이블은 허브 자료를 써요) | 센터 데이터 |
 
+`build-data` 는 원본을 읽어 PostgreSQL 에 넣어요. 데이터 모드마다 스키마 하나를 쓰고, 그 안에 데이터 종류마다 테이블 하나를 만들어요.
+
+| 스키마 안의 것 | 내용 |
+|---|---|
+| 표준 테이블 8개 | `pop_kor_emd_daily`, `pop_for_long_emd_daily`, `bus_route_daily`, `arrivals_purpose_monthly`, `foreign_visitors_monthly`, `card_cn_area_monthly`, `card_zone_dow_monthly`, `spend_tour_type_monthly` |
+| 월 집계 테이블 3개 | `m_pop_kor_emd_month`, `m_pop_for_long_emd_month`, `m_bus_route_month` |
+| 참조표 `ref_*` | 읍면동, 지구, 테마, 거점, 노선, 방문목적, 국적, 요일 달력 |
+| `meta_*` | 테이블별 수록 기간과 행 수, 적재 때 빠진 행, 만든 시각 |
+
+새 스키마를 다 만든 뒤 한 번에 바꿔치기해서, 만드는 동안에도 기존 데이터로 답할 수 있어요. 분석할 때는 읽기 전용으로만 붙어요.
+받은 자료를 파일로 보고 싶으면 `python -m meomulmeong export-csv --mode hub` 로 `data/export/hub/` 에 CSV 를 내보내요.
+허브 · 센터 자료는 재배포할 수 없어서 이 폴더는 저장소에 올리지 않아요.
+
 합성 데이터는 허브 API 응답과 같은 컬럼으로 만들어져 실데이터와 같은 적재 경로를 지나요. 읍면동마다 숨은 유형을 심어 두어서
 세 단계가 끝까지 이어지는지 시험할 수 있어요. 실제 통계가 아니므로 화면과 제안서에 "샘플 데이터" 배지가 붙어요.
 
@@ -218,7 +238,7 @@ backend/
 
 ### 6.4 새 데이터 붙이기
 
-`config/catalog/` 에 YAML 한 장을 추가하고 `build-data` 를 다시 실행해요. `select` 에 표준 컬럼별 변환식(DuckDB SQL)을 적어요.
+`config/catalog/` 에 YAML 한 장을 추가하고 `build-data` 를 다시 실행해요. `select` 에 표준 컬럼별 변환식(PostgreSQL SQL)을 적어요.
 센터 추출본은 `sources.center.file_glob` 로 파일 이름을 지정해요. 자세한 형식은 [config/catalog/README.md](config/catalog/README.md)에 있어요.
 
 ---
@@ -282,7 +302,7 @@ cd ../frontend && npm run gen:api      # 백엔드 모델을 바꾼 뒤에 실�
 
 | 상태 코드 | code | 뜻 |
 |---|---|---|
-| 503 | `warehouse_missing` | 데이터 창고가 없어요. `build-data` 를 먼저 실행해야 해요 (`/api/health` 의 `ready` 로 미리 알 수 있어요) |
+| 503 | `warehouse_missing` | 데이터 창고가 없거나 PostgreSQL 에 붙지 못했어요. `docker compose up -d db` 와 `build-data` 를 먼저 실행해야 해요 (`/api/health` 의 `ready` 로 미리 알 수 있어요) |
 | 409 | `warehouse_missing` | 바꾸려는 데이터 모드의 창고가 없어요 |
 | 404 | `unknown_place` · `report_not_found` | 모르는 읍면동, 없는 제안서 |
 | 400 | `nothing_to_report` | 제안서에 넣을 분석 결과가 아직 없어요 |
@@ -366,7 +386,8 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 ## 9. 테스트와 평가
 
 ```bash
-.venv/bin/python -m pytest -q              # 243개 (실제 Claude 호출 1개는 기본 제외), 약 15초. 임시 폴더에 합성 데이터를 새로 만들어 써요
+.venv/bin/python -m pytest -q              # 254개 (실제 Claude 호출 1개는 기본 제외), 약 1분. PostgreSQL 이 떠 있어야 해요.
+                                           # 테스트 전용 스키마(mt…)에 합성 데이터를 새로 넣고 끝나면 지워요. 개발용 스키마는 건드리지 않아요
 .venv/bin/python -m pytest -m cloud        # 실제 Claude API 왕복 시험 (API 키 필요, 요금이 나가요)
 .venv/bin/python -m eval                   # 골든셋 60문항 (템플릿 모드)
 .venv/bin/python -m eval --llm anthropic   # 클라우드 LLM 모드 (요금이 나가요)
@@ -454,9 +475,13 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 **구현**
 
 - [x] React 화면(`frontend/`). 실행과 구성은 [../frontend/README.md](../frontend/README.md)에 있어요.
-- [x] Docker 에서 허브 실데이터 쓰기: `docker-compose.hub.yml` 로 만든 창고 파일만 읽기 전용으로 연결해요 (12절). 센터 데이터는 센터 PC 에서만 쓸 수 있어요.
-- [ ] `install.bat` / `run.bat`, 오프라인 설치 꾸러미(wheelhouse + 빌드한 화면). `run.bat` 은 `python -m meomulmeong serve --open` 을 부르면 돼요.
+- [x] 데이터 창고를 DuckDB 파일에서 PostgreSQL 로 옮겼어요 (2026-11-16). 골든셋 60문항과 허브 실데이터 답의 숫자가 옮기기 전과 같은 것을 확인했어요.
+- [x] Docker 에서 허브 실데이터 쓰기: `build-data --mode hub` 가 같은 PostgreSQL 에 넣으므로 화면에서 바로 고를 수 있어요 (12절). 센터 데이터는 센터 PC 에서만 쓸 수 있어요.
+- [ ] `install.bat` / `run.bat`, 오프라인 설치 꾸러미(wheelhouse + 빌드한 화면). `run.bat` 은 `python -m meomulmeong serve --prepare --open` 을 부르면 돼요.
+      데이터 창고는 센터 PC 에 설치된 PostgreSQL 을 써요. `.env` 의 `MEOMUL_PG_*` 에 접속 정보를 넣고, 그 사용자에게 스키마를 만들 권한이 있어야 해요.
 - [x] 기획서 PDF 의 Streamlit · 로컬 LLM 문구를 React 웹 · 템플릿 + Claude 로 고쳤어요 (2026-11-13).
+- [x] 기획서 PDF 의 DuckDB 표기 네 군데(6쪽 흐름도와 데이터 상자, 11쪽 기술 표, 13쪽 오픈소스)를 PostgreSQL 로 고쳤어요 (2026-11-16).
+- [x] 기획서 12쪽 설치 항목에서 "오프라인 패키지로 pip 설치"와 "Docker·WSL 불필요" 문구를 지웠어요 (2026-11-16). `install.bat` → `run.bat` 만 남아요.
 - [ ] 센터 모드: `4-11 유동인구 v02`, `3-02 버스 노선별 이용` 변환식은 명세서만 보고 썼어요. 실제 추출본으로 검증해야 해요. `1-08 카드 v02`(읍면동 × 업종 42개)는 아직 연결하지 않았어요.
 - [ ] 반출 신청 패키지, PDF 제안서 (기획서의 탑재 후 확장 항목).
 - [ ] `playbook.yaml` 규칙 12개는 초안이에요. 문구와 임계값을 팀에서 검토해 주세요.
@@ -465,20 +490,24 @@ chain = svc.run_chain("성산읍", sid, with_report=True)      # 처음부터 �
 
 ## 12. Docker 로 띄우기 (선택)
 
-센터 PC는 기획서대로 Docker 없이 실행해요. Docker 는 개발 PC나 데모 서버에서 한 번에 띄울 때 써요.
-파일은 저장소 맨 위에 있어요: `Dockerfile`, `docker-compose.yml`, `docker-compose.hub.yml`(실데이터 창고 연결), `.dockerignore`.
+센터 PC는 Docker 없이 실행하고, 데이터 창고는 센터 PC 에 설치된 PostgreSQL 을 써요. Docker 는 개발 PC나 데모 서버에서 한 번에 띄울 때 써요.
+파일은 저장소 맨 위에 있어요: `Dockerfile`, `docker-compose.yml`, `.dockerignore`.
 
 ```bash
 # 저장소 맨 위 폴더에서
-docker compose up -d --build        # http://localhost:3000 (처음에는 이미지를 만들어요, 2~3분)
+docker compose up -d --build        # http://localhost:3000 (처음에는 이미지를 만들고 샘플 데이터를 넣어요, 3~4분)
+docker compose up -d db             # 데이터 창고(PostgreSQL)만 띄우기
 docker compose logs -f              # 로그
-docker compose down                 # 내리기 (제안서와 실행 기록은 볼륨에 남아요)
-docker compose down -v              # 볼륨까지 지우기
+docker compose down                 # 내리기 (데이터, 제안서, 실행 기록은 볼륨에 남아요)
+docker compose down -v              # 볼륨까지 지우기 (넣어 둔 데이터도 지워져요)
 ```
 
 | 항목 | 내용 |
 |---|---|
-| 이미지 · 컨테이너 | 이미지 `jeju-meomulmeong:0.1.0`(약 630MB), 컨테이너 `jeju-meomulmeong-app`. 백엔드 + 빌드한 React 화면 + 샘플 데이터 창고. Node 는 빌드 단계에서만 써요 |
+| 앱 | 이미지 `jeju-meomulmeong:0.1.0`(약 510MB), 컨테이너 `jeju-meomulmeong-app`. 백엔드 + 빌드한 React 화면. Node 는 빌드 단계에서만 써요 |
+| 데이터 창고 | 이미지 `postgres:17-alpine`, 컨테이너 `jeju-meomulmeong-db`. `127.0.0.1:5434` 로만 열어요. 데이터는 `jeju-meomulmeong_pgdata` 볼륨에 남아요 |
+| 처음 뜰 때 | 앱이 샘플 데이터 스키마가 없으면 합성 데이터를 만들어 PostgreSQL 에 넣어요 (`serve --prepare`, 약 25초). 다음부터는 바로 떠요 |
+| 창고 암호 | 이 PC 안에서만 여는 개발 · 시연용 기본값이에요. 바꾸려면 처음 띄우기 전에 `MEOMUL_PG_PASSWORD` 를 셸 환경변수와 `backend/.env` 에 같은 값으로 넣어요 |
 | 주소 | `127.0.0.1:3000` 으로만 열어요. 로그인 기능이 없어서 밖으로는 열지 않아요 |
 | 실행 사용자 | 루트가 아닌 `meomul` (uid 10001) |
 | 환경변수 | `backend/.env` 가 있으면 실행할 때 읽어 넘겨요. API 키는 이미지에 들어가지 않아요 |
@@ -488,14 +517,14 @@ docker compose down -v              # 볼륨까지 지우기
 **클라우드 LLM(Claude)을 쓸 때** — `backend/.env` 에 `ANTHROPIC_API_KEY` 를 넣고 다시 띄우면 화면의 LLM 모드에서 클라우드를 고를 수 있어요.
 키는 실행할 때만 컨테이너에 넘기고 이미지에는 들어가지 않아요. 컨테이너가 인터넷에 닿아야 해요.
 
-**허브 실데이터로 띄울 때** — 6.3절대로 받아 `build-data --mode hub` 로 창고를 만든 뒤 겹침 파일을 함께 써요.
-창고 파일 하나만 읽기 전용으로 연결하고, 화면의 데이터 모드에서 "실데이터"를 고르면 돼요.
+**허브 실데이터로 띄울 때** — 6.3절대로 받아 `build-data --mode hub` 를 실행하면 같은 PostgreSQL 의 `hub` 스키마에 들어가요.
+컨테이너를 다시 만들 필요 없이 화면의 데이터 모드에서 "실데이터"를 고르면 돼요.
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.hub.yml up -d --build
+cd backend && .venv/bin/python -m meomulmeong build-data --mode hub
 ```
 
-**이미지에 넣지 않는 것** — `.dockerignore` 가 모두 빼고 필요한 것만 담아요. `.env`, 센터 · 허브 원자료, 데이터 창고, 실행 결과, xlsx · pdf 는 들어가지 않아요.
+**이미지에 넣지 않는 것** — `.dockerignore` 가 모두 빼고 필요한 것만 담아요. `.env`, 센터 · 허브 원자료, CSV 내보내기, 실행 결과, xlsx · pdf 는 들어가지 않아요.
 `tests/test_deploy_files.py` 가 이 규칙과 포트 범위를 확인해요.
 
 ---
@@ -503,7 +532,7 @@ docker compose -f docker-compose.yml -f docker-compose.hub.yml up -d --build
 ## 13. 외부 서비스·오픈소스·AI 활용
 
 - 외부 서비스 의존성: 템플릿 모드는 없음. 선택 기능으로 Anthropic API(클라우드 LLM), 제주데이터허브 Open API(데이터 갱신 때만).
-- 오픈소스: DuckDB(MIT), pandas(BSD-3), NumPy(BSD-3), PyArrow(Apache-2.0), pydantic·pydantic-settings(MIT), PyYAML(MIT),
+- 오픈소스: PostgreSQL(PostgreSQL License), psycopg(LGPL-3.0), pandas(BSD-3), NumPy(BSD-3), PyArrow(Apache-2.0), pydantic·pydantic-settings(MIT), PyYAML(MIT),
   Jinja2(BSD-3), httpx(BSD-3), FastAPI(MIT), Uvicorn(BSD-3), Starlette(BSD-3), Anthropic Python SDK(MIT), pytest(MIT), ruff(MIT).
   버전은 `requirements.lock` 에 고정했어요.
 - AI 활용: 이 백엔드 코드와 문서의 초안은 Claude Code(Anthropic Claude)로 작성했어요. 대회 규칙에 따라 최종 제출물에 사용 모델과 범위를 밝혀야 해요.

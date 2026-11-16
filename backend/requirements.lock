@@ -21,8 +21,6 @@ click==8.5.1
     # via uvicorn
 docstring-parser==0.18.0
     # via anthropic
-duckdb==2.0.0
-    # via -r requirements.txt
 fastapi==0.162.5
     # via -r requirements.txt
 h11==0.16.0
@@ -59,6 +57,10 @@ opentelemetry-api==1.45.2
     #   fastapi
 pandas==3.1.1
     # via -r requirements.txt
+psycopg==3.3.9
+    # via -r requirements.txt
+psycopg-binary==3.3.9
+    # via psycopg
 pyarrow==26.0.1
     # via -r requirements.txt
 pydantic==2.14.3
@@ -92,6 +94,7 @@ typing-extensions==4.16.0
     #   fastapi
     #   httpx2
     #   opentelemetry-api
+    #   psycopg
     #   pydantic
     #   pydantic-core
     #   pydantic-settings

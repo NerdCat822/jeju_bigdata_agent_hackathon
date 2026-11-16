@@ -39,7 +39,7 @@ def run_sql(ctx: ToolContext, sql: str, title: str = "조회 결과", max_rows: 
         res = ctx.wh.run_guarded(sql, max_rows=limit)
     except SqlRejected as e:
         return ToolResult(tool="run_sql", ok=False, message=str(e), data={"sql": sql})
-    except Exception as e:  # noqa: BLE001  (DuckDB 문법·컬럼 오류)
+    except Exception as e:  # noqa: BLE001  (SQL 문법·컬럼 오류)
         return ToolResult(tool="run_sql", ok=False, message=f"SQL 실행 오류: {str(e).splitlines()[0][:300]}", data={"sql": sql})
     rows = [[v.isoformat() if hasattr(v, "isoformat") else v for v in r] for r in res.rows]
     ev = EvidenceTable(id="free_sql", title=title, columns=res.columns, rows=rows, sql=res.sql,

@@ -3,11 +3,12 @@
 *.xls
 *.hwp
 
-# 센터 원자료 추출본, 허브 수집본, 합성 데이터, 데이터 창고 (backend/.gitignore 에도 같은 규칙이 있어요)
+# 센터 원자료 추출본, 허브 수집본, 합성 데이터, CSV 내보내기, 옛 DuckDB 창고 파일 (backend/.gitignore 에도 같은 규칙이 있어요)
 **/data/center/
 **/data/hub/
 **/data/synthetic/
 **/data/warehouse/
+**/data/export/
 *.duckdb
 *.duckdb.wal
 

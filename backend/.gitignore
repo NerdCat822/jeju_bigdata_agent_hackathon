@@ -14,6 +14,7 @@ data/synthetic/
 data/hub/
 data/center/
 data/warehouse/
+data/export/
 
 # 실행 결과 (제안서, 실행 기록, 평가 보고서)
 outputs/

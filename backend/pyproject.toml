@@ -9,7 +9,7 @@ description = "머물멍 (Jeju Town Vitality Agent) 백엔드: 읍면동 활력 
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "duckdb>=1.1",
+    "psycopg[binary]>=3.2",
     "pandas>=2.2",
     "pyarrow>=17",
     "numpy>=1.26",

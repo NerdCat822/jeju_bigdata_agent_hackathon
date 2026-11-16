@@ -35,7 +35,10 @@ def test_weekday_calendar(ctx):
     "SELECT 1; SELECT 2",
     "SELECT * FROM read_csv('/etc/passwd')",
     "SELECT * FROM secret_table",
-    "SELECT * FROM duckdb_settings()",
+    "SELECT * FROM pg_settings",
+    "SELECT pg_read_file('/etc/passwd')",
+    "SELECT emd_nm INTO copy_of_emd FROM ref_emd",
+    "SELECT * FROM ref_emd, pg_catalog.pg_user",
     "INSERT INTO ref_emd SELECT * FROM ref_emd",
     "COPY ref_emd TO 'out.csv'",
 ])

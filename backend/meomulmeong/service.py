@@ -59,7 +59,7 @@ class AgentService:
         config = load_config(settings.config_dir)
         refs = Refs(settings.ref_dir)
         catalog = Catalog.load(settings.catalog_dir)
-        wh = Warehouse(settings.warehouse_path(data_mode))
+        wh = Warehouse(settings, data_mode)
         ctx = ToolContext(wh, refs, catalog, config, settings)
         llm, note = connect_llm(settings, llm_mode)
         return cls(settings, config, Agent(ctx, llm), note)

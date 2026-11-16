@@ -34,7 +34,7 @@ from pydantic import Field
 
 from .. import progress
 from ..agent.orchestrator import _INTENT_STAGE
-from ..data.warehouse import WarehouseMissing
+from ..data.warehouse import WarehouseMissing, warehouse_exists
 from ..schemas import (
     INTENT_LABEL,
     STAGE_TITLE,
@@ -282,8 +282,9 @@ class ApiState:
         s = self.settings
         svc = self._service
         cur_llm = svc.agent.llm_mode if svc else None
+        built = warehouse_exists(s, ["synthetic", "hub", "center"])
         return {
-            "data": [{"mode": m, "label": DATA_BADGE[m], "available": s.warehouse_path(m).exists(),  # type: ignore[arg-type]
+            "data": [{"mode": m, "label": DATA_BADGE[m], "available": built[m],
                       "current": bool(svc and svc.agent.ctx.wh.data_mode == m)} for m in ("synthetic", "hub", "center")],
             "llm": [
                 {"mode": "template", "label": "템플릿 (LLM 없음)", "available": True, "current": cur_llm == "template"},
