@@ -5,7 +5,7 @@
   "built_at": "2026-11-13T10:55:23",
   "llm_mode": "template",
   "llm_model": null,
-  "llm_label": "템플릿 (LLM 없음)",
+  "llm_label": "기본 (AI 없이)",
   "llm_note": "",
   "tables": [
    {
@@ -91,7 +91,7 @@
    "llm": [
     {
      "mode": "template",
-     "label": "템플릿 (LLM 없음)",
+     "label": "기본 (AI 없이)",
      "available": true,
      "current": true
     },
@@ -101,7 +101,8 @@
      "available": false,
      "current": false
     }
-   ]
+   ],
+   "locked": false
   }
  },
  "places": [

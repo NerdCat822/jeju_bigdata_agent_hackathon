@@ -38,10 +38,14 @@ export type AskOut = S['AskOut']
 export type ChainOut = S['ChainOut']
 export type ReportOut = S['ReportOut']
 export type ModesIn = S['ModesIn']
+export type MapPlace = S['MapPlaceOut']
+export type AddressHit = S['AddressOut']
+export type RouteOut = S['RouteOut']
 
 /** 스트리밍 응답(SSE)의 진행 알림. */
 export type Progress =
-  | { kind: 'start' }
+  | { kind: 'start'; run?: string }
+  | { kind: 'queue' }
   | { kind: 'stage'; stage: number; title: string; place: string | null }
   | { kind: 'tool'; tool: string; label: string; ok: boolean; seconds: number }
   | { kind: 'llm'; purpose: string; label: string; attempt: number }
@@ -57,6 +61,8 @@ export interface StreamDone {
 }
 
 export interface StreamHandlers {
+  /** 실행 번호 (멈추기에 써요). 첫 알림에 와요. */
+  onRun?: (run: string) => void
   onProgress?: (p: Progress) => void
   onAnswer?: (a: Answer) => void
 }

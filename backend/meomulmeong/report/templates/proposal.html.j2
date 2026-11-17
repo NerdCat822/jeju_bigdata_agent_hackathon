@@ -38,7 +38,34 @@
   .lbl { paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
   .check { font-size:13px; }
   .ok { color:#2c6e3f; } .no { color:#b23a1e; }
-  @media print { body { background:#fff; } section { break-inside: avoid; } details[open] summary { display:none; } }
+  .locmap { margin:16px 0 0; }
+  .locmap img { display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:12px; }
+  .locmap figcaption { color:var(--sub); font-size:12.5px; margin-top:6px; }
+  .nfig { margin:6px 0 0; }
+  .nbox { position:relative; }
+  .nbox img { display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:12px; }
+  .nbox svg { position:absolute; inset:0; width:100%; height:100%; }
+  .rlist { list-style:none; margin:8px 0 0; padding:0; font-size:13px; }
+  .rlist li { margin:2px 0; }
+  .rkey { display:inline-block; width:14px; height:4px; border-radius:2px; margin-right:8px; vertical-align:middle; }
+  .tlegend { list-style:none; display:flex; flex-wrap:wrap; gap:4px 18px; margin:8px 0 0; padding:0; font-size:13px; }
+  .tdot { display:inline-grid; place-items:center; width:16px; height:16px; border-radius:50%; font-size:9px; font-weight:700; margin-right:6px; vertical-align:-3px; }
+  .tlegend .cnt { color:var(--sub); }
+  @page { size: A4; margin: 14mm 12mm; }
+  @media print {
+    body { background:#fff; font-size:12.5px; }
+    main { max-width:none; padding:0; }
+    section { border:0; border-radius:0; padding:0; margin-top:16px; }
+    section.stage { break-before: page; margin-top:0; }
+    h2, h3, .headline { break-after: avoid; }
+    tr, .sugg, .headline, .notice, svg, .nfig { break-inside: avoid; }
+    thead { display: table-header-group; }
+    .scroll { overflow: visible; }
+    table { font-size:10.5px; }
+    th, td { padding:3px 5px; white-space: normal; }
+    td.t, th.t { min-width:0; }
+    details[open] summary { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -48,16 +75,18 @@
   <p class="meta">발급 {{ issued }} · 해설 {{ explained }} · 데이터 <span class="badge data">{{ data_badge }}</span></p>
   {% if sample %}<div class="notice">이 문서의 숫자는 <b>샘플(합성) 데이터</b>로 계산한 것이라 실제 통계가 아니에요. 화면 구성과 계산 과정을 보여 주기 위한 예시예요.</div>{% endif %}
 
+  {% if location_map %}<figure class="locmap"><img src="{{ location_map }}" alt="{{ place }} 위치와 3단계 코스의 출발 거점 지도"><figcaption>{{ location_caption }}</figcaption></figure>{% endif %}
+
   <section>
     <h2>한눈에 보기</h2>
     <ul>
-    {% for a in answers %}<li><b>Stage {{ a.stage }} {{ a.stage_title }}</b> — {{ a.headline }}</li>{% endfor %}
+    {% for a in answers %}<li><b>{{ a.stage }}단계 {{ a.stage_title }}</b> — {{ a.headline }}</li>{% endfor %}
     </ul>
   </section>
 
   {% for a in answers %}
-  <section>
-    <h2>Stage {{ a.stage }} · {{ a.stage_title }}</h2>
+  <section class="stage">
+    <h2>{{ a.stage }}단계 · {{ a.stage_title }}</h2>
     <div>{% for b in a.badges %}<span class="badge {{ b.tone }}">{{ b.label }}</span>{% endfor %}</div>
     <div class="headline">{{ a.headline }}</div>
     <p>{{ a.explanation }}</p>
@@ -91,7 +120,7 @@
 
     <h3>검증</h3>
     <p class="check">{% for c in a.checks %}<span class="{{ 'ok' if c.passed else 'no' }}">{{ '통과' if c.passed else '실패' }}</span> {{ c.label }} — {{ c.detail }}<br>{% endfor %}
-    {% if a.fallback %}<span class="no">LLM 해설이 검증을 통과하지 못해 템플릿 해설로 대신했어요.</span>{% endif %}</p>
+    {% if a.fallback %}<span class="no">AI 설명이 검증을 통과하지 못해 수치만 담은 기본 설명으로 대신했어요.</span>{% endif %}</p>
   </section>
   {% endfor %}
 

@@ -62,7 +62,7 @@ Docker 없이 따로 설치한 PostgreSQL 을 쓰려면 `.env` 에 `MEOMUL_PG_HO
 | 환경변수 | 기본값 | 뜻 |
 |---|---|---|
 | `MEOMUL_DATA_MODE` | `synthetic` | `synthetic`(샘플) · `hub`(허브 수집본) · `center`(센터 추출본) |
-| `MEOMUL_LLM_MODE` | `template` | `template`(LLM 없음) · `anthropic`(클라우드 Claude, 선택) |
+| `MEOMUL_LLM_MODE` | `template` | `template`(LLM 없음, 화면에는 '기본 (AI 없이)') · `anthropic`(클라우드 Claude, 선택) |
 | `MEOMUL_ANTHROPIC_MODEL` | `claude-opus-5-5` | 클라우드 모델 |
 | `ANTHROPIC_API_KEY` | (없음) | 클라우드 모드에서만 필요 |
 | `MEOMUL_HUB_PROJECT_KEY` | (없음) | 제주데이터허브 프로젝트 키 (수집할 때만) |
@@ -70,6 +70,10 @@ Docker 없이 따로 설치한 PostgreSQL 을 쓰려면 `.env` 에 `MEOMUL_PG_HO
 | `MEOMUL_API_HOST` / `MEOMUL_API_PORT` | `127.0.0.1` / `8501` | 웹 API 서버 주소. 기본은 이 PC 안에서만 열려요 |
 | `MEOMUL_CORS_ORIGINS` | 5173·3000 포트의 localhost | 개발할 때 React 개발 서버에서 API를 부를 수 있게 허용할 주소 (쉼표로 구분) |
 | `MEOMUL_WEB_DIST` | `../frontend/dist` | 빌드한 React 화면 폴더. 있으면 같은 주소에서 화면도 함께 내줘요 |
+| `MEOMUL_LOCK_MODES` | `false` | `true` 면 데이터·AI 설명 방식을 바꾸는 API(`POST /api/modes`)를 403 으로 막고, 화면은 지금 모드를 읽기 전용으로 보여 줘요. 여러 사람이 같은 주소를 쓰는 배포본용 (모드는 서버 전체에 걸려요) |
+| `NAVER_CLOUD_PLATFORM_CLIENT_ID` / `NAVER_CLOUD_PLATFORM_CLIENT_SECRET` | (없음) | 네이버 클라우드 Maps (선택). 있으면 화면의 지도를 네이버 지도로 그리고(Dynamic Map), 지도에서 누른 곳·주소로 읍면동 찾기(Reverse Geocoding·Geocoding), 코스의 자동차 도로 경로·거리·시간(Directions 5), 제안서 위치 지도(Static Map)를 써요. Secret 은 서버 밖으로 내보내지 않아요. `MEOMUL_NAVER_MAP_CLIENT_ID` / `_SECRET` 으로 써도 돼요. Dynamic Map 은 NCP 콘솔에 등록한 웹 주소에서만 열려요 |
+| `MEOMUL_NAVER_MAPS` | `true` | `false` 면 키가 있어도 네이버 지도를 쓰지 않아요 (인터넷이 없는 센터 PC). 지도를 못 불러오면 화면은 기본 지도로 바꿔 그려요 |
+| `MEOMUL_API_DOCS` | `true` | `false` 면 `/docs` · `/redoc` · `/openapi.json` 을 열지 않아요. 공개 주소에 둘 때 꺼요 |
 
 `.env` 에 값을 비워 둔 항목은 기본값을 써요.
 

@@ -1,6 +1,7 @@
 """웹 API: React 화면이 부르는 경로를 시험해요 (확인 카드 → 실행 → 연계 → 제안서, 스트리밍, 모드 전환)."""
 
 import json
+import threading
 
 import pytest
 from conftest import make_settings
@@ -33,7 +34,8 @@ def events(text: str) -> list[tuple[str, dict]]:
 def test_health_and_bootstrap(client):
     assert client.get("/api/health").json() == {"ok": True, "ready": True, "message": None}
     b = client.get("/api/bootstrap").json()
-    assert set(b) == {"status", "places", "suggested", "options"}
+    assert set(b) == {"status", "places", "suggested", "options", "naver_map_key_id"}
+    assert b["naver_map_key_id"] is None  # 테스트는 지도를 꺼 둬요
     assert len(b["places"]) == 43 and {"emd_cd", "emd_nm", "lat", "lon", "area_type"} <= set(b["places"][0])
     assert b["status"]["data_badge"] == "샘플 데이터" and b["status"]["llm_mode"] == "template"
     assert [s["stage"] for s in b["suggested"]] == [1, 2, 3] and all(s["questions"] for s in b["suggested"])
@@ -63,8 +65,71 @@ def test_llm_mode_label_is_a_readable_model_name(client):
     assert fmt.model_name("claude-sonnet-4-20250514") == "Claude Sonnet 4"
     model = client.app.state.meomul.settings.anthropic_model
     labels = {m["mode"]: m["label"] for m in client.get("/api/status").json()["modes"]["llm"]}
-    assert labels == {"template": "템플릿 (LLM 없음)", "anthropic": fmt.model_name(model)}
+    assert labels == {"template": "기본 (AI 없이)", "anthropic": fmt.model_name(model)}
     assert "클라우드" not in labels["anthropic"] and model not in labels["anthropic"]
+
+
+
+def test_modes_can_be_locked_for_a_shared_deployment(svc):
+    """여러 사람이 같은 주소를 쓰는 배포본: 모드를 바꾸는 API 를 막고, 화면이 읽기 전용으로 보이게 알려요."""
+    locked = TestClient(create_app(service=svc, settings=svc.settings.model_copy(update={"lock_modes": True})))
+    before = locked.get("/api/status").json()
+    assert before["modes"]["locked"] is True
+    r = locked.post("/api/modes", json={"llm_mode": "anthropic"})
+    assert r.status_code == 403 and r.json()["detail"]["code"] == "modes_locked"
+    assert locked.get("/api/status").json()["llm_mode"] == before["llm_mode"]  # 아무것도 바뀌지 않았어요
+
+
+def test_api_docs_can_be_turned_off_for_a_public_address(svc, client):
+    assert client.get("/docs").status_code == 200 and client.get("/openapi.json").status_code == 200
+    closed = TestClient(create_app(service=svc, settings=svc.settings.model_copy(update={"api_docs": False})))
+    for path in ("/docs", "/redoc", "/openapi.json"):
+        r = closed.get(path)
+        assert r.status_code == 404 or "openapi" not in r.text.lower(), path  # 화면(SPA)이 있으면 index.html 로 가요
+    assert closed.get("/api/health").status_code == 200
+
+
+def test_stream_says_when_it_waits_for_another_analysis(client):
+    """분석은 한 번에 하나씩 돌아요. 앞 사람의 분석이 돌고 있으면 기다린다고 먼저 알려요."""
+    query = client.post("/api/understand", json={"question": "성산읍 청년 인구 진단"}).json()["card"]["query"]
+    state = client.app.state.meomul
+    assert state.run_lock.acquire(timeout=5)  # 앞 사람의 분석이 도는 중인 것처럼
+    released = threading.Timer(0.5, state.run_lock.release)
+    released.start()
+    try:
+        r = client.post("/api/run/stream", json={"query": query, "session_id": None})
+    finally:
+        released.join()
+    ev = events(r.text)
+    assert ev[0][0] == "progress" and ev[0][1]["kind"] == "start" and ev[0][1]["run"]  # 실행 번호 (멈추기에 써요)
+    assert ev[1] == ("progress", {"kind": "queue"})
+    assert ev[-1][0] == "done"
+
+
+def test_a_waiting_run_can_be_cancelled(client):
+    """'멈추기': 앞 사람을 기다리던 실행은 차례를 기다리지 않고 멈추고, 잠금을 건드리지 않아요."""
+    query = client.post("/api/understand", json={"question": "성산읍 청년 인구 진단"}).json()["card"]["query"]
+    state = client.app.state.meomul
+    assert state.run_lock.acquire(timeout=5)  # 앞 사람의 분석이 도는 중
+    out: dict = {}
+    t = threading.Thread(target=lambda: out.update(r=client.post("/api/run/stream", json={"query": query, "session_id": None})))
+    try:
+        t.start()
+        for _ in range(100):  # 실행이 등록될 때까지
+            with state.runs_lock:
+                runs = list(state.runs)
+            if runs:
+                break
+            threading.Event().wait(0.05)
+        assert len(runs) == 1
+        assert client.post(f"/api/runs/{runs[0]}/cancel").json() == {"ok": True}
+        t.join(timeout=10)
+        ev = events(out["r"].text)
+        assert ev[0][1]["run"] == runs[0] and ev[-1] == ("error", {"code": "cancelled", "message": "분석을 멈췄어요."})
+        assert state.run_lock.locked()  # 앞 사람의 잠금은 그대로예요
+    finally:
+        state.run_lock.release()
+    assert client.post(f"/api/runs/{runs[0]}/cancel").status_code == 404  # 끝난 실행은 없어요
 
 
 # --------------------------------------------------------------------------- 확인 카드 → 실행
@@ -120,7 +185,7 @@ def test_ask_runs_the_chain_and_serves_the_report(client):
     assert r["report_url"].startswith("/api/reports/") and r["answer"] is None
     page = client.get(r["report_url"])
     assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
-    assert "성산읍" in page.text and "Stage 3" in page.text
+    assert "성산읍" in page.text and "3단계" in page.text
     assert "attachment" in client.get(r["report_url"], params={"download": "true"}).headers["content-disposition"]
     assert "attachment" not in page.headers.get("content-disposition", "")
 
@@ -154,7 +219,7 @@ def test_chain_stream_sends_progress_and_one_answer_per_stage(client):
     r = client.post("/api/chain/stream", json={"place": "성산읍", "with_report": True})
     assert r.status_code == 200 and r.headers["content-type"].startswith("text/event-stream")
     ev = events(r.text)
-    assert ev[0] == ("progress", {"kind": "start"}) and ev[-1][0] == "done"
+    assert ev[0][0] == "progress" and ev[0][1]["kind"] == "start" and ev[-1][0] == "done"
     stages = [d["stage"] for e, d in ev if e == "progress" and d["kind"] == "stage"]
     answers = [d["stage"] for e, d in ev if e == "answer"]
     assert stages == [1, 2, 3] and answers == [1, 2, 3]

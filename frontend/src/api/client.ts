@@ -8,10 +8,13 @@ import type {
   CardOut,
   ChainOut,
   Health,
+  AddressHit,
+  MapPlace,
   ModesIn,
   Progress,
   QueryInput,
   ReportOut,
+  RouteOut,
   Status,
   StreamDone,
   StreamHandlers,
@@ -30,7 +33,7 @@ export class ApiError extends Error {
   }
 }
 
-const OFFLINE = '백엔드 서버에 연결하지 못했어요. `python -m meomulmeong serve` 가 켜져 있는지 확인해 주세요.'
+const OFFLINE = '서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.'
 
 // 화면이 놓인 자리. 주소 맨 위에 있으면 '' 이고, 상대 경로로 빌드한 배포본에서는 '.' 이에요.
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
@@ -108,7 +111,11 @@ async function stream(path: string, body: unknown, on: StreamHandlers, signal?: 
     const chunk = await reader.read()
     if (chunk.done) break
     for (const ev of parser.push(decoder.decode(chunk.value, { stream: true }))) {
-      if (ev.event === 'progress') on.onProgress?.(ev.data as Progress)
+      if (ev.event === 'progress') {
+        const p = ev.data as Progress
+        if (p.kind === 'start' && p.run) on.onRun?.(p.run)
+        on.onProgress?.(p)
+      }
       else if (ev.event === 'answer') on.onAnswer?.(ev.data as Answer)
       else if (ev.event === 'done') done = ev.data as StreamDone
       else if (ev.event === 'error') {
@@ -145,6 +152,12 @@ export const api = {
     call<ReportOut>('/api/reports', { session_id, place }).then((out) => ({ ...out, url: apiUrl(out.url) })),
   consent: (session_id: string, consent: boolean): Promise<{ session_id: string; consent: boolean }> =>
     call(`/api/sessions/${encodeURIComponent(session_id)}/cloud-consent`, { consent }),
+  /** 스트리밍 실행 멈추기. 서버는 지금 단계를 마치고 멈춰서 다음 사람의 분석이 바로 시작돼요. */
+  cancelRun: (run: string): Promise<{ ok: boolean }> => call(`/api/runs/${encodeURIComponent(run)}/cancel`, {}),
+  // 네이버 지도 (서버에 지도 키가 있을 때만 돼요. 없으면 503 이고, 화면은 기본 지도를 써요)
+  mapLocate: (lat: number, lon: number): Promise<MapPlace> => call(`/api/map/locate?lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}`),
+  mapSearch: (q: string): Promise<AddressHit[]> => call(`/api/map/search?q=${encodeURIComponent(q)}`),
+  mapRoute: (keys: string[]): Promise<RouteOut> => call(`/api/map/route?keys=${encodeURIComponent(keys.join(','))}`),
 }
 
 export type Api = typeof api

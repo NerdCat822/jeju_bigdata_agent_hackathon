@@ -1,4 +1,5 @@
 import type { Answer } from '../api/types'
+import { modelName } from '../lib/format'
 
 /** 검증 항목 이름. 백엔드 제안서(report/builder.py)와 같은 이름을 써요. */
 export const CHECK_LABEL: Record<string, string> = {
@@ -16,10 +17,10 @@ export const CHECK_LABEL: Record<string, string> = {
 
 export function explainedBy(a: Answer): string {
   if (a.explained_by === 'llm') {
-    const who = a.llm_mode === 'anthropic' ? '클라우드 LLM' : 'LLM'
+    const who = a.llm_model ? modelName(a.llm_model) : 'AI'
     const retry = a.verification.retries ? `, 다시 쓰기 ${a.verification.retries}회` : ''
-    return `해설: ${who}${a.llm_model ? ` · ${a.llm_model}` : ''} (검증 통과${retry})`
+    return `해설: ${who} (검증 통과${retry})`
   }
-  if (a.verification.fallback) return '해설: 규칙 문장 (LLM 해설이 검증을 통과하지 못해 대체)'
+  if (a.verification.fallback) return '해설: 규칙 문장 (AI 설명이 검증을 통과하지 못해 대체)'
   return '해설: 규칙 문장'
 }

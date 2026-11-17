@@ -23,6 +23,15 @@ def pct(v: float | None, digits: int = 1, signed: bool = True) -> str:
     return f"{sign}{x:.{digits}f}%"
 
 
+def people_approx(v: float | None) -> str:
+    """결론에 쓸 대략의 인원수. 만 명이 넘으면 '약 21.8만 명', 그보다 작으면 '1,234명' 그대로예요."""
+    if not is_num(v):
+        return "-"
+    if abs(v) < 10_000:
+        return people(v)
+    return f"약 {v / 10_000:,.1f}만 명"
+
+
 def pct_abs(v: float | None, digits: int = 1) -> str:
     """0.068 또는 -0.068 → '6.8%' (늘었어요/줄었어요 문장용)."""
     if not is_num(v):

@@ -113,3 +113,35 @@ export function caption(text: string): string {
   const t = text.trim()
   return /[.?!]\s+\S/.test(t) ? t : t.replace(/\.$/, '')
 }
+
+/** 모델 ID 를 화면용 이름으로: 'claude-opus-5-5' → 'Claude Opus 5.5' (끝의 날짜 꼬리표는 빼요). */
+export function modelName(id: string): string {
+  const parts = id.trim().split('-').filter(Boolean)
+  if (parts.length > 1 && /^\d{8}$/.test(parts[parts.length - 1])) parts.pop()
+  const words: string[] = []
+  for (const p of parts) {
+    const last = words[words.length - 1]
+    if (/^\d+$/.test(p) && last !== undefined && /^\d+(\.\d+)*$/.test(last)) words[words.length - 1] = `${last}.${p}`
+    else words.push(/^\d+$/.test(p) ? p : p.charAt(0).toUpperCase() + p.slice(1))
+  }
+  return words.join(' ') || id
+}
+
+/**
+ * 비교 기간을 짧게: '2018-01~2018-12 vs 2017-01~2017-12' → '2018년 vs 2017년',
+ * '2024-08~2025-07 vs 2023-08~2024-07' → '2024-08~2025-07 vs 직전 1년'. 모양이 다르면 그대로 둬요.
+ */
+export function shortPeriod(text: string): string {
+  const m = /^(\d{4})-(\d{2})~(\d{4})-(\d{2}) vs (\d{4})-(\d{2})~(\d{4})-(\d{2})$/.exec(text.trim())
+  if (!m) return text
+  const [y1, m1, y2, m2, y3, m3, y4, m4] = m.slice(1).map(Number)
+  if (m1 === 1 && m2 === 12 && y1 === y2 && m3 === 1 && m4 === 12 && y3 === y4) return `${y1}년 vs ${y3}년`
+  const months = (y2 - y1) * 12 + (m2 - m1) + 1
+  const before = (y1 - y4) * 12 + (m1 - m4) === 1 // 앞 기간이 바로 이어져 끝나요
+  if (before && months === (y4 - y3) * 12 + (m4 - m3) + 1) {
+    const span = months === 12 ? '직전 1년' : `직전 ${months}개월`
+    return `${y1}-${String(m1).padStart(2, '0')}~${y2}-${String(m2).padStart(2, '0')} vs ${span}`
+  }
+  return text
+}
+

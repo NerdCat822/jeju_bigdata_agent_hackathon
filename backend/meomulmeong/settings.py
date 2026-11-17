@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(os.environ.get("MEOMUL_HOME") or Path(__file__).resolve().parents[1]).resolve()
@@ -102,6 +102,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         env_ignore_empty=True,  # .env.example 을 그대로 복사해 값이 빈 항목은 기본값을 써요
         extra="ignore",
+        populate_by_name=True,  # 별칭이 있는 항목도 Settings(naver_map_client_id=...) 처럼 이름으로 넣을 수 있게
     )
 
     data_mode: DataMode = "synthetic"
@@ -110,6 +111,14 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-opus-5-5"
 
     hub_project_key: str = ""
+
+    # 네이버 클라우드 Maps (선택). 화면의 지도, 주소 찾기, 코스 도로 경로, 제안서 위치 지도에만 써요. 비우면 기본 지도로 그려요.
+    # 콘솔에서 복사한 이름(NAVER_CLOUD_PLATFORM_CLIENT_*)도 그대로 읽어요. Secret 은 서버 밖으로 내보내지 않아요.
+    naver_maps: bool = True  # False 면 키가 있어도 쓰지 않아요 (테스트, 인터넷이 없는 센터 PC)
+    naver_map_client_id: str = Field(default="", validation_alias=AliasChoices(
+        "MEOMUL_NAVER_MAP_CLIENT_ID", "NAVER_CLOUD_PLATFORM_CLIENT_ID", "naver_map_client_id"))
+    naver_map_client_secret: str = Field(default="", validation_alias=AliasChoices(
+        "MEOMUL_NAVER_MAP_CLIENT_SECRET", "NAVER_CLOUD_PLATFORM_CLIENT_SECRET", "naver_map_client_secret"))
     hub_base_url: str = "https://open.jejudatahub.net/api/proxy"
 
     # 데이터 창고 (PostgreSQL). 기본값은 docker-compose.yml 의 db 서비스에 맞춰 두었어요.
@@ -126,6 +135,9 @@ class Settings(BaseSettings):
     # 개발할 때 React 개발 서버(다른 포트)에서 API를 부를 수 있게 허용하는 주소 (쉼표로 구분)
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000"
     web_dist: Path | None = None  # 빌드한 React 화면 폴더 (기본: ../frontend/dist)
+    # 여러 사람이 같은 주소로 들어오는 배포본에서 켜요. 모드 전환은 서버 전체에 걸려서, 한 사람이 바꾸면 모두의 화면이 바뀌어요.
+    lock_modes: bool = False  # True 면 데이터·AI 설명 방식을 바꾸는 API 를 막고, 화면은 지금 모드를 읽기 전용으로 보여 줘요
+    api_docs: bool = True  # False 면 /docs · /redoc · /openapi.json 을 열지 않아요 (공개 주소에 둘 때)
 
     home: Path = BACKEND_DIR
     outputs: Path | None = None  # 제안서·실행 기록 폴더 (기본: home/outputs)

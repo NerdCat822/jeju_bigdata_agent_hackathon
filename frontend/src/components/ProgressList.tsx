@@ -19,10 +19,12 @@ interface Props {
   items: Progress[]
   running: boolean
   startedAt: number | null
+  /** 있으면 도는 동안 '멈추기' 단추를 보여 줘요. */
+  onStop?: () => void
 }
 
 /** 답을 만드는 동안 지금 무엇을 하는지 보여 줘요. */
-export function ProgressList({ items, running, startedAt }: Props): ReactNode {
+export function ProgressList({ items, running, startedAt, onStop }: Props): ReactNode {
   const elapsed = useElapsed(startedAt, running)
   const rows = toRows(items, running)
   const waiting = rows.some((r) => r.state === 'wait')
@@ -38,7 +40,14 @@ export function ProgressList({ items, running, startedAt }: Props): ReactNode {
             '이렇게 만들었어요'
           )}
         </span>
-        {running && <span className="muted mono small">{seconds(elapsed)}</span>}
+        <span className="progress-tools">
+          {running && <span className="muted mono small">{seconds(elapsed)}</span>}
+          {running && onStop && (
+            <button type="button" className="btn btn-outline btn-small" onClick={onStop}>
+              멈추기
+            </button>
+          )}
+        </span>
       </div>
       <ol className="progress-list">
         {rows.map((r) =>

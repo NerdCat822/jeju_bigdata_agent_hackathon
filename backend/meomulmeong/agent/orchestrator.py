@@ -66,7 +66,7 @@ _FIX = {
     "pairing": "숫자를 그 지표의 이름과 같은 문장에 쓰거나, 그 숫자를 빼요",
     "prediction": "'올 거예요', '가능성이 있어요', '~하면 늘릴 수 있어요' 같은 예측·추측을 빼고 지금까지의 값만 말해요",
     "fidelity": "초안에 없는 내용을 더하지 말아요. 숫자는 초안에서 함께 쓰인 대상(내국인·중국인·테마·지명)과만 같이 쓰고, "
-                "'가장'·'최고' 같은 말은 초안에 있는 것만 써요. 배율은 초안의 순서 그대로 '주말 하루 소비는 평일 하루의 몇 배'처럼 써요",
+                "'가장'·'최고' 같은 말은 초안에 있는 것만 써요. 배율은 초안처럼 주말을 앞에 두고 '주말 하루 소비가 평일 하루보다 많아요(적어요)' 꼴로 쓰고, 배율 숫자는 초안 그대로 괄호에 써요",
     "references": "근거에 없는 읍면동·노선·지명을 빼요",
     "assumption": "'가정'이라는 낱말을 넣어 가정에 따른 계산임을 밝혀요",
     "format": "입력을 그대로 옮기지 말고, 3문장 이내의 한 문단으로 써요",
@@ -251,11 +251,11 @@ class Agent:
                     headline, explanation = res["text"]
                     explained_by = "llm"
                 elif res["error"]:
-                    notices.append(f"LLM 해설을 쓰지 못해 템플릿 해설로 대신했어요. ({res['error']})")
+                    notices.append(f"AI 설명을 받지 못해 기본 설명으로 대신했어요. ({res['error']})")
                 else:
-                    notices.append("LLM 해설이 검증을 통과하지 못해 수치만 담은 템플릿 해설로 대신했어요.")
+                    notices.append("AI 설명이 검증을 통과하지 못해 수치만 담은 기본 설명으로 대신했어요.")
             else:
-                notices.append("클라우드 전송에 동의하지 않아 템플릿 해설을 썼어요. '전송 미리보기'를 확인한 뒤 동의하면 LLM 해설을 받을 수 있어요.")
+                notices.append("Claude에 보내는 데 아직 동의하지 않아 기본 설명을 보여 드려요. 아래 '전송 미리보기'에서 보낼 내용을 확인하고 동의하면 Claude가 설명을 다시 써요.")
         draft = ""
         if explained_by == "llm" and b.stage is not None:  # LLM 해설은 초안 충실도까지 기록에 남겨요
             draft = ". ".join(explainer.template_text(b))

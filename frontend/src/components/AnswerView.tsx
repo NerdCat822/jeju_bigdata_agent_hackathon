@@ -3,6 +3,7 @@ import type { Answer, NextQuestion, Suggestion } from '../api/types'
 import { caption } from '../lib/format'
 import { EvidencePanel } from './EvidencePanel'
 import { Icon } from './Icon'
+import { KeyFigures } from './KeyFigures'
 import { TypeMark } from './TypeMark'
 import { VerificationPanel } from './VerificationPanel'
 import { ChartCard } from './viz/ChartCard'
@@ -23,7 +24,7 @@ interface Props {
   onAgreeCloud: () => void
 }
 
-/** 답 하나: 한 줄 결론 → 쉬운 해설 → 제안 → 차트·지도 → 근거표 · 한계 · 검증 → 다음 질문. */
+/** 답 하나: 한 줄 결론 → 핵심 숫자 → 쉬운 해설 → 제안 → 차트·지도 → 근거표 · 한계 · 검증 → 다음 질문. */
 export function AnswerView({ answer: a, stageTitle, typeNames, busy, needsConsent, onAsk, onReport, onPickPlace, onAgreeCloud }: Props): ReactNode {
   if (!a.ok) return <FailedAnswer answer={a} busy={busy} onAsk={onAsk} />
   const type = a.badges.find((b) => b.tone === 'type')?.label.replace('유형 ', '') ?? null
@@ -34,7 +35,7 @@ export function AnswerView({ answer: a, stageTitle, typeNames, busy, needsConsen
     <article className="answer" id={a.stage ? `stage-${a.stage}` : undefined} aria-labelledby={`headline-${a.id}`}>
       <header className="headline">
         <div className="headline-meta">
-          <span>{a.stage && stageTitle ? `Stage ${a.stage} · ${stageTitle}` : '자유 질문'}</span>
+          <span>{a.stage && stageTitle ? `${a.stage}단계 · ${stageTitle}` : '자유 질문'}</span>
           {tags.length > 0 && (
             <ul className="tag-row" aria-label="표시">
               {tags.map((b) => (
@@ -58,6 +59,8 @@ export function AnswerView({ answer: a, stageTitle, typeNames, busy, needsConsen
         </h2>
       </header>
 
+      <KeyFigures answer={a} />
+
       {a.explanation && <p className="explanation">{a.explanation}</p>}
 
       {a.notices.length > 0 && (
@@ -70,7 +73,7 @@ export function AnswerView({ answer: a, stageTitle, typeNames, busy, needsConsen
         </ul>
       )}
 
-      {a.suggestions.length > 0 && <Suggestions items={a.suggestions} />}
+      {a.suggestions.length > 0 && <Suggestions items={a.suggestions} fired={numberFact(a, 'n_fired')} />}
 
       <Visuals answer={a} onPickPlace={busy ? undefined : onPickPlace} />
 
@@ -92,7 +95,7 @@ export function AnswerView({ answer: a, stageTitle, typeNames, busy, needsConsen
         {a.llm_payload && (a.llm_mode === 'anthropic' || needsConsent) && (
           <details className="fold" open={needsConsent}>
             <summary>
-              <Icon name="chevron" /> 전송 미리보기 <span className="muted">클라우드 LLM에 보내는 내용 (집계 지표만)</span>
+              <Icon name="chevron" /> 전송 미리보기 <span className="muted">Claude에 보내는 내용 (집계 지표만)</span>
             </summary>
             <div className="fold-body">
               <pre className="payload">{a.llm_payload}</pre>
@@ -164,20 +167,36 @@ function Visuals({ answer: a, onPickPlace }: { answer: Answer; onPickPlace?: (na
   )
 }
 
-function Suggestions({ items }: { items: Suggestion[] }): ReactNode {
+/** 근거의 숫자 값 하나 (없으면 null). */
+function numberFact(a: Answer, key: string): number | null {
+  const v = a.facts.find((f) => f.key === key)?.value
+  return typeof v === 'number' ? v : null
+}
+
+/** 제안 카드: 제목을 먼저, 규칙 번호는 근거 줄 끝에 작게 둬요. */
+function Suggestions({ items, fired }: { items: Suggestion[]; fired: number | null }): ReactNode {
+  // 해설은 '규칙 12개 가운데 6개가 조건을 충족'이라 말하는데 화면에는 상위 몇 개만 보여 줘요. 그 차이를 밝혀요.
+  const more = fired !== null && fired > items.length
   return (
     <section className="suggestions" aria-label="규칙이 만든 제안">
-      <h3 className="section-title">제안 후보</h3>
+      <h3 className="section-title">
+        제안 후보
+        {more && <span className="section-note">조건을 충족한 {fired}개 가운데 우선순위가 높은 {items.length}개예요</span>}
+      </h3>
       <ol>
         {items.map((s) => (
           <li key={s.rule_id} className="suggestion">
-            <span className="rule-id">{s.rule_id}</span>
             <div className="suggestion-head">
               <span>{s.name}</span>
               {s.target && <span className="muted">대상 {s.target}</span>}
             </div>
             <p>{s.text}</p>
-            {s.evidence_text.length > 0 && <p className="suggestion-evidence">근거 · {s.evidence_text.join(' · ')}</p>}
+            <p className="suggestion-evidence">
+              {s.evidence_text.length > 0 && <>근거 · {s.evidence_text.join(' · ')} </>}
+              <span className="rule-id">
+                규칙 <span>{s.rule_id}</span>
+              </span>
+            </p>
           </li>
         ))}
       </ol>
@@ -193,8 +212,8 @@ interface NextProps {
   onReport: () => void
 }
 
-/** "이 동네에 누가 올까? → Stage 2" 같은 이름에서 화살표 뒤는 떼고, 다음 단계로 간다는 뜻은 아이콘으로 보여 줘요. */
-const plainLabel = (label: string): string => label.replace(/\s*→\s*Stage\s*\d+\s*$/, '')
+/** "이 동네에 누가 올까? → 2단계" 같은 이름에서 화살표 뒤는 떼고, 다음 단계로 간다는 뜻은 아이콘으로 보여 줘요. */
+const plainLabel = (label: string): string => label.replace(/\s*→\s*(?:Stage\s*\d+|\d+단계)\s*$/, '')
 
 function NextQuestions({ items, busy, onAsk, onReport }: NextProps): ReactNode {
   if (!items.length) return null

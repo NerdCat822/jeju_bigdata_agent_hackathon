@@ -95,7 +95,7 @@ def test_chain_and_report(agent, settings):
     path = Path(result.report_path)
     html = path.read_text(encoding="utf-8")
     assert path.parent == settings.outputs_dir / "reports" and path.suffix == ".html"
-    for needle in ("성산읍 제안서", "샘플(합성) 데이터", "Stage 1", "Stage 3", "SQL 보기", "R01", "<svg", "한계", "가정"):
+    for needle in ("성산읍 제안서", "샘플(합성) 데이터", "1단계", "3단계", "SQL 보기", "R01", "<svg", "한계", "가정"):
         assert needle in html, needle
     assert "<script" not in html  # 자바스크립트 없이 열려요
 

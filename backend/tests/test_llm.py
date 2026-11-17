@@ -74,7 +74,7 @@ def test_fallback_to_template_after_two_retries(agent):
     a = ag.ask("성산읍 청년 인구 진단", ag.session())
     assert a.explained_by == "template" and a.verification.fallback and a.verification.retries == 2
     assert a.verification.passed and "1,5" in a.explanation  # 수치만 담은 템플릿 해설
-    assert any("템플릿 해설로 대신" in n for n in a.notices)
+    assert any("기본 설명으로 대신" in n for n in a.notices)
     assert len(ag.llm.calls) == 3
 
 
@@ -323,10 +323,10 @@ def test_explain_time_budget_stops_retries(agent, monkeypatch):
 
 
 def test_stage2_payload_leaves_out_the_stage_link_sentence(agent):
-    """'Stage 1에서 …으로 분류됐어요'는 화면용 문장이에요. LLM 초안에서는 빼고, 유형은 근거 목록으로만 알려 줘요."""
+    """'1단계에서 …으로 분류됐어요'는 화면용 문장이에요. LLM 초안에서는 빼고, 유형은 근거 목록으로만 알려 줘요."""
     ag = make(agent, {"explain": [ExplainOut(explanation="중국인 카드 소비가 늘었어요.")]})
     a = ag.ask("성산읍에 누가 올까?", ag.session())
     draft_line = next(x for x in a.llm_payload.splitlines() if x.startswith("해설 초안:"))
-    assert "Stage 1에서" not in draft_line and "중국인 카드 소비" in draft_line
+    assert "1단계에서" not in draft_line and "중국인 카드 소비" in draft_line
     template = agent.ask("성산읍에 누가 올까?", agent.session())
-    assert "Stage 1에서" in template.explanation  # 템플릿 해설에는 그대로 있어요
+    assert "1단계에서" in template.explanation  # 템플릿 해설에는 그대로 있어요

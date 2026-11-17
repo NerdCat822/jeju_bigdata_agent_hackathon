@@ -25,6 +25,9 @@ from .schemas import STAGE_TITLE, Answer, ChainResult, ConfirmCard, ParsedQuery
 from .settings import AppConfig, DataMode, Settings, get_settings, load_config
 from .tools.base import TOOLS, ToolContext
 
+# 화면에 보여 줄 템플릿 모드 이름 (처음 보는 사람도 알아보게 'LLM' 같은 말은 쓰지 않아요)
+TEMPLATE_LABEL = "기본 (AI 없이)"
+
 SUGGESTED = {
     1: ["성산읍 청년 인구 왜 줄었어?", "30대가 살기 좋은 읍면은?", "한 달 살이 지원은 어디에?"],
     2: ["성산읍에 누가 올까?", "서귀포 구도심 음식점인데 외국인 손님 늘릴 수 있나?", "구좌읍 숙박 중국인 소비 변화"],
@@ -163,7 +166,7 @@ class AgentService:
         return {
             "data_mode": wh.data_mode, "data_badge": wh.data_badge, "built_at": wh.build_info().get("built_at"),
             "llm_mode": self.agent.llm_mode, "llm_model": llm.model if llm else None,
-            "llm_label": fmt.model_name(llm.model) if llm else "템플릿 (LLM 없음)",
+            "llm_label": fmt.model_name(llm.model) if llm else TEMPLATE_LABEL,
             "llm_note": self.llm_note,
             "tables": [{"table": m.table, "title": m.title, "rows": m.n_rows, "source": m.source,
                         "period": f"{m.min_date}~{m.max_date}" if m.min_date else "자료 없음"} for m in wh.meta().values()],

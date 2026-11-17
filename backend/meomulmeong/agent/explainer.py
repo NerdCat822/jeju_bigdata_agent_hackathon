@@ -76,20 +76,25 @@ def _s1_emd(b: Bundle) -> tuple[str, str]:
     else:
         headline = _s1_headline(lab, t, near, visit, resd, b.stage_output.get("tau"))
     s: list[str] = []
+    # 거주·근무·방문 변화율은 화면의 핵심 숫자 카드에 크게 있어서, 문단은 두 문장으로 줄여요 (나머지는 근거표에 있어요)
     if b.fact("youth_resd_p1"):
+        than = "직전 기간과" if fmt.is_num(resd) and abs(resd) < FLAT else "직전 기간보다"  # '…보다 거의 같았어요'는 어색해요
         s.append(f"{place}의 {lab_full} 거주인구는 최근 기간({_p1(b)}) 하루 평균 {b.text('youth_resd_p1')}으로, "
-                 f"직전 기간보다 {_chg(resd)}.")
-        s.append(f"같은 기간 {lab_full} 근무인구는 {_chg(work, end=False)}, 방문자는 {_chg(visit)}.")
-        s.append(f"{lab_full} 비중은 {b.text('youth_share')}, 정주비는 {b.text('settle_ratio')}예요.")
-    elif fmt.is_num(resd):
-        s.append(f"{place}의 {lab_full} 거주인구는 {_chg(resd, end=False)}, 근무인구는 {_chg(work, end=False)}, "
-                 f"방문자는 {_chg(visit)}.")
-    if b.fact("foreign_resd_chg") and fmt.is_num(b.value("foreign_resd_chg")):
-        s.append(f"외국인 장기체류 거주인구는 {_chg(b.value('foreign_resd_chg'))}.")
+                 f"{than} {_chg(resd)}.")
+        second = f"{lab_full} 비중은 {b.text('youth_share')}, 정주비는 {b.text('settle_ratio')}"
+        if peers and q.intent != "trend":
+            second += f"이고, 지표가 비슷한 곳은 {fmt.josa(peers, '이에요예요')}"
+        else:
+            second += "예요"
+        s.append(second + ".")
+    else:
+        if fmt.is_num(resd):
+            s.append(f"{place}의 {lab_full} 거주인구는 {_chg(resd, end=False)}, 근무인구는 {_chg(work, end=False)}, "
+                     f"방문자는 {_chg(visit)}.")
+        if peers and q.intent != "trend":
+            s.append(f"지표가 비슷한 곳은 {fmt.josa(peers, '이에요예요')}.")
     if q.intent == "trend" and t:
         s.append(f"유형은 「{_type_text(t)}」이에요.")
-    if peers and q.intent != "trend":
-        s.append(f"지표가 비슷한 곳은 {fmt.josa(peers, '이에요예요')}.")
     if b.fact("small_sample"):
         s.append("기준 인구가 100명 미만인 작은 표본이라 변화율은 참고로만 봐 주세요.")
     if q.wants_cause:
@@ -160,6 +165,18 @@ def _old_period(b: Bundle, key: str) -> str:
     return f" ({f.period} 자료)"
 
 
+def _weekend(b: Bundle, key: str) -> str:
+    """'주말 하루 소비가 평일 하루보다 적어요 (0.89배)'. 배율만 쓰면 뜻을 두 번 생각해야 해서 많고 적음을 먼저 말해요.
+
+    새 숫자는 만들지 않아요 (괄호 안 배율과 기간은 근거에 있는 값이에요).
+    """
+    v = float(b.value(key))
+    word = "평일 하루와 비슷해요" if abs(v - 1) < 0.03 else ("평일 하루보다 많아요" if v > 1 else "평일 하루보다 적어요")
+    when = _old_period(b, key).strip()  # '(2017-09~2017-11 자료)' 또는 ''
+    inner = f"{b.text(key)}, {when[1:-1]}" if when else b.text(key)
+    return f"주말 하루 소비가 {word} ({inner})"
+
+
 def _s2(b: Bundle) -> tuple[str, str]:
     q = b.query
     out = b.stage_output
@@ -174,7 +191,7 @@ def _s2(b: Bundle) -> tuple[str, str]:
         headline = "조건을 충족한 제안 규칙이 없어요. 지표를 먼저 확인해 주세요"
     s: list[str] = []
     if t:
-        s.append(f"{fmt.josa(place, '은는')} Stage 1에서 「{_type_text(t)}」으로 분류됐어요.")
+        s.append(f"{fmt.josa(place, '은는')} 1단계에서 「{_type_text(t)}」으로 분류됐어요.")
     if t == "유지" and b.fact("near_type"):
         s.append(f"정해진 유형에 들지 않아 가장 가까운 유형인 {b.text('near_type')}의 규칙을 참고로 적용했어요.")
     top, total = out.get("top_theme"), b.value("cn_growth:전체")
@@ -188,13 +205,11 @@ def _s2(b: Bundle) -> tuple[str, str]:
     if th and b.fact(f"cn_growth:{th}") and th != top:
         extra = f", 개별여행 인당 배율은 {b.text(f'indiv_ratio_cn:{th}')}예요" if b.fact(f"indiv_ratio_cn:{th}") else ""
         s.append(f"질문하신 {th}의 중국인 소비는 {_chg(b.value(f'cn_growth:{th}'), end=not extra)}{extra}.")
-    # '주말 소비비'는 낯선 말이라 풀어서 써요: 주말 하루 소비가 평일 하루의 몇 배인지
-    if b.fact("peak_dow_cn") and b.fact("weekend_ratio_cn"):
-        s.append(f"중국인 소비는 {b.text('peak_dow_cn')}에 가장 많고, 주말 하루 소비는 평일 하루의 {b.text('weekend_ratio_cn')}예요"
-                 f"{_old_period(b, 'weekend_ratio_cn')}.")
-    if b.fact("peak_dow_kr") and b.fact("weekend_ratio_kr"):
-        s.append(f"내국인 소비는 {b.text('peak_dow_kr')}에 가장 많고, 주말 하루 소비는 평일 하루의 {b.text('weekend_ratio_kr')}예요"
-                 f"{_old_period(b, 'weekend_ratio_kr')}.")
+    # '주말 소비비'는 낯선 말이라 풀어서 써요: 주말 하루 소비가 평일 하루보다 많은지 적은지, 배율은 괄호로
+    if b.fact("peak_dow_cn") and b.fact("weekend_ratio_cn") and fmt.is_num(b.value("weekend_ratio_cn")):
+        s.append(f"중국인 소비는 {b.text('peak_dow_cn')}에 가장 많고, {_weekend(b, 'weekend_ratio_cn')}.")
+    if b.fact("peak_dow_kr") and b.fact("weekend_ratio_kr") and fmt.is_num(b.value("weekend_ratio_kr")):
+        s.append(f"내국인 소비는 {b.text('peak_dow_kr')}에 가장 많고, {_weekend(b, 'weekend_ratio_kr')}.")
     if b.fact("nat_top") and fmt.is_num(b.value("nat_growth_top")) and b.value("nat_growth_top") > 0:
         s.append(f"외국인 방문자 가운데 {b.text('nat_top')} 방문자가 {fmt.pct_abs(b.value('nat_growth_top'))} 늘어 증가 폭이 가장 컸어요.")
     if b.fact("n_rules"):
@@ -205,6 +220,14 @@ def _s2(b: Bundle) -> tuple[str, str]:
 
 
 # =========================================================================== Stage 3
+def _elasticity_words(delta: float, eps: float) -> str:
+    """탄력성 가정을 쉬운 말로: '손님도 좌석과 같은 비율로 줄어든다고 가정'. 기호(ε)는 답 위의 '가정' 표시에 있어요."""
+    after = "줄어든다고" if delta < 0 else "늘어난다고"
+    if abs(eps - 1.0) < 1e-9:
+        return f"손님도 좌석과 같은 비율로 {after} 가정"
+    return f"손님은 좌석 변화율의 {eps:.1f}배만큼 {after} 가정"
+
+
 def _s3(b: Bundle) -> tuple[str, str]:
     q = b.query
     place = q.place_name or ""
@@ -216,11 +239,13 @@ def _s3(b: Bundle) -> tuple[str, str]:
         dv = float(b.value("scenario_delta"))
         verb = "줄면" if delta < 0 else "늘면"
         result = "줄어드는" if dv < 0 else "늘어나는"
+        eps = float(b.value("elasticity"))
         headline = (f"국내선 공급이 {fmt.pct_abs(delta, 0)} {verb} {b.text('target_month')} 입도객은 "
-                    f"{fmt.people(abs(dv))} {result} 것으로 계산돼요 (ε {b.text('elasticity')} 가정)")
+                    f"{fmt.people_approx(abs(dv))} {result} 것으로 계산돼요 ({_elasticity_words(delta, eps)})")
         s.append(f"전년 동월({b.text('baseline_month')}) 실적 {b.text('baseline_total')}을 기준선으로, 국내선 공급 "
                  f"{b.text('supply_change')}와 탄력성 ε {fmt.josa(b.text('elasticity'), '을를')} 가정하면 {b.text('target_month')} 입도객은 "
                  f"{b.text('scenario_total')}으로 계산돼요.")
+        s.append("탄력성(ε)은 좌석이 바뀌는 비율에 손님 수가 얼마나 따라 움직이는지를 정한 가정값이에요.")
         others = [f for f in b.facts() if f.key.startswith("scenario_total_e") and f.key != f"scenario_total_e{float(b.value('elasticity')):.1f}"]
         if others:
             s.append("탄력성을 바꾸면 " + ", ".join(f"ε {f.key.split('_e')[1]}일 때 {f.text}" for f in others) + "이에요.")
@@ -258,7 +283,7 @@ def _s3(b: Bundle) -> tuple[str, str]:
         s.append("이 시나리오는 예측이 아니라 가정에 따른 계산이에요.")
     if q.wants_cause:
         s.append(CAUSE_NOTE)
-    return headline or "Stage 3 분석 결과예요", " ".join(s)
+    return headline or "3단계 분석 결과예요", " ".join(s)
 
 
 def template_text(b: Bundle) -> tuple[str, str]:
@@ -305,15 +330,15 @@ def next_questions(b: Bundle) -> list[NextQuestion]:
         third = (NextQuestion(label="30대만 보기", question=f"{place} 30대만 보면?", kind="follow_up", stage=1)
                  if sorted(q.ages) == [20, 30] else
                  NextQuestion(label="20·30대로 보기", question=f"{place} 청년 인구 진단", kind="follow_up", stage=1))
-        return [NextQuestion(label="이 동네에 누가 올까? → Stage 2", question=f"{place}에 누가 올까?", kind="next_stage", stage=2),
+        return [NextQuestion(label="이 동네에 누가 올까? → 2단계", question=f"{place}에 누가 올까?", kind="next_stage", stage=2),
                 second, third]
     if b.stage == 2:
         p = place or "제주"
         out = []
         if q.place_kind == "emd":
-            out.append(NextQuestion(label="어떻게 데려올까? → Stage 3", question=f"{p} 어떻게 데려올까?", kind="next_stage", stage=3))
+            out.append(NextQuestion(label="어떻게 데려올까? → 3단계", question=f"{p} 어떻게 데려올까?", kind="next_stage", stage=3))
         else:
-            out.append(NextQuestion(label="감편 시나리오 보기 → Stage 3", question="국내선 10% 감편 시 입도객은?", kind="next_stage", stage=3))
+            out.append(NextQuestion(label="감편 시나리오 보기 → 3단계", question="국내선 10% 감편 시 입도객은?", kind="next_stage", stage=3))
         theme = "숙박" if q.theme == "식음료" else "식음료"
         out.append(NextQuestion(label=f"{theme}만 보기", question=f"{p} {theme} 중국인 소비 변화", kind="follow_up", stage=2))
         if q.place_kind in ("emd", "zone"):
@@ -403,8 +428,8 @@ def llm_payload(b: Bundle, max_facts: int = 30) -> str:
     """
     headline, draft = template_text(b)
     if b.stage == 2:
-        # 앞 단계를 잇는 문장('Stage 1에서 …으로 분류됐어요')은 빼요. 작은 모델이 이 문장과 한 줄 결론을 한 문장으로 섞었어요.
-        draft = " ".join(x for x in _SENTENCE.split(draft) if "Stage 1에서" not in x)
+        # 앞 단계를 잇는 문장('1단계에서 …으로 분류됐어요')은 빼요. 작은 모델이 이 문장과 한 줄 결론을 한 문장으로 섞었어요.
+        draft = " ".join(x for x in _SENTENCE.split(draft) if "1단계에서" not in x)
     main_period = b.text("period", "")
     lines = [f"질문: {b.query.stage_question or b.query.question}",
              f"단계: Stage {b.stage} {STAGE_TITLE.get(b.stage or 0, '')}".strip(),

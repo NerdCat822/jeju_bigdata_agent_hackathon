@@ -192,7 +192,8 @@ ORDER BY month"""
     chart = ChartSpec(
         id="s1_trend", kind="line", title=f"{row['emd_nm']} {lab} 거주·방문 추이",
         x=x, series=[Series(name=f"{lab} 거주", y=index(resd)), Series(name="방문자", y=index(visit))],
-        y_title="지수 (첫 달 = 100)", y_format="index", note="각 계열의 첫 달 값을 100으로 놓은 지수예요.",
+        y_title="첫 달 대비 (첫 달 = 100)", y_format="index",
+        note="두 선 모두 첫 달을 100으로 놓았어요. 110이면 첫 달보다 10% 많고, 90이면 10% 적어요.",
     )
     ev_month = EvidenceTable(
         id="s1_monthly", title=f"{row['emd_nm']} 월별 하루 평균 인구",

@@ -24,6 +24,8 @@ _PREFIX = f"mt{os.getpid()}_"
 _counter = itertools.count(1)
 # 접두어 없이 만든 Settings 도 개발용 스키마를 건드리지 못하게, 아무도 만들지 않는 스키마를 가리키게 해요.
 os.environ["MEOMUL_PG_SCHEMA_PREFIX"] = f"{_PREFIX}0_"
+# 이 PC 의 backend/.env 에 지도 키가 있어도 테스트는 네이버를 부르지 않아요 (지도 테스트는 가짜 전송 계층을 써요)
+os.environ["MEOMUL_NAVER_MAPS"] = "false"
 
 
 def make_settings(home: Path, **kw) -> Settings:

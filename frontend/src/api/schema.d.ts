@@ -135,6 +135,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/map/locate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Map Locate
+         * @description 지도의 한 점이 속한 읍면동 (Reverse Geocoding). 바다 위나 43곳 밖이면 404.
+         */
+        get: operations["map_locate_api_map_locate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/map/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Map Route
+         * @description 코스의 자동차 도로 경로와 거리·시간 (Directions 5). 버스 노선의 실제 경로는 아니에요.
+         */
+        get: operations["map_route_api_map_route_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/map/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Map Search
+         * @description 도로명·지번 주소로 찾기 (Geocoding). 제주의 주소만, 읍면동을 붙여 돌려줘요.
+         */
+        get: operations["map_search_api_map_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/modes": {
         parameters: {
             query?: never;
@@ -147,6 +207,8 @@ export interface paths {
         /**
          * Set Modes
          * @description 데이터 모드나 LLM 모드를 바꿔요. 데이터 모드를 바꾸면 대화 맥락은 새로 시작해요.
+         *
+         *     모드는 서버 전체에 걸려요. 여러 사람이 같은 주소를 쓰는 배포본은 MEOMUL_LOCK_MODES 로 잠가요.
          */
         post: operations["set_modes_api_modes_post"];
         delete?: never;
@@ -269,6 +331,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/{run_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Run
+         * @description 스트리밍 실행을 멈춰요 (화면의 '멈추기'). 지금 하는 단계가 끝나면 멈추고, 다음 사람의 분석이 바로 시작돼요.
+         */
+        post: operations["cancel_run_api_runs__run_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions": {
         parameters: {
             query?: never;
@@ -353,6 +435,27 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AddressOut */
+        AddressOut: {
+            /**
+             * Address
+             * @description 도로명 주소 (없으면 지번 주소)
+             */
+            address: string;
+            /**
+             * Emd Cd
+             * @description 그 주소가 속한 읍면동 (43곳 밖이면 없음)
+             */
+            emd_cd: string | null;
+            /** Emd Nm */
+            emd_nm: string | null;
+            /** Jibun */
+            jibun: string;
+            /** Lat */
+            lat: number;
+            /** Lon */
+            lon: number;
+        };
         /**
          * Answer
          * @description 질문 하나에 대한 최종 답.
@@ -474,6 +577,11 @@ export interface components {
         };
         /** BootstrapOut */
         BootstrapOut: {
+            /**
+             * Naver Map Key Id
+             * @description 화면에서 네이버 지도를 띄울 Client ID. 없으면 기본 지도로 그려요
+             */
+            naver_map_key_id: string | null;
             options: components["schemas"]["OptionsOut"];
             /** Places */
             places: components["schemas"]["PlaceOut"][];
@@ -706,6 +814,13 @@ export interface components {
             /** Label */
             label: string;
         };
+        /** MapPlaceOut */
+        MapPlaceOut: {
+            /** Emd Cd */
+            emd_cd: string;
+            /** Emd Nm */
+            emd_nm: string;
+        };
         /** MapPoint */
         MapPoint: {
             /** Category */
@@ -771,6 +886,12 @@ export interface components {
             data: components["schemas"]["ModeOption"][];
             /** Llm */
             llm: components["schemas"]["ModeOption"][];
+            /**
+             * Locked
+             * @description 배포본처럼 모드가 정해져 있어 바꿀 수 없는지 (MEOMUL_LOCK_MODES)
+             * @default false
+             */
+            locked: boolean;
         };
         /** NextQuestion */
         NextQuestion: {
@@ -986,6 +1107,27 @@ export interface components {
             filename: string;
             /** Url */
             url: string;
+        };
+        /** RouteOut */
+        RouteOut: {
+            /**
+             * Distance M
+             * @description 자동차 도로 기준 거리 (m)
+             */
+            distance_m: number;
+            /**
+             * Duration S
+             * @description 자동차 기준 걸리는 시간 (초, 부른 때의 교통 기준)
+             */
+            duration_s: number;
+            /**
+             * Path
+             * @description (위도, 경도) 순서의 도로 경로
+             */
+            path: [
+                number,
+                number
+            ][];
         };
         /** Series */
         Series: {
@@ -1353,6 +1495,101 @@ export interface operations {
             };
         };
     };
+    map_locate_api_map_locate_get: {
+        parameters: {
+            query: {
+                lat: number;
+                lon: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapPlaceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    map_route_api_map_route_get: {
+        parameters: {
+            query: {
+                /** @description 거점 ID와 읍면동 코드를 지나는 순서대로 쉼표로 (2~7개) */
+                keys: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    map_search_api_map_search_get: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     set_modes_api_modes_post: {
         parameters: {
             query?: never;
@@ -1543,6 +1780,39 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_run_api_runs__run_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
                 };
             };
             /** @description Validation Error */

@@ -8,7 +8,9 @@ import { Icon, Spinner } from './components/Icon'
 import { Sidebar } from './components/Sidebar'
 import { Toast } from './components/Toast'
 import { TurnView } from './components/TurnView'
+import { api as realApi } from './api/client'
 import type { Api } from './api/client'
+import { MapsContext } from './components/viz/mapsContext'
 import { STAGE_QUESTION, useAgent } from './state/agent'
 
 /** 머물멍 화면. 왼쪽은 모드와 단계, 가운데는 질문 → 확인 카드 → 답. */
@@ -58,56 +60,60 @@ export default function App({ api }: { api?: Api }): ReactNode {
   }
 
   const ask = (question: string, autoRun: boolean): void => void actions.ask(question, { autoRun })
+  const maps = { keyId: boot.naver_map_key_id ?? null, api: api ?? realApi }
 
   return (
-    <div className="app">
-      <Sidebar state={state} boot={boot} actions={actions} onDataInfo={() => setShowData(true)} />
-      <main className="main" ref={mainRef}>
-        <div className="main-inner">
-          <div className="topline">
+    <MapsContext.Provider value={maps}>
+      <div className="app">
+        <Sidebar state={state} boot={boot} actions={actions} onDataInfo={() => setShowData(true)} />
+        <main className="main" ref={mainRef}>
+          <div className="main-inner">
+            <div className="topline">
+              {active ? (
+                <button type="button" className="link-button" onClick={() => actions.selectTurn(null)}>
+                  <Icon name="home" /> 첫 화면
+                </button>
+              ) : (
+                <span />
+              )}
+              <ul className="status-line" aria-label="지금 쓰는 데이터와 AI 설명 방식">
+                <li className="tag">{boot.status.data_badge}</li>
+                <li>{boot.status.llm_label}</li>
+              </ul>
+            </div>
+            <AskBar busy={state.busy} busyLabel={state.busyLabel} chips={chips} onAsk={ask} />
             {active ? (
-              <button type="button" className="link-button" onClick={() => actions.selectTurn(null)}>
-                <Icon name="home" /> 첫 화면
-              </button>
+              <TurnView
+                key={active.id}
+                turn={active}
+                boot={boot}
+                latestYear={latestYear}
+                busy={state.busy}
+                cloudConsent={state.cloudConsent}
+                onRun={() => void actions.runTurn(active.id)}
+                onEdit={(patch) => void actions.editCard(active.id, patch)}
+                onAsk={(q) => ask(q, true)}
+                onReport={() => void actions.makeReport()}
+                onPickPlace={(name) => ask(STAGE_QUESTION[1](name), true)}
+                onAgreeCloud={() => void actions.agreeCloud()}
+                onStop={actions.stop}
+              />
             ) : (
-              <span />
+              <Home
+                boot={boot}
+                picked={state.pickedPlace}
+                busy={state.busy}
+                onAsk={(q) => ask(q, true)}
+                onPick={actions.pickPlace}
+                onDiagnose={(place) => ask(STAGE_QUESTION[1](place), true)}
+                onChain={(place) => actions.runChain(place)}
+              />
             )}
-            <ul className="status-line" aria-label="지금 쓰는 데이터와 LLM 모드">
-              <li className="tag">{boot.status.data_badge}</li>
-              <li>{boot.status.llm_label}</li>
-            </ul>
           </div>
-          <AskBar busy={state.busy} busyLabel={state.busyLabel} chips={chips} onAsk={ask} />
-          {active ? (
-            <TurnView
-              key={active.id}
-              turn={active}
-              boot={boot}
-              latestYear={latestYear}
-              busy={state.busy}
-              cloudConsent={state.cloudConsent}
-              onRun={() => void actions.runTurn(active.id)}
-              onEdit={(patch) => void actions.editCard(active.id, patch)}
-              onAsk={(q) => ask(q, true)}
-              onReport={() => void actions.makeReport()}
-              onPickPlace={(name) => ask(STAGE_QUESTION[1](name), true)}
-              onAgreeCloud={() => void actions.agreeCloud()}
-            />
-          ) : (
-            <Home
-              boot={boot}
-              picked={state.pickedPlace}
-              busy={state.busy}
-              onAsk={(q) => ask(q, true)}
-              onPick={actions.pickPlace}
-              onDiagnose={(place) => ask(STAGE_QUESTION[1](place), true)}
-              onChain={(place) => actions.runChain(place)}
-            />
-          )}
-        </div>
-      </main>
-      {showData && <DataInfo status={boot.status} onClose={() => setShowData(false)} />}
-      <Toast notice={state.notice} onClose={actions.dismissNotice} />
-    </div>
+        </main>
+        {showData && <DataInfo status={boot.status} onClose={() => setShowData(false)} />}
+        <Toast notice={state.notice} onClose={actions.dismissNotice} />
+      </div>
+    </MapsContext.Provider>
   )
 }

@@ -69,7 +69,7 @@ describe('화면 상태', () => {
     await act(async () => result.current.actions.runChain('성산읍'))
     await waitFor(() => expect(result.current.state.turns[0]?.status).toBe('done'))
     const turn = result.current.state.turns[0]
-    expect(api.chainStream).toHaveBeenCalledWith('성산읍', 'sess-1', expect.anything())
+    expect(api.chainStream).toHaveBeenCalledWith('성산읍', 'sess-1', expect.anything(), expect.any(AbortSignal))
     expect(turn.answers.map((a) => a.stage)).toEqual([1, 2, 3])
     expect(turn.kind).toBe('chain')
     expect(turn.reportUrl).toBe('/api/reports/sample.html')

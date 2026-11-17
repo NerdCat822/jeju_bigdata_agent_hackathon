@@ -10,7 +10,7 @@
   --raised: #f6f1e9;
   --text: #2b211b;
   --text-2: #635a54;
-  --text-3: #7a716b;
+  --text-3: #726963; /* 크림 바탕 5.0:1, 흰 바탕 5.4:1 */
   --line: rgba(43, 33, 27, 0.1);
   --line-strong: rgba(43, 33, 27, 0.18);
   --dark: #2b211b;
@@ -24,7 +24,7 @@
   --accent-wash: #fff8ee;
   --accent-line: #ffe3bf;
   --green-soft: #e7f6ec;
-  --green-ink: #1f8a4c;
+  --green-ink: #187a42; /* 연두 바탕 4.8:1 */
 
   /* 뜻이 있는 색 */
   --positive: #15803d;
@@ -76,8 +76,8 @@ body {
   background: var(--surface);
   color: var(--text);
   font-family: var(--font);
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 15px;
+  line-height: 24px;
   font-weight: 400;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -265,6 +265,37 @@ a {
   overflow-y: auto;
 }
 
+.side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.side-top .side-toggle {
+  display: none;
+  height: 32px;
+  padding: 0 12px;
+}
+
+.side-menu {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.side-value {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: var(--r-control);
+  background: var(--raised);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -287,16 +318,16 @@ a {
   padding: 0 8px;
   margin-bottom: 8px;
   color: var(--text-3);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .side-hint {
   padding: 0 8px;
   margin-top: 8px;
   color: var(--text-3);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .seg {
@@ -413,7 +444,7 @@ a {
   height: 16px;
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .nav-row.is-on .step-no {
@@ -472,10 +503,10 @@ a {
   width: 100%;
 }
 
-/* 묻기 · 다음 단계로 가는 단추 (기획서 예시처럼 귤색에 흰 글자) */
+/* 묻기 · 다음 단계로 가는 단추. 귤색 바탕에 흰 글자는 대비가 2.05:1 이라 진한 갈색 글자를 써요 (7.7:1) */
 .btn-accent {
   background: var(--accent);
-  color: #fff;
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -542,7 +573,7 @@ a {
   border-radius: var(--r-tag);
   background: var(--raised);
   color: var(--text-2);
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -667,6 +698,8 @@ a {
 /* ------------------------------------------------------------------ 질문 입력 */
 .ask {
   display: grid;
+  /* 칸이 내용(입력창의 기본 너비)보다 좁아질 수 있어야 휴대폰에서 '묻기' 단추가 화면 밖으로 밀리지 않아요 */
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin-bottom: 32px;
 }
@@ -804,8 +837,8 @@ a {
   display: grid;
   gap: 4px;
   color: var(--text-2);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .toggle-row {
@@ -858,6 +891,18 @@ a {
   font-weight: 500;
 }
 
+.progress-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-small {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
 .progress-step {
   display: flex;
   align-items: center;
@@ -879,7 +924,7 @@ a {
 
 .progress-step .muted {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* ------------------------------------------------------------------ 답 */
@@ -925,6 +970,45 @@ a {
   font-weight: 500;
 }
 
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.figure {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
+}
+
+.figures dd {
+  margin: 0;
+}
+
+.figure-label {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.figure-value {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.figure-note {
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 18px;
+}
+
 .explanation {
   max-width: 44em;
   color: var(--text);
@@ -950,9 +1034,25 @@ a {
 }
 
 .section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
+}
+
+.section-note {
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.field-hint {
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 18px;
 }
 
 /* 제안 후보: 같은 카드 세 장 대신, 규칙 번호가 한 줄로 서는 목록 */
@@ -963,8 +1063,7 @@ a {
 
 .suggestion {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  gap: 4px 12px;
+  gap: 4px;
   padding: 16px 20px;
 }
 
@@ -973,11 +1072,14 @@ a {
 }
 
 .rule-id {
-  grid-row: 1 / span 3;
-  padding-top: 2px;
+  margin-left: 4px;
   color: var(--text-3);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.rule-id span {
   font-family: var(--mono);
-  font-size: 12px;
 }
 
 .suggestion-head {
@@ -1109,7 +1211,7 @@ a {
 
 .evidence-note {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 16px;
 }
 
@@ -1138,7 +1240,7 @@ a {
 
 .data-table thead th {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .data-table tbody th {
@@ -1207,7 +1309,7 @@ a {
   background: var(--page);
   color: var(--text);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 20px;
 }
 
@@ -1280,7 +1382,7 @@ a {
 .step-list code,
 .step-list .muted {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .step-list code {
@@ -1296,15 +1398,36 @@ a {
 .jump {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 20px;
-  color: var(--text-3);
-  font-size: 13px;
-  line-height: 20px;
+  gap: 8px;
 }
 
-.jump a {
+.jump-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
   text-decoration: none;
-  transition: color 150ms var(--ease);
+  transition: background-color 150ms var(--ease), border-color 150ms var(--ease);
+}
+
+.jump-item:hover {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.jump-item .step-no {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
 }
 
 .jump a:hover {
@@ -1356,6 +1479,31 @@ a {
   color: var(--text-2);
   font-size: 15px;
   line-height: 24px;
+}
+
+.hero-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.hero-select {
+  width: 220px;
+}
+
+.hero .hero-hint {
+  margin-top: 8px;
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.stage-no {
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /* 세 단계는 이어지는 한 흐름이라, 카드 세 장이 아니라 한 띠로 보여 줘요 */
@@ -1525,7 +1673,7 @@ a {
   border: 0;
   background: none;
   color: var(--text-3);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 16px;
   transition: color 150ms var(--ease);
 }
@@ -1539,8 +1687,8 @@ a {
   flex-wrap: wrap;
   gap: 4px 16px;
   color: var(--text-2);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .viz-legend li {
@@ -1596,13 +1744,13 @@ a {
 .viz-tick {
   fill: var(--text-3);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .viz-cat {
   fill: var(--text-2);
   font-family: var(--font);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .viz-line {
@@ -1610,6 +1758,15 @@ a {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.viz-line.is-main {
+  stroke-width: 3;
+}
+
+.viz-line.is-sub {
+  stroke-width: 1.5;
+  opacity: 0.8;
 }
 
 .viz-dot {
@@ -1621,7 +1778,7 @@ a {
 .viz-value {
   fill: var(--text);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .viz-bar {
@@ -1709,7 +1866,7 @@ a {
   min-width: 56px;
   color: var(--text-2);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
   text-align: right;
 }
 
@@ -1727,7 +1884,7 @@ a {
   border-radius: var(--r-control);
   background: var(--surface);
   box-shadow: var(--shadow-float);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 16px;
   pointer-events: none;
 }
@@ -1756,8 +1913,8 @@ a {
 
 .viz-note {
   color: var(--text-3);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .viz-table {
@@ -1773,7 +1930,7 @@ a {
 
 .map-offnote {
   fill: var(--text-3);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .map-course {
@@ -1829,7 +1986,7 @@ rect.map-mark {
 
 .map-label {
   fill: var(--text-2);
-  font-size: 11px;
+  font-size: 12px;
   paint-order: stroke;
   stroke: rgba(255, 255, 255, 0.92);
   stroke-width: 3px;
@@ -1839,7 +1996,7 @@ rect.map-mark {
 
 .map-label.is-strong {
   fill: var(--text);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -1936,6 +2093,142 @@ rect.map-mark {
 }
 
 /* ------------------------------------------------------------------ 좁은 화면 */
+/* ---- 네이버 지도 (Dynamic Map). 불러오지 못하면 기본 지도(SVG)로 바꿔 그려요 */
+.nmap {
+  width: 100%;
+  height: 360px;
+  border-radius: var(--r-card);
+  overflow: hidden;
+  background: var(--island);
+}
+
+.viz-card .nmap {
+  height: 320px;
+}
+
+.viz-card.is-wide .nmap {
+  height: 420px;
+}
+
+.nm-mark {
+  position: relative;
+  display: block;
+}
+
+.nm-dot {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--map-dot);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.nm-dot.is-target {
+  border: 3px solid #fff;
+  outline: 3px solid var(--accent);
+  background: var(--accent);
+}
+
+.nm-dot.is-hub {
+  border-radius: 4px;
+  background: var(--dark);
+}
+
+.nm-dot.is-via {
+  border-color: var(--dark);
+  background: #fff;
+}
+
+.nm-name {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 4px);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.route-list {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.route-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.route-key {
+  display: inline-block;
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.picker-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.addr {
+  display: grid;
+  gap: 8px;
+}
+
+.addr-form {
+  display: flex;
+  gap: 8px;
+  max-width: 520px;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.addr-hits {
+  display: grid;
+  gap: 2px;
+  max-width: 520px;
+}
+
+.addr-hits .ask-row {
+  justify-content: space-between;
+}
+
+.addr-msg:empty {
+  display: none;
+}
+
 @media (max-width: 1080px) {
   .viz-grid,
   .stages {
@@ -1956,6 +2249,7 @@ rect.map-mark {
     height: auto;
   }
   .side {
+    padding: 8px 12px;
     border-right: 0;
     border-bottom: 1px solid var(--line);
     overflow: visible;
@@ -1963,17 +2257,34 @@ rect.map-mark {
   .side-history {
     display: none;
   }
-  /* 좁은 화면에서는 데이터와 LLM 모드를 나란히 두어 사이드바가 첫 화면을 다 차지하지 않게 해요 */
-  .side {
+  /* 좁은 화면에서는 메뉴를 접어 두어 질문창과 본문이 먼저 보이게 해요. 펼치면 데이터와 AI 설명을 나란히 둬요 */
+  .side-top .side-toggle {
+    display: inline-flex;
+  }
+  .side:not(.is-open) .side-menu {
+    display: none;
+  }
+  .side.is-open .side-menu {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 16px;
+    padding: 8px 0;
   }
-  .side > * {
+  .side-menu > * {
     grid-column: 1 / -1;
   }
-  .side > section.side-block {
+  .side-menu > section.side-block {
     grid-column: auto;
+  }
+  .side-foot {
+    padding-top: 16px;
+  }
+  .hero {
+    align-items: flex-start;
+  }
+  .hero img {
+    width: 48px;
+    height: 48px;
   }
   .main {
     overflow: visible;
@@ -1993,6 +2304,13 @@ rect.map-mark {
   .picker-select {
     width: 100%;
   }
+  .nmap,
+  .viz-card .nmap {
+    height: 300px;
+  }
+  .picker-tools {
+    justify-content: stretch;
+  }
   .headline-text {
     font-size: 22px;
     line-height: 32px;
@@ -2000,8 +2318,11 @@ rect.map-mark {
 }
 
 @media (max-width: 480px) {
-  .side > section.side-block {
+  .side-menu > section.side-block {
     grid-column: 1 / -1;
+  }
+  .hero-select {
+    width: 100%;
   }
 }
 

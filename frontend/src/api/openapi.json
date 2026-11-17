@@ -1,6 +1,60 @@
 {
   "components": {
     "schemas": {
+      "AddressOut": {
+        "properties": {
+          "address": {
+            "description": "도로명 주소 (없으면 지번 주소)",
+            "title": "Address",
+            "type": "string"
+          },
+          "emd_cd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "그 주소가 속한 읍면동 (43곳 밖이면 없음)",
+            "title": "Emd Cd"
+          },
+          "emd_nm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emd Nm"
+          },
+          "jibun": {
+            "title": "Jibun",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          }
+        },
+        "required": [
+          "address",
+          "jibun",
+          "lat",
+          "lon",
+          "emd_cd",
+          "emd_nm"
+        ],
+        "title": "AddressOut",
+        "type": "object"
+      },
       "Answer": {
         "description": "질문 하나에 대한 최종 답.",
         "properties": {
@@ -323,6 +377,18 @@
       },
       "BootstrapOut": {
         "properties": {
+          "naver_map_key_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "화면에서 네이버 지도를 띄울 Client ID. 없으면 기본 지도로 그려요",
+            "title": "Naver Map Key Id"
+          },
           "options": {
             "$ref": "#/components/schemas/OptionsOut"
           },
@@ -348,7 +414,8 @@
           "status",
           "places",
           "suggested",
-          "options"
+          "options",
+          "naver_map_key_id"
         ],
         "title": "BootstrapOut",
         "type": "object"
@@ -977,6 +1044,24 @@
         "title": "MapLine",
         "type": "object"
       },
+      "MapPlaceOut": {
+        "properties": {
+          "emd_cd": {
+            "title": "Emd Cd",
+            "type": "string"
+          },
+          "emd_nm": {
+            "title": "Emd Nm",
+            "type": "string"
+          }
+        },
+        "required": [
+          "emd_cd",
+          "emd_nm"
+        ],
+        "title": "MapPlaceOut",
+        "type": "object"
+      },
       "MapPoint": {
         "properties": {
           "category": {
@@ -1177,11 +1262,18 @@
             },
             "title": "Llm",
             "type": "array"
+          },
+          "locked": {
+            "default": false,
+            "description": "배포본처럼 모드가 정해져 있어 바꿀 수 없는지 (MEOMUL_LOCK_MODES)",
+            "title": "Locked",
+            "type": "boolean"
           }
         },
         "required": [
           "data",
-          "llm"
+          "llm",
+          "locked"
         ],
         "title": "ModesOut",
         "type": "object"
@@ -1951,6 +2043,45 @@
         "title": "ReportOut",
         "type": "object"
       },
+      "RouteOut": {
+        "properties": {
+          "distance_m": {
+            "description": "자동차 도로 기준 거리 (m)",
+            "title": "Distance M",
+            "type": "integer"
+          },
+          "duration_s": {
+            "description": "자동차 기준 걸리는 시간 (초, 부른 때의 교통 기준)",
+            "title": "Duration S",
+            "type": "integer"
+          },
+          "path": {
+            "description": "(위도, 경도) 순서의 도로 경로",
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Path",
+            "type": "array"
+          }
+        },
+        "required": [
+          "distance_m",
+          "duration_s",
+          "path"
+        ],
+        "title": "RouteOut",
+        "type": "object"
+      },
       "Series": {
         "properties": {
           "name": {
@@ -2608,9 +2739,159 @@
         ]
       }
     },
+    "/api/map/locate": {
+      "get": {
+        "description": "지도의 한 점이 속한 읍면동 (Reverse Geocoding). 바다 위나 43곳 밖이면 404.",
+        "operationId": "map_locate_api_map_locate_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lat",
+            "required": true,
+            "schema": {
+              "maximum": 90,
+              "minimum": -90,
+              "title": "Lat",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lon",
+            "required": true,
+            "schema": {
+              "maximum": 180,
+              "minimum": -180,
+              "title": "Lon",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapPlaceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Map Locate",
+        "tags": [
+          "지도"
+        ]
+      }
+    },
+    "/api/map/route": {
+      "get": {
+        "description": "코스의 자동차 도로 경로와 거리·시간 (Directions 5). 버스 노선의 실제 경로는 아니에요.",
+        "operationId": "map_route_api_map_route_get",
+        "parameters": [
+          {
+            "description": "거점 ID와 읍면동 코드를 지나는 순서대로 쉼표로 (2~7개)",
+            "in": "query",
+            "name": "keys",
+            "required": true,
+            "schema": {
+              "description": "거점 ID와 읍면동 코드를 지나는 순서대로 쉼표로 (2~7개)",
+              "title": "Keys",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Map Route",
+        "tags": [
+          "지도"
+        ]
+      }
+    },
+    "/api/map/search": {
+      "get": {
+        "description": "도로명·지번 주소로 찾기 (Geocoding). 제주의 주소만, 읍면동을 붙여 돌려줘요.",
+        "operationId": "map_search_api_map_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AddressOut"
+                  },
+                  "title": "Response Map Search Api Map Search Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Map Search",
+        "tags": [
+          "지도"
+        ]
+      }
+    },
     "/api/modes": {
       "post": {
-        "description": "데이터 모드나 LLM 모드를 바꿔요. 데이터 모드를 바꾸면 대화 맥락은 새로 시작해요.",
+        "description": "데이터 모드나 LLM 모드를 바꿔요. 데이터 모드를 바꾸면 대화 맥락은 새로 시작해요.\n\n모드는 서버 전체에 걸려요. 여러 사람이 같은 주소를 쓰는 배포본은 MEOMUL_LOCK_MODES 로 잠가요.",
         "operationId": "set_modes_api_modes_post",
         "requestBody": {
           "content": {
@@ -2859,6 +3140,54 @@
           }
         },
         "summary": "Run Stream",
+        "tags": [
+          "스트리밍"
+        ]
+      }
+    },
+    "/api/runs/{run_id}/cancel": {
+      "post": {
+        "description": "스트리밍 실행을 멈춰요 (화면의 '멈추기'). 지금 하는 단계가 끝나면 멈추고, 다음 사람의 분석이 바로 시작돼요.",
+        "operationId": "cancel_run_api_runs__run_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "maxLength": 40,
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Cancel Run Api Runs  Run Id  Cancel Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Run",
         "tags": [
           "스트리밍"
         ]

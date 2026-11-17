@@ -264,7 +264,7 @@ def confirm_card(q: ParsedQuery, refs: Refs, config: AppConfig) -> ConfirmCard:
         if q.intent in ("plan", "forecast", "routes", "chain"):
             sc = c3.supply_change_default if q.supply_change is None else q.supply_change
             el = c3.elasticity_default if q.elasticity is None else q.elasticity
-            chips.append(Chip(label="가정", value=f"국내선 공급 {fmt.pct(sc, 0)} · ε {el:.1f}"))
+            chips.append(Chip(label="가정", value=f"국내선 공급 {fmt.pct(sc, 0)} · 탄력성 {el:.1f}"))
             if q.target_month:
                 chips.append(Chip(label="대상 월", value=f"{q.target_month}월"))
         if q.hub_id and q.hub_id in refs.hubs:
@@ -272,9 +272,11 @@ def confirm_card(q: ParsedQuery, refs: Refs, config: AppConfig) -> ConfirmCard:
     label = INTENT_LABEL.get(q.intent, q.intent)
     if q.intent == "recommend" and q.wants_cause:
         label = "전체 읍면동 비교"
-    if q.stage and q.intent not in ("chain", "free"):
-        label = f"Stage {q.stage} {STAGE_TITLE[q.stage]} · {label}"
-    chips.append(Chip(label="질문", value=label))
+    if q.intent == "chain":
+        label = "1~3단계 전체"
+    elif q.stage and q.intent != "free":
+        label = f"{q.stage}단계 {STAGE_TITLE[q.stage]} · {label}"
+    chips.append(Chip(label="분석", value=label))
     if q.wants_cause:
         warnings.append("원인은 이 자료만으로 단정할 수 없어요. 함께 움직인 지표와 확인할 외부 요인으로 답할게요.")
     return ConfirmCard(query=q, chips=chips, warnings=warnings, runnable=runnable)

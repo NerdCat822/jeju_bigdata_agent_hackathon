@@ -161,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"데이터: {svc.agent.ctx.wh.data_badge} · LLM: {svc.status()['llm_label']}" + (f" ({svc.llm_note})" if svc.llm_note else ""))
         except HTTPException as e:  # 데이터 창고가 없어도 서버는 띄워요. 화면은 /api/health 로 안내를 받아요
             print(f"주의: {e.detail['message']}")  # type: ignore[index]
-        print(f"머물멍 API: http://{host}:{port}  (API 문서: http://{host}:{port}/docs)")
+        print(f"머물멍 API: http://{host}:{port}" + (f"  (API 문서: http://{host}:{port}/docs)" if settings.api_docs else ""))
         if host not in ("127.0.0.1", "localhost"):
             print(f"주의: {host} 에서 접속을 받아요. 로그인 기능이 없으니 접속 범위를 좁혀 쓰세요 "
                   "(컨테이너라면 ports 를 127.0.0.1 로 열고, 아니면 믿을 수 있는 망에서만 쓰세요).")

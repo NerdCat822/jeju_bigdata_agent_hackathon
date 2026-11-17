@@ -101,8 +101,9 @@ export function LineChart({ spec }: { spec: ChartSpec }): ReactNode {
           </text>
         ))}
         {active !== null && <line className="viz-cross" x1={x(active)} x2={x(active)} y1={M.top} y2={M.top + plotH} />}
+        {/* 계열이 여럿이면 첫 계열(예: 청년 거주)을 굵게, 나머지는 가늘게 그려 시선이 핵심 선에 가게 해요 */}
         {paths.map((d, k) => (
-          <path key={spec.series[k].name} className="viz-line" d={d} stroke={seriesColor(k)} />
+          <path key={spec.series[k].name} className={`viz-line${paths.length > 1 ? (k === 0 ? ' is-main' : ' is-sub') : ''}`} d={d} stroke={seriesColor(k)} />
         ))}
         {ends.map((e, k) =>
           e ? (

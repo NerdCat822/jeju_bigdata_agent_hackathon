@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bootstrap } from '../test/fixtures'
-import { axisTick, caption, compact, formatCell, josa, pct, seconds, shortMonth, valueLabel } from './format'
+import { axisTick, caption, compact, formatCell, josa, modelName, pct, seconds, shortMonth, shortPeriod, valueLabel } from './format'
 import { JEJU_OUTLINE, OFF_MAP_LAT, declutter, makeProjection } from './geo'
 import { niceAxis, thin } from './scale'
 import { SseParser } from './sse'
@@ -56,6 +56,23 @@ describe('숫자 표기 (백엔드와 같은 규칙)', () => {
     expect(caption('유동인구는 통신 데이터 추정치예요.')).toBe('유동인구는 통신 데이터 추정치예요')
     expect(caption('임계값 τ = ±3%. 위에서부터 먼저 맞는 유형이에요.')).toBe('임계값 τ = ±3%. 위에서부터 먼저 맞는 유형이에요.')
     expect(caption('탄력성 ε 1.0 가정')).toBe('탄력성 ε 1.0 가정')
+  })
+})
+
+describe('화면용 이름', () => {
+  it('모델 ID 를 읽기 좋은 이름으로 바꿔요 (백엔드와 같은 규칙)', () => {
+    expect(modelName('claude-opus-5-5')).toBe('Claude Opus 5.5')
+    expect(modelName('claude-fable-5-2')).toBe('Claude Fable 5.2')
+    expect(modelName('claude-3-5-sonnet-20241022')).toBe('Claude 3.5 Sonnet')
+    expect(modelName('claude-sonnet-4-20250514')).toBe('Claude Sonnet 4')
+  })
+
+  it('비교 기간을 짧게 적고, 모르는 모양은 그대로 둬요', () => {
+    expect(shortPeriod('2018-01~2018-12 vs 2017-01~2017-12')).toBe('2018년 vs 2017년')
+    expect(shortPeriod('2024-08~2025-07 vs 2023-08~2024-07')).toBe('2024-08~2025-07 vs 직전 1년')
+    expect(shortPeriod('2026-03~2026-08 vs 2025-09~2026-02')).toBe('2026-03~2026-08 vs 직전 6개월')
+    expect(shortPeriod('2017-09~2017-11')).toBe('2017-09~2017-11')
+    expect(shortPeriod('2025-01~2025-06 vs 2024-01~2024-06')).toBe('2025-01~2025-06 vs 2024-01~2024-06') // 이어지지 않으면 그대로
   })
 })
 

@@ -18,6 +18,8 @@ export interface MapDot {
   detail?: string
   /** 이름표를 항상 보여 줄지. 대상·비교 읍면동·거점은 기본으로 보여 줘요. */
   labeled?: boolean
+  /** 점 안에 적을 짧은 글자 (네이버 지도의 코스 번호). 있으면 이름표 대신 이걸 보여 주고 이름은 툴팁과 목록에 둬요. */
+  mark?: string
 }
 
 interface Props {

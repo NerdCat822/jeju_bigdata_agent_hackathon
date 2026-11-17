@@ -84,6 +84,6 @@ def test_confirm_card(parser, refs, settings):
     card = confirm_card(parser.parse("어떻게 데려올까?")[0], refs, cfg)
     assert not card.runnable and any("읍면동" in w for w in card.warnings)
     card = confirm_card(parser.parse("성산읍 어떻게 데려올까? 감편 10%")[0], refs, cfg)
-    assert ("가정", "국내선 공급 -10% · ε 1.0") in [(c.label, c.value) for c in card.chips]
+    assert ("가정", "국내선 공급 -10% · 탄력성 1.0") in [(c.label, c.value) for c in card.chips]
     card = confirm_card(parser.parse("청년이 빠지는 읍면 한 곳의 전체 제안서")[0], refs, cfg)
     assert card.runnable and "자동 선택" in card.chips[0].value

@@ -156,6 +156,8 @@ export interface AgentActions {
   makeReport: (place?: string | null) => Promise<void>
   setModes: (patch: ModesIn) => Promise<void>
   agreeCloud: () => Promise<void>
+  /** 지금 도는 분석을 멈춰요 (서버에도 알려요). */
+  stop: () => void
   selectTurn: (id: string | null) => void
   pickPlace: (place: string | null) => void
   dismissNotice: () => void
@@ -193,6 +195,9 @@ export function useAgent(api: Api = realApi): { state: AgentState; actions: Agen
     void reload()
   }, [reload])
 
+  // 지금 도는 스트리밍 실행 (멈추기용)
+  const running = useRef<{ controller: AbortController; run: string | null } | null>(null)
+
   const execute = useCallback(
     async (id: string, card: ConfirmCard) => {
       dispatch({
@@ -201,7 +206,12 @@ export function useAgent(api: Api = realApi): { state: AgentState; actions: Agen
         patch: { status: 'running', progress: [], answers: [], error: null, dirty: false, kind: null, reportUrl: null, startedAt: Date.now(), elapsed: null },
       })
       dispatch({ type: 'busy', busy: true, label: '분석하는 중' })
+      const run = { controller: new AbortController(), run: null as string | null }
+      running.current = run
       const on = {
+        onRun: (r: string) => {
+          run.run = r
+        },
         onProgress: (item: Progress) => dispatch({ type: 'progress', id, item }),
         onAnswer: (answer: Answer) => dispatch({ type: 'answer', id, answer }),
       }
@@ -211,14 +221,16 @@ export function useAgent(api: Api = realApi): { state: AgentState; actions: Agen
         const done =
           q.intent === 'chain'
             ? q.place_name
-              ? await api.chainStream(q.place_name, sid, on)
-              : await api.askStream(q.question, sid, on) // 장소를 에이전트가 고르는 연계 실행
-            : await api.runStream(q, sid, on)
+              ? await api.chainStream(q.place_name, sid, on, run.controller.signal)
+              : await api.askStream(q.question, sid, on, run.controller.signal) // 장소를 에이전트가 고르는 연계 실행
+            : await api.runStream(q, sid, on, run.controller.signal)
         keepSession(done.session_id)
         dispatch({ type: 'patch', id, patch: { status: 'done', kind: done.kind, elapsed: done.elapsed, reportUrl: done.report_url ?? null } })
       } catch (e) {
-        dispatch({ type: 'patch', id, patch: { status: 'error', error: errorText(e) } })
+        const stopped = run.controller.signal.aborted
+        dispatch({ type: 'patch', id, patch: { status: 'error', error: stopped ? '분석을 멈췄어요. 다시 시도를 누르면 처음부터 계산해요.' : errorText(e) } })
       } finally {
+        if (running.current === run) running.current = null
         dispatch({ type: 'busy', busy: false })
       }
     },
@@ -279,6 +291,12 @@ export function useAgent(api: Api = realApi): { state: AgentState; actions: Agen
 
   const selectTurn = useCallback((id: string | null) => dispatch({ type: 'active', id }), [])
   const pickPlace = useCallback((place: string | null) => dispatch({ type: 'pick', place }), [])
+  const stop = useCallback(() => {
+    const r = running.current
+    if (!r) return
+    if (r.run) void api.cancelRun(r.run).catch(() => {}) // 서버도 다음 단계에서 멈춰서 줄이 풀려요
+    r.controller.abort()
+  }, [api])
   const dismissNotice = useCallback(() => dispatch({ type: 'notice', notice: null }), [])
 
   const needPlace = useCallback(() => {
@@ -342,7 +360,7 @@ export function useAgent(api: Api = realApi): { state: AgentState; actions: Agen
         if (dataChanged) session.current = null // 데이터가 바뀌면 서버도 대화를 새로 시작해요
         dispatch({ type: 'status', status, reset: dataChanged })
         if (patch.llm_mode && status.llm_mode !== patch.llm_mode) {
-          dispatch({ type: 'notice', notice: { tone: 'warn', text: status.llm_note || 'LLM을 쓸 수 없어 템플릿 모드로 실행해요.' } })
+          dispatch({ type: 'notice', notice: { tone: 'warn', text: status.llm_note || 'AI 설명을 쓸 수 없어 기본 설명으로 실행해요.' } })
         } else if (dataChanged) {
           dispatch({ type: 'notice', notice: { tone: 'info', text: `${status.data_badge}로 바꿨어요. 대화는 새로 시작해요.` } })
         }
@@ -368,8 +386,8 @@ export function useAgent(api: Api = realApi): { state: AgentState; actions: Agen
   }, [api, runTurn])
 
   const actions = useMemo<AgentActions>(
-    () => ({ reload, ask, runTurn, editCard, openStage, runChain, makeReport, setModes, agreeCloud, selectTurn, pickPlace, dismissNotice }),
-    [reload, ask, runTurn, editCard, openStage, runChain, makeReport, setModes, agreeCloud, selectTurn, pickPlace, dismissNotice],
+    () => ({ reload, ask, runTurn, editCard, openStage, runChain, makeReport, setModes, agreeCloud, stop, selectTurn, pickPlace, dismissNotice }),
+    [reload, ask, runTurn, editCard, openStage, runChain, makeReport, setModes, agreeCloud, stop, selectTurn, pickPlace, dismissNotice],
   )
   return { state, actions }
 }

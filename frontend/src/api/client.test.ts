@@ -50,7 +50,8 @@ describe('API 호출', () => {
     vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))))
     const off = (await api.bootstrap().catch((e: unknown) => e)) as ApiError
     expect(off.code).toBe('offline')
-    expect(off.message).toContain('serve')
+    expect(off.message).toContain('잠시 후')
+    expect(off.message).not.toContain('python') // 개발 명령어는 화면에 보여 주지 않아요
   })
 })
 

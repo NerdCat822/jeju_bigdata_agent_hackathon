@@ -7,6 +7,7 @@ import { bootstrap, cardOut, failed, stage1, stage2, stage3 } from '../test/fixt
 import { AnswerView } from './AnswerView'
 import { ConfirmCard } from './ConfirmCard'
 import { EvidencePanel } from './EvidencePanel'
+import { keyFigures } from './keyFigures'
 import { toRows } from './progressRows'
 import { explainedBy } from './verification'
 import { ChartCard } from './viz/ChartCard'
@@ -37,9 +38,9 @@ describe('답 화면', () => {
     render(<AnswerView answer={stage1} stageTitle="청년이 머무는 동네" {...answerProps} />)
     expect(screen.getByRole('heading', { level: 2, name: stage1.headline })).toBeInTheDocument()
     expect(screen.getByText(stage1.explanation)).toBeInTheDocument()
-    const meta = screen.getByText('Stage 1 · 청년이 머무는 동네').parentElement as HTMLElement
+    const meta = screen.getByText('1단계 · 청년이 머무는 동네').parentElement as HTMLElement
     expect(within(meta).getByText('C 방문 의존형')).toBeInTheDocument() // 유형 표식과 이름
-    expect(screen.getByText('Stage 1 · 청년이 머무는 동네')).toBeInTheDocument()
+    expect(screen.queryByText(/Stage/)).toBeNull() // 처음 보는 사람에게 낯선 'Stage' 대신 '1단계'
     expect(screen.queryByText('샘플 데이터')).toBeNull() // 데이터 배지는 화면 위쪽에만 둬요
     expect(screen.getByText(/검증 통과 · 7개 항목/)).toBeInTheDocument()
     const next = screen.getByRole('navigation', { name: '다음 질문' })
@@ -54,7 +55,7 @@ describe('답 화면', () => {
     expect(onAsk).toHaveBeenCalledWith('성산읍 감편 20%면?')
     await userEvent.click(screen.getByRole('button', { name: '최종 제안서 받기' }))
     expect(onReport).toHaveBeenCalledOnce()
-    expect(screen.queryByText(/→ Stage/)).toBeNull() // 화살표 글자는 떼고 아이콘으로 보여 줘요
+    expect(screen.queryByText(/→ (Stage|\d단계)/)).toBeNull() // 화살표 글자는 떼고 아이콘으로 보여 줘요
     expect(within(screen.getByRole('list', { name: '표시' })).getByText(/가정: 국내선 공급 -10%/)).toBeInTheDocument() // 가정 배지
   })
 
@@ -66,6 +67,38 @@ describe('답 화면', () => {
       expect(within(list).getByText(s.text)).toBeInTheDocument()
     }
     expect(within(list).getAllByText(/^근거 ·/)).toHaveLength(stage2.suggestions.length)
+    // 제목이 먼저 오고 규칙 번호는 근거 줄 끝에 있어요
+    const first = within(list).getAllByRole('listitem')[0]
+    expect(first.firstElementChild?.textContent).toContain(stage2.suggestions[0].name)
+    expect(within(first).getByText(stage2.suggestions[0].rule_id).closest('.suggestion-evidence')).not.toBeNull()
+    // 해설은 '규칙 12개 가운데 6개'라 말하는데 화면에는 3개만 있어요. 그 차이를 밝혀요
+    expect(within(list).getByText('조건을 충족한 6개 가운데 우선순위가 높은 3개예요')).toBeInTheDocument()
+  })
+
+  it('답마다 핵심 숫자 세 개를 큰 숫자 카드로 먼저 보여 줘요', () => {
+    render(<AnswerView answer={stage1} stageTitle="청년이 머무는 동네" {...answerProps} />)
+    const cards = screen.getByLabelText('핵심 숫자')
+    expect(within(cards).getByText('20·30대 거주 변화')).toBeInTheDocument()
+    expect(within(cards).getByText('−5.5%')).toBeInTheDocument()
+    expect(keyFigures(stage1).map((f) => [f.label, f.value, f.note])).toEqual([
+      ['20·30대 거주 변화', '−5.5%', '하루 평균 1,589명'],
+      ['20·30대 근무 변화', '−1.3%', '하루 평균 619명'],
+      ['방문자 변화', '+7.9%', '하루 평균 16,638명'],
+    ])
+    expect(keyFigures(stage2).map((f) => [f.label, f.value])).toEqual([
+      ['조건을 충족한 제안', '6개'],
+      ['가장 빠르게 늘어난 국적', '대만 +38.0%'],
+      ['중국인 카드 소비 변화', '+10.7%'],
+    ])
+    // 큰 인원수는 줄여 적고, 정확한 값은 근거표에 둬요
+    expect(keyFigures(stage3)[0]).toMatchObject({ label: '입도객 변화 (가정에 따른 계산)', value: '−11.9만 명', note: '기준선 1,193,769명 대비' })
+    expect(keyFigures(failed)).toEqual([])
+    // 순위를 물은 질문만 1~3위를 카드로 보여 줘요 (진단 답에도 전체 순위가 실려 와요)
+    expect(keyFigures({ ...stage1, intent: 'recommend' }).map((f) => [f.label, f.value])).toEqual([
+      ['1위 · 오라동', '+7.9%'],
+      ['2위 · 대천동', '+7.4%'],
+      ['3위 · 삼양동', '+7.3%'],
+    ])
   })
 
   it('답하지 못한 질문은 이유와 예시 질문을 보여 줘요', async () => {
@@ -89,7 +122,7 @@ describe('답 화면', () => {
   it('해설을 누가 썼는지 밝혀요', () => {
     expect(explainedBy(stage1)).toBe('해설: 규칙 문장')
     expect(explainedBy({ ...stage1, explained_by: 'llm', llm_mode: 'anthropic', llm_model: 'claude-opus-5-5', verification: { ...stage1.verification, retries: 1 } })).toBe(
-      '해설: 클라우드 LLM · claude-opus-5-5 (검증 통과, 다시 쓰기 1회)',
+      '해설: Claude Opus 5.5 (검증 통과, 다시 쓰기 1회)',
     )
     expect(explainedBy({ ...stage1, verification: { ...stage1.verification, fallback: true } })).toContain('대체')
   })
@@ -294,6 +327,15 @@ describe('확인 카드', () => {
     expect(screen.queryByLabelText('테마')).toBeNull()
   })
 
+  it('실행한 뒤에는 카드 제목이 계산까지 했다고 알려요', () => {
+    const { rerender } = render(<ConfirmCard turn={turn()} {...base} onRun={noop} onEdit={noop} />)
+    expect(screen.getByRole('heading', { name: '이렇게 이해했어요' })).toBeInTheDocument()
+    rerender(<ConfirmCard turn={turn({ status: 'running' })} {...base} onRun={noop} onEdit={noop} />)
+    expect(screen.getByRole('heading', { name: '이렇게 이해하고 계산하고 있어요' })).toBeInTheDocument()
+    rerender(<ConfirmCard turn={turn({ status: 'done' })} {...base} onRun={noop} onEdit={noop} />)
+    expect(screen.getByRole('heading', { name: '이렇게 이해하고 계산했어요' })).toBeInTheDocument()
+  })
+
   it('고친 뒤에는 다시 실행하라고 알려요', () => {
     render(<ConfirmCard turn={turn({ dirty: true, status: 'done' })} {...base} onRun={noop} onEdit={noop} />)
     expect(screen.getByRole('button', { name: '다시 실행' })).toBeEnabled()
@@ -314,7 +356,7 @@ describe('진행 상황', () => {
   it('LLM 호출은 결과와 합쳐 한 줄로 보여 주고, 진행 중인 줄을 표시해요', () => {
     const rows = toRows(items, true)
     expect(rows.map((r) => [r.label, r.state])).toEqual([
-      ['Stage 1 · 청년이 머무는 동네', 'ok'],
+      ['1단계 · 청년이 머무는 동네', 'ok'],
       ['청년 인구 추이 계산', 'ok'],
       ['쉬운 해설 쓰기', 'fail'],
       ['쉬운 해설 쓰기 (2번째)', 'wait'],
@@ -324,5 +366,12 @@ describe('진행 상황', () => {
 
   it('끝나면 기다리는 줄이 남지 않아요', () => {
     expect(toRows(items, false).some((r) => r.state === 'wait')).toBe(false)
+  })
+
+  it('앞 사람의 분석을 기다리는 동안 그렇다고 알려 주고, 차례가 오면 기다렸다고 바꿔 적어요', () => {
+    const queued: Progress[] = [{ kind: 'start' }, { kind: 'queue' }]
+    expect(toRows(queued, true).map((r) => [r.label, r.state])).toEqual([['앞 사람의 분석이 끝나기를 기다리고 있어요', 'wait']])
+    const after = toRows([...queued, items[1], items[2]], true)
+    expect(after[0]).toMatchObject({ label: '앞 사람의 분석을 기다렸어요', state: 'ok' })
   })
 })

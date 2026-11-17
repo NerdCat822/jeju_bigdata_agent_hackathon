@@ -20,13 +20,14 @@ from __future__ import annotations
 import json
 import os
 import queue
+import secrets
 import threading
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import quote
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi import Path as PathParam
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
@@ -35,6 +36,7 @@ from pydantic import Field
 from .. import fmt, progress
 from ..agent.orchestrator import _INTENT_STAGE
 from ..data.warehouse import WarehouseMissing, warehouse_exists
+from ..maps import MapsUnavailable, NaverMaps, in_jeju
 from ..schemas import (
     INTENT_LABEL,
     STAGE_TITLE,
@@ -46,7 +48,7 @@ from ..schemas import (
     ConfirmCard,
     ParsedQuery,
 )
-from ..service import AgentService
+from ..service import TEMPLATE_LABEL, AgentService
 from ..settings import DATA_BADGE, DataMode, LlmMode, Settings, get_settings
 
 SESSION_ID = r"^[A-Za-z0-9_-]{1,64}$"
@@ -154,6 +156,7 @@ class ModeOption(BaseModel):
 class ModesOut(BaseModel):
     data: list[ModeOption]
     llm: list[ModeOption]
+    locked: bool = Field(default=False, description="배포본처럼 모드가 정해져 있어 바꿀 수 없는지 (MEOMUL_LOCK_MODES)")
 
 
 class StatusOut(BaseModel):
@@ -233,6 +236,28 @@ class BootstrapOut(BaseModel):
     places: list[PlaceOut]
     suggested: list[SuggestedGroup]
     options: OptionsOut
+    naver_map_key_id: str | None = Field(default=None, description="화면에서 네이버 지도를 띄울 Client ID. 없으면 기본 지도로 그려요")
+
+
+# =========================================================================== 지도 (네이버 클라우드 Maps, 선택)
+class MapPlaceOut(BaseModel):
+    emd_cd: str
+    emd_nm: str
+
+
+class AddressOut(BaseModel):
+    address: str = Field(description="도로명 주소 (없으면 지번 주소)")
+    jibun: str
+    lat: float
+    lon: float
+    emd_cd: str | None = Field(default=None, description="그 주소가 속한 읍면동 (43곳 밖이면 없음)")
+    emd_nm: str | None = None
+
+
+class RouteOut(BaseModel):
+    distance_m: int = Field(description="자동차 도로 기준 거리 (m)")
+    duration_s: int = Field(description="자동차 기준 걸리는 시간 (초, 부른 때의 교통 기준)")
+    path: list[tuple[float, float]] = Field(description="(위도, 경도) 순서의 도로 경로")
 
 
 # =========================================================================== 서버 상태
@@ -250,6 +275,8 @@ class ApiState:
         self._service = service
         self._data_mode, self._llm_mode = data_mode, llm_mode
         self.run_lock = threading.Lock()  # 분석은 한 번에 하나씩
+        self.runs: dict[str, threading.Event] = {}  # 스트리밍 실행마다 '멈추기' 신호
+        self.runs_lock = threading.Lock()
         self._make_lock = threading.Lock()
 
     def service(self) -> AgentService:
@@ -287,10 +314,11 @@ class ApiState:
             "data": [{"mode": m, "label": DATA_BADGE[m], "available": built[m],
                       "current": bool(svc and svc.agent.ctx.wh.data_mode == m)} for m in ("synthetic", "hub", "center")],
             "llm": [
-                {"mode": "template", "label": "템플릿 (LLM 없음)", "available": True, "current": cur_llm == "template"},
+                {"mode": "template", "label": TEMPLATE_LABEL, "available": True, "current": cur_llm == "template"},
                 {"mode": "anthropic", "label": fmt.model_name(s.anthropic_model),
                  "available": bool(os.environ.get("ANTHROPIC_API_KEY")), "current": cur_llm == "anthropic"},
             ],
+            "locked": s.lock_modes,
         }
 
 
@@ -325,12 +353,20 @@ def _sse(event: str, data: Any) -> str:
 
 # =========================================================================== 앱
 def create_app(service: AgentService | None = None, settings: Settings | None = None,
-               data_mode: str | None = None, llm_mode: str | None = None, web_dist: Path | None = None) -> FastAPI:
-    """FastAPI 앱을 만들어요. `uvicorn meomulmeong.api:create_app --factory` 로도 띄울 수 있어요."""
+               data_mode: str | None = None, llm_mode: str | None = None, web_dist: Path | None = None,
+               maps: NaverMaps | None = None) -> FastAPI:
+    """FastAPI 앱을 만들어요. `uvicorn meomulmeong.api:create_app --factory` 로도 띄울 수 있어요.
+
+    maps 를 주지 않으면 설정의 네이버 지도 키로 만들어요 (키가 없으면 지도 API 없이 떠요).
+    """
     settings = settings or (service.settings if service else get_settings())
     state = ApiState(settings, service, data_mode, llm_mode)
+    naver = maps or NaverMaps.from_settings(settings)
+    docs = settings.api_docs  # 공개 주소에 둘 때는 끄고(MEOMUL_API_DOCS=false), 이 PC 에서 개발할 때만 켜요
     app = FastAPI(title="머물멍 API", version="0.1.0",
-                  description="머물멍 (Jeju Town Vitality Agent) 백엔드. React 화면이 부르는 API예요.")
+                  description="머물멍 (Jeju Town Vitality Agent) 백엔드. React 화면이 부르는 API예요.",
+                  docs_url="/docs" if docs else None, redoc_url="/redoc" if docs else None,
+                  openapi_url="/openapi.json" if docs else None)
     app.state.meomul = state
     origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
     if origins:  # 개발할 때 Vite 개발 서버(다른 포트)에서 부를 수 있게 해요. 배포본은 같은 주소라 필요 없어요.
@@ -342,13 +378,22 @@ def create_app(service: AgentService | None = None, settings: Settings | None = 
             return work(state.service())  # 기다리는 사이 모드가 바뀌었을 수 있어 다시 가져와요
 
     def stream(work: Callable[[AgentService, Callable[[str, Any], None]], dict[str, Any]]) -> StreamingResponse:
-        """분석을 따로 돌리면서 진행 알림과 답을 SSE 로 흘려보내요."""
+        """분석을 따로 돌리면서 진행 알림과 답을 SSE 로 흘려보내요.
+
+        실행마다 번호(run)를 첫 알림에 실어 보내요. POST /api/runs/{run}/cancel 이 오면 다음 단계에서 멈추고 잠금을 풀어요.
+        """
         q: queue.Queue[tuple[str, Any] | None] = queue.Queue()
+        run_id = secrets.token_urlsafe(9)
+        cancelled = threading.Event()
+        with state.runs_lock:
+            state.runs[run_id] = cancelled
 
         def send(event: str, data: Any) -> None:
             q.put((event, data))
 
         def on_progress(ev: dict[str, Any]) -> None:
+            if cancelled.is_set():
+                raise progress.Cancelled()
             if ev["kind"] == "answer":  # 연계 실행은 단계가 끝날 때마다 답을 보내요
                 send("answer", ev["answer"].model_dump(mode="json"))
             else:
@@ -357,24 +402,46 @@ def create_app(service: AgentService | None = None, settings: Settings | None = 
         def worker() -> None:
             try:
                 state.service()
-                with state.run_lock, progress.listen(on_progress):
-                    send("done", work(state.service(), send))
+                if not state.run_lock.acquire(blocking=False):  # 분석은 한 번에 하나씩이라, 앞 사람이 있으면 알려 주고 기다려요
+                    send("progress", {"kind": "queue"})
+                    while not state.run_lock.acquire(timeout=0.3):
+                        if cancelled.is_set():  # 기다리다 멈추면 차례를 기다리지 않아요
+                            raise progress.Cancelled()
+                try:
+                    with progress.listen(on_progress):
+                        send("done", work(state.service(), send))
+                finally:
+                    state.run_lock.release()
+            except progress.Cancelled:
+                send("error", {"code": "cancelled", "message": "분석을 멈췄어요."})
             except HTTPException as e:
                 send("error", e.detail if isinstance(e.detail, dict) else {"code": "error", "message": str(e.detail)})
             except Exception as e:  # noqa: BLE001
                 send("error", {"code": "internal", "message": f"처리하다 오류가 났어요: {e}"})
             finally:
+                with state.runs_lock:
+                    state.runs.pop(run_id, None)
                 q.put(None)
 
         threading.Thread(target=worker, daemon=True, name="meomul-stream").start()
 
         def events() -> Iterator[str]:
-            yield _sse("progress", {"kind": "start"})
+            yield _sse("progress", {"kind": "start", "run": run_id})
             while (item := q.get()) is not None:
                 yield _sse(*item)
 
         return StreamingResponse(events(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+    @app.post("/api/runs/{run_id}/cancel", tags=["스트리밍"])
+    def cancel_run(run_id: str = PathParam(max_length=40)) -> dict[str, bool]:
+        """스트리밍 실행을 멈춰요 (화면의 '멈추기'). 지금 하는 단계가 끝나면 멈추고, 다음 사람의 분석이 바로 시작돼요."""
+        with state.runs_lock:
+            ev = state.runs.get(run_id)
+        if ev is None:
+            raise _fail(404, "no_run", "이미 끝났거나 없는 실행이에요.")
+        ev.set()
+        return {"ok": True}
 
     # ------------------------------------------------------------------ 상태 · 첫 화면
     @app.get("/api/health", response_model=HealthOut, tags=["상태"])
@@ -396,7 +463,78 @@ def create_app(service: AgentService | None = None, settings: Settings | None = 
         svc = state.service()
         return {"status": {**svc.status(), "modes": state.modes()}, "places": svc.places(),
                 "suggested": [{"stage": k, "title": STAGE_TITLE[k], "questions": v} for k, v in svc.suggested_questions().items()],  # type: ignore[union-attr]
-                "options": _options(svc)}
+                "options": _options(svc), "naver_map_key_id": naver.client_id if naver else None}
+
+    # ------------------------------------------------------------------ 지도 (네이버, 선택)
+    def need_maps() -> NaverMaps:
+        if naver is None:
+            raise _fail(503, "maps_off", "네이버 지도 키가 없어 이 기능을 쓸 수 없어요.")
+        return naver
+
+    def emd_of(code: str | None) -> dict[str, str] | None:
+        """행정동 코드(10자리) → 우리 읍면동. 앞 8자리가 읍면동 코드예요."""
+        e = state.service().agent.refs.emds.get((code or "")[:8])
+        return {"emd_cd": e.emd_cd, "emd_nm": e.emd_nm} if e else None
+
+    @app.get("/api/map/locate", response_model=MapPlaceOut, tags=["지도"])
+    def map_locate(lat: float = Query(ge=-90, le=90), lon: float = Query(ge=-180, le=180)) -> dict[str, str]:
+        """지도의 한 점이 속한 읍면동 (Reverse Geocoding). 바다 위나 43곳 밖이면 404."""
+        m = need_maps()
+        if not in_jeju(lat, lon):
+            raise _fail(400, "outside_jeju", "제주도 안의 점을 골라 주세요.")
+        try:
+            found = emd_of(m.admcode(lat, lon))
+        except MapsUnavailable as e:
+            raise _fail(503, "maps_unavailable", f"지도에서 동네를 찾지 못했어요. {e}") from e
+        if not found:
+            raise _fail(404, "no_place", "그 자리에는 읍면동이 없어요. 육지 위를 눌러 주세요.")
+        return found
+
+    @app.get("/api/map/search", response_model=list[AddressOut], tags=["지도"])
+    def map_search(q: str = Query(min_length=2, max_length=80)) -> list[dict[str, Any]]:
+        """도로명·지번 주소로 찾기 (Geocoding). 제주의 주소만, 읍면동을 붙여 돌려줘요."""
+        m = need_maps()
+
+        def jeju(query: str) -> list[dict[str, Any]]:
+            return [a for a in m.geocode(query) if in_jeju(a["lat"], a["lon"])]
+
+        try:
+            found = jeju(q)
+            # '중앙로 105'처럼 다른 지역에도 있는 주소는 제주가 밀려나요. 시를 붙여 한 번 더 찾아요
+            # ('제주특별자치도 성산읍 …'처럼 시 없이 도만 붙이면 네이버가 찾지 못해요)
+            if not found and "제주시" not in q and "서귀포" not in q:
+                for city in ("제주특별자치도 제주시", "제주특별자치도 서귀포시"):
+                    found += [a for a in jeju(f"{city} {q}") if (a["lat"], a["lon"]) not in {(b["lat"], b["lon"]) for b in found}]
+            out = []
+            for a in found:
+                place = emd_of(m.admcode(a["lat"], a["lon"]))
+                out.append({"address": a["road"] or a["jibun"], "jibun": a["jibun"], "lat": a["lat"], "lon": a["lon"],
+                            **(place or {})})
+        except MapsUnavailable as e:
+            raise _fail(503, "maps_unavailable", f"주소를 찾지 못했어요. {e}") from e
+        return out
+
+    @app.get("/api/map/route", response_model=RouteOut, tags=["지도"])
+    def map_route(keys: str = Query(description="거점 ID와 읍면동 코드를 지나는 순서대로 쉼표로 (2~7개)")) -> dict[str, Any]:
+        """코스의 자동차 도로 경로와 거리·시간 (Directions 5). 버스 노선의 실제 경로는 아니에요."""
+        m = need_maps()
+        refs = state.service().agent.refs
+        names = [k for k in keys.split(",") if k]
+        if not 2 <= len(names) <= 7:
+            raise _fail(400, "bad_route", "지나는 곳은 2~7곳이어야 해요.")
+        points = []
+        for k in names:
+            spot = refs.hubs.get(k) or refs.emds.get(k)
+            if spot is None:
+                raise _fail(400, "bad_route", f"모르는 거점·읍면동이에요: {k}")
+            points.append((spot.lat, spot.lon))
+        try:
+            route = m.driving(points)
+        except MapsUnavailable as e:
+            raise _fail(503, "maps_unavailable", f"도로 경로를 찾지 못했어요. {e}") from e
+        if not route:
+            raise _fail(404, "no_route", "자동차 도로로 잇지 못했어요.")
+        return route
 
     @app.get("/api/places", response_model=list[PlaceOut], tags=["상태"])
     def places() -> list[dict[str, Any]]:
@@ -409,7 +547,12 @@ def create_app(service: AgentService | None = None, settings: Settings | None = 
 
     @app.post("/api/modes", response_model=StatusOut, tags=["상태"])
     def set_modes(body: ModesIn) -> dict[str, Any]:
-        """데이터 모드나 LLM 모드를 바꿔요. 데이터 모드를 바꾸면 대화 맥락은 새로 시작해요."""
+        """데이터 모드나 LLM 모드를 바꿔요. 데이터 모드를 바꾸면 대화 맥락은 새로 시작해요.
+
+        모드는 서버 전체에 걸려요. 여러 사람이 같은 주소를 쓰는 배포본은 MEOMUL_LOCK_MODES 로 잠가요.
+        """
+        if settings.lock_modes:
+            raise _fail(403, "modes_locked", "이 주소에서는 데이터와 AI 설명 방식이 정해져 있어 바꿀 수 없어요.")
         with state.run_lock:
             svc = state.switch(body.data_mode, body.llm_mode)
         return {**svc.status(), "modes": state.modes()}

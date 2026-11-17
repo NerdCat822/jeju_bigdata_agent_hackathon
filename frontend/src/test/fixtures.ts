@@ -1,5 +1,6 @@
 /** 테스트용 예시 응답. 실제 API(샘플 데이터, 템플릿 모드)에서 뽑은 값이에요. */
 import { vi } from 'vitest'
+import { ApiError } from '../api/client'
 import type { Api } from '../api/client'
 import type { Answer, Bootstrap, CardOut, ChainOut, ConfirmCard, Progress, StreamHandlers } from '../api/types'
 import bootstrapJson from './fixtures/bootstrap.json'
@@ -33,6 +34,11 @@ const tool = (name: string, label: string): Progress => ({ kind: 'tool', tool: n
 export function fakeApi(overrides: Partial<Api> = {}): Api {
   const base: Api = {
     health: vi.fn(async () => ({ ok: true, ready: true, message: null })),
+    cancelRun: vi.fn(async () => ({ ok: true })),
+    // 지도 키가 없는 서버처럼: 지도 API 는 모두 503
+    mapLocate: vi.fn(async () => Promise.reject(new ApiError('네이버 지도 키가 없어요.', 'maps_off', 503))),
+    mapSearch: vi.fn(async () => Promise.reject(new ApiError('네이버 지도 키가 없어요.', 'maps_off', 503))),
+    mapRoute: vi.fn(async () => Promise.reject(new ApiError('네이버 지도 키가 없어요.', 'maps_off', 503))),
     bootstrap: vi.fn(async () => bootstrap),
     status: vi.fn(async () => bootstrap.status),
     setModes: vi.fn(async (body) => ({

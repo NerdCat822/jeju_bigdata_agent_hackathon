@@ -43,7 +43,7 @@ export function ConfirmCard({ turn, options, places, latestYear, busy, onRun, on
       <div className="confirm-main">
         <div className="confirm-body">
           <h2 id={`confirm-${turn.id}`} className="confirm-title">
-            이렇게 이해했어요
+            {running ? '이렇게 이해하고 계산하고 있어요' : turn.status === 'done' && !turn.dirty ? '이렇게 이해하고 계산했어요' : '이렇게 이해했어요'}
           </h2>
           <ul className="tag-row" aria-label="질문 해석">
             {card.chips.map((c) => (
@@ -215,7 +215,7 @@ function QueryEditor({ query: q, options, places, latestYear, disabled, onEdit }
             </select>
           </label>
           <div className="field">
-            <span id="eps-label">탄력성 ε (가정)</span>
+            <span id="eps-label">탄력성 ε (가정): 좌석 변화에 손님이 따라 움직이는 정도</span>
             <div className="toggle-row" role="group" aria-labelledby="eps-label">
               {options.elasticity_grid.map((e) => (
                 <button key={e} type="button" className={`toggle${elasticity === e ? ' is-on' : ''}`} aria-pressed={elasticity === e} onClick={() => onEdit({ elasticity: e })}>
@@ -223,6 +223,7 @@ function QueryEditor({ query: q, options, places, latestYear, disabled, onEdit }
                 </button>
               ))}
             </div>
+            <span className="field-hint">1.0이면 좌석이 줄어든 비율만큼 손님도 줄어요</span>
           </div>
           <label className="field">
             <span>대상 월</span>

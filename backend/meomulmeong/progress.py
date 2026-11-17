@@ -18,6 +18,13 @@ from typing import Any
 
 Listener = Callable[[dict[str, Any]], None]
 
+
+class Cancelled(BaseException):  # noqa: N818
+    """사람이 '멈추기'를 눌렀어요. 듣는 쪽이 이걸 던지면 다음 알림 자리에서 분석을 멈춰요.
+
+    분석 코드의 `except Exception` 에 잡히지 않게 BaseException 을 이어받아요 (emit 도 이것만은 삼키지 않아요).
+    """
+
 _listener: ContextVar[Listener | None] = ContextVar("meomul_progress", default=None)
 
 # 화면에 그대로 보여 줄 짧은 이름
