@@ -91,6 +91,26 @@ describe('머물멍 화면', () => {
     expect(screen.getByRole('button', { name: '센터' })).toBeDisabled()
   })
 
+  it('실데이터가 있으면 샘플 단추는 보이지 않아요', async () => {
+    // 허브 실데이터를 올려 두고 그 모드로 띄운 서버처럼 만들어요
+    const data = bootstrap.status.modes.data.map((m) =>
+      m.mode === 'hub' ? { ...m, available: true, current: true } : { ...m, current: false },
+    )
+    const status = { ...bootstrap.status, data_mode: 'hub' as const, data_badge: '실데이터', modes: { ...bootstrap.status.modes, data } }
+    await start(fakeApi({ bootstrap: vi.fn(async () => ({ ...bootstrap, status })) }))
+    expect(screen.queryByRole('button', { name: '샘플' })).toBeNull()
+    expect(screen.getByRole('button', { name: '실데이터' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: '센터' })).toBeDisabled()
+  })
+
+  it('실데이터가 있어도 지금 샘플을 보고 있으면 샘플 단추를 남겨 둬요', async () => {
+    const data = bootstrap.status.modes.data.map((m) => (m.mode === 'hub' ? { ...m, available: true } : m))
+    const status = { ...bootstrap.status, modes: { ...bootstrap.status.modes, data } }
+    await start(fakeApi({ bootstrap: vi.fn(async () => ({ ...bootstrap, status })) }))
+    expect(screen.getByRole('button', { name: '샘플' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: '실데이터' })).toBeEnabled()
+  })
+
   it('장소 없이 처음부터 끝까지를 누르면 읍면동을 고르라고 안내해요', async () => {
     const api = await start()
     const side = screen.getByRole('complementary', { name: '머물멍 메뉴' })

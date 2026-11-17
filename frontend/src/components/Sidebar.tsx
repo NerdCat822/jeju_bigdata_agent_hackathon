@@ -39,6 +39,9 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
   const activeStages = new Set(active?.answers.map((a) => a.stage) ?? [])
   const report = active?.reportUrl ?? null
   const history = [...state.turns].reverse().slice(0, 6)
+  // 실데이터나 센터 데이터가 있으면 샘플 단추는 감춰요. 샘플만 있거나 지금 샘플을 보고 있을 때만 보여 줘요.
+  const hasReal = status.modes.data.some((m) => m.mode !== 'synthetic' && m.available)
+  const dataModes = status.modes.data.filter((m) => m.mode !== 'synthetic' || m.current || !hasReal)
 
   return (
     <aside className="side" aria-label="머물멍 메뉴">
@@ -52,7 +55,7 @@ export function Sidebar({ state, boot, actions, onDataInfo }: Props): ReactNode 
           데이터
         </h2>
         <div className="seg" role="group" aria-labelledby="side-data">
-          {status.modes.data.map((m) => (
+          {dataModes.map((m) => (
             <button
               key={m.mode}
               type="button"
