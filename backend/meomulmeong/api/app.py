@@ -32,7 +32,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import Field
 
-from .. import progress
+from .. import fmt, progress
 from ..agent.orchestrator import _INTENT_STAGE
 from ..data.warehouse import WarehouseMissing, warehouse_exists
 from ..schemas import (
@@ -288,7 +288,7 @@ class ApiState:
                       "current": bool(svc and svc.agent.ctx.wh.data_mode == m)} for m in ("synthetic", "hub", "center")],
             "llm": [
                 {"mode": "template", "label": "템플릿 (LLM 없음)", "available": True, "current": cur_llm == "template"},
-                {"mode": "anthropic", "label": f"클라우드 · {s.anthropic_model}",
+                {"mode": "anthropic", "label": fmt.model_name(s.anthropic_model),
                  "available": bool(os.environ.get("ANTHROPIC_API_KEY")), "current": cur_llm == "anthropic"},
             ],
         }

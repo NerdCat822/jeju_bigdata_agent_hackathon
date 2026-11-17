@@ -10,6 +10,7 @@ import time
 
 from pydantic import ValidationError
 
+from ..fmt import model_name
 from .base import LLMError, LLMFormatError, LLMProvider, T
 
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
@@ -45,7 +46,7 @@ class AnthropicProvider(LLMProvider):
             _ = self.client
         except Exception as e:  # noqa: BLE001  (인증 정보가 전혀 없을 때)
             return False, f"Anthropic 인증 정보를 찾지 못했어요: {e}"
-        return True, f"클라우드 · {self.model} (전송 전 미리보기와 동의가 필요해요)"
+        return True, f"{model_name(self.model)} (전송 전 미리보기와 동의가 필요해요)"
 
     def _create(self, system: str, user: str, schema: dict, model: str, effort: str):
         kwargs = dict(

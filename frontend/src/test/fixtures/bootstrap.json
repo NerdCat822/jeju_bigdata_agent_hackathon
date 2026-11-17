@@ -97,7 +97,7 @@
     },
     {
      "mode": "anthropic",
-     "label": "클라우드 · claude-opus-5-5",
+     "label": "Claude Opus 5.5",
      "available": false,
      "current": false
     }

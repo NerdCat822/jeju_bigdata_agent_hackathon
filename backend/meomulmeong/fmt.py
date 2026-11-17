@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from datetime import date
 from typing import Any
 
@@ -109,3 +110,17 @@ def ages_label(ages: list[int]) -> str:
     if all(p.isdigit() for p in parts):
         return "·".join(parts) + "대"
     return "·".join(p + "대" if p.isdigit() else p for p in parts)
+
+
+def model_name(model_id: str) -> str:
+    """모델 ID 를 화면에 보여 줄 이름으로 바꿔요. 'claude-opus-5-5' → 'Claude Opus 5.5', 'claude-3-5-sonnet-20241022' → 'Claude 3.5 Sonnet'."""
+    parts = [p for p in model_id.strip().split("-") if p]
+    if len(parts) > 1 and re.fullmatch(r"\d{8}", parts[-1]):  # 끝의 날짜 꼬리표는 빼요
+        parts.pop()
+    words: list[str] = []
+    for p in parts:
+        if p.isdigit() and words and re.fullmatch(r"\d+(\.\d+)*", words[-1]):
+            words[-1] += f".{p}"  # 숫자가 이어지면 버전으로 묶어요 (5, 5 → 5.5)
+        else:
+            words.append(p if p.isdigit() else p.capitalize())
+    return " ".join(words) or model_id

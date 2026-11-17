@@ -53,6 +53,20 @@ def test_status_never_leaks_secrets(client, monkeypatch):
     assert next(m for m in client.get("/api/status").json()["modes"]["llm"] if m["mode"] == "anthropic")["available"] is True
 
 
+def test_llm_mode_label_is_a_readable_model_name(client):
+    """LLM 모드 이름은 모델 ID 대신 읽기 좋은 이름으로 보여 줘요."""
+    from meomulmeong import fmt
+
+    assert fmt.model_name("claude-opus-5-5") == "Claude Opus 5.5"
+    assert fmt.model_name("claude-fable-5-2") == "Claude Fable 5.2"
+    assert fmt.model_name("claude-3-5-sonnet-20241022") == "Claude 3.5 Sonnet"  # 끝의 날짜는 빼요
+    assert fmt.model_name("claude-sonnet-4-20250514") == "Claude Sonnet 4"
+    model = client.app.state.meomul.settings.anthropic_model
+    labels = {m["mode"]: m["label"] for m in client.get("/api/status").json()["modes"]["llm"]}
+    assert labels == {"template": "템플릿 (LLM 없음)", "anthropic": fmt.model_name(model)}
+    assert "클라우드" not in labels["anthropic"] and model not in labels["anthropic"]
+
+
 # --------------------------------------------------------------------------- 확인 카드 → 실행
 def test_understand_then_run_and_follow_up(client):
     r = client.post("/api/understand", json={"question": "성산읍 청년 인구 왜 줄었어?"}).json()

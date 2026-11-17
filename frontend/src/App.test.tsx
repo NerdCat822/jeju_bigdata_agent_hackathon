@@ -73,14 +73,14 @@ describe('머물멍 화면', () => {
     const status = { ...bootstrap.status, modes: { ...bootstrap.status.modes, llm } }
     const api = fakeApi({
       bootstrap: vi.fn(async () => ({ ...bootstrap, status })),
-      setModes: vi.fn(async () => ({ ...status, llm_mode: 'anthropic' as const, llm_label: '클라우드 · claude-opus-5-5' })),
+      setModes: vi.fn(async () => ({ ...status, llm_mode: 'anthropic' as const, llm_label: 'Claude Opus 5.5' })),
     })
     await start(api)
     const select = screen.getByRole('combobox', { name: 'LLM 모드' })
     expect(within(select).getAllByRole('option').map((o) => o.getAttribute('value'))).toEqual(['template', 'anthropic'])
     await userEvent.selectOptions(select, 'anthropic')
     const badges = screen.getByRole('list', { name: '지금 쓰는 데이터와 LLM 모드' })
-    expect(await within(badges).findByText('클라우드 · claude-opus-5-5')).toBeInTheDocument()
+    expect(await within(badges).findByText('Claude Opus 5.5')).toBeInTheDocument()
     expect(api.setModes).toHaveBeenCalledWith({ llm_mode: 'anthropic' })
   })
 
