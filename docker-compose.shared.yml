@@ -4,7 +4,8 @@
 #
 #   docker compose -f docker-compose.yml -f docker-compose.shared.yml up -d --build
 #
-# 이 폴더의 .env (저장소에 올라가지 않아요) 에 아래 두 줄을 두면 -f 없이 docker compose up -d 만 해도 돼요.
+# 이 폴더(저장소 맨 위)의 .env 에 아래 두 줄을 두면 -f 없이 docker compose up -d 만 해도 돼요.
+# 앱의 환경변수(API 키 등)도 같은 .env 에 있어요. .env 는 저장소에 올라가지 않아요.
 #   COMPOSE_FILE=docker-compose.yml:docker-compose.shared.yml
 #   MEOMUL_PG_PASSWORD=<공용 PostgreSQL 의 meomul 계정 암호>
 #
@@ -16,7 +17,7 @@
 #
 # 게이트웨이 뒤에서는 로그인 없이 여러 사람이 같은 주소로 들어와요. 그래서 이 파일로 띄우면
 #   - 데이터·AI 설명 방식을 고정해요 (MEOMUL_LOCK_MODES). 모드는 서버 전체에 걸려서, 한 사람이 바꾸면 모두의 화면이 바뀌어요.
-#     모드를 바꾸려면 backend/.env 의 MEOMUL_DATA_MODE · MEOMUL_LLM_MODE 를 고치고 다시 띄워요.
+#     모드를 바꾸려면 .env 의 MEOMUL_DATA_MODE · MEOMUL_LLM_MODE 를 고치고 다시 띄워요.
 #   - API 문서(/docs · /openapi.json)를 열지 않아요 (MEOMUL_API_DOCS).
 
 services:

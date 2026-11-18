@@ -171,7 +171,7 @@ def connect(settings: Settings) -> psycopg.Connection:
     except psycopg.OperationalError as e:
         raise WarehouseUnreachable(
             f"데이터 창고({settings.pg_label})에 연결하지 못했어요.\n"
-            "먼저 `docker compose up -d db` 로 PostgreSQL 을 띄우세요. 다른 서버를 쓰면 backend/.env 의 MEOMUL_PG_* 값을 확인하세요."
+            "먼저 `docker compose up -d db` 로 PostgreSQL 을 띄우세요. 다른 서버를 쓰면 .env 의 MEOMUL_PG_* 값을 확인하세요."
         ) from e
     with con.cursor() as cur:
         cur.execute("SET max_parallel_workers_per_gather = 0")  # 같은 질문에 항상 같은 숫자 (병렬 합산은 끝자리가 흔들려요)

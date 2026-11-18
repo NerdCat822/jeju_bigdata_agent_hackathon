@@ -12,6 +12,8 @@ from pydantic import AliasChoices, BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(os.environ.get("MEOMUL_HOME") or Path(__file__).resolve().parents[1]).resolve()
+# 환경변수 파일은 저장소 맨 위의 .env 하나예요 (docker compose 도 같은 파일을 읽어요). 이미지 안에는 없어요.
+ENV_FILE = BACKEND_DIR.parent / ".env"
 
 DataMode = Literal["synthetic", "hub", "center"]
 LlmMode = Literal["template", "anthropic"]
@@ -36,7 +38,7 @@ def _load_dotenv(path: Path) -> None:
             os.environ[key] = value
 
 
-_load_dotenv(BACKEND_DIR / ".env")
+_load_dotenv(ENV_FILE)
 
 
 class AnalysisCfg(BaseModel):
@@ -99,7 +101,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="MEOMUL_",
-        env_file=str(BACKEND_DIR / ".env"),
+        env_file=str(ENV_FILE),
         env_file_encoding="utf-8",
         env_ignore_empty=True,  # .env.example 을 그대로 복사해 값이 빈 항목은 기본값을 써요
         extra="ignore",

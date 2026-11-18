@@ -6,9 +6,6 @@
 !frontend/
 
 # ---- 백엔드에서 빼는 것
-backend/.env
-backend/.env.*
-!backend/.env.example
 backend/.venv/
 backend/data/synthetic/
 backend/data/hub/
@@ -26,10 +23,10 @@ backend/.ruff_cache/
 # ---- 화면에서 빼는 것 (이미지 안에서 다시 설치하고 빌드해요)
 frontend/node_modules/
 frontend/dist/
-frontend/.env
-frontend/.env.*
 
-# ---- 어디에 있든 빼는 것
+# ---- 어디에 있든 빼는 것 (.env 는 저장소 맨 위에 두지만, 어느 폴더에 있든 넣지 않아요)
+**/.env
+**/.env.*
 **/*.xlsx
 **/*.xls
 **/*.hwp

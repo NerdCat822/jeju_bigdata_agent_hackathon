@@ -5,7 +5,8 @@
 #   docker compose logs -f           로그 보기
 #   docker compose down              내리기 (데이터, 제안서, 실행 기록은 볼륨에 남아요)
 #
-# 클라우드 LLM(Claude)을 쓰려면 backend/.env 에 ANTHROPIC_API_KEY 를 넣고 다시 띄워요.
+# 환경변수는 저장소 맨 위의 .env 하나에 둬요 (.env.example 을 복사해 만들어요).
+# 클라우드 LLM(Claude)을 쓰려면 .env 에 ANTHROPIC_API_KEY 를 넣고 다시 띄워요.
 name: jeju-meomulmeong
 
 services:
@@ -15,7 +16,7 @@ services:
     environment:
       POSTGRES_DB: meomul
       POSTGRES_USER: meomul
-      # 이 PC 안에서만 여는 개발·시연용 창고의 기본 암호예요. 바꾸려면 MEOMUL_PG_PASSWORD 를 정하고 backend/.env 에도 같은 값을 넣어요.
+      # 이 PC 안에서만 여는 개발·시연용 창고의 기본 암호예요. 바꾸려면 .env 에 MEOMUL_PG_PASSWORD 를 넣어요 (앱도 같은 값을 읽어요).
       POSTGRES_PASSWORD: ${MEOMUL_PG_PASSWORD:-meomul}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C" # 글자 정렬이 어느 PC 에서나 같게
       TZ: Asia/Seoul
@@ -36,8 +37,8 @@ services:
     ports:
       - "127.0.0.1:3000:3000" # 이 PC 안에서만 열어요. 로그인 기능이 없어서 밖으로는 열지 않아요.
     env_file:
-      # API 키 같은 값은 이미지에 넣지 않고, 실행할 때 backend/.env 에서 읽어 넘겨요. 파일이 없어도 떠요.
-      - path: backend/.env
+      # API 키 같은 값은 이미지에 넣지 않고, 실행할 때 저장소 맨 위 .env 에서 읽어 넘겨요. 파일이 없어도 떠요.
+      - path: .env
         required: false
     environment:
       TZ: Asia/Seoul

@@ -57,7 +57,8 @@ Docker 없이 따로 설치한 PostgreSQL 을 쓰려면 `.env` 에 `MEOMUL_PG_HO
 .venv/bin/python -m meomulmeong ask "성산읍 청년 인구 진단" --llm anthropic --yes-cloud
 ```
 
-환경변수는 `.env.example` 을 `.env` 로 복사해 채워요. `.env` 는 저장소에 올리지 않아요.
+환경변수는 저장소 맨 위의 `.env.example` 을 같은 자리에 `.env` 로 복사해 채워요 (이 폴더에서는 `cp ../.env.example ../.env`).
+백엔드와 docker compose 가 이 `.env` 하나를 읽어요. `.env` 는 저장소에 올리지 않아요.
 
 | 환경변수 | 기본값 | 뜻 |
 |---|---|---|
@@ -515,14 +516,14 @@ docker compose down -v              # 볼륨까지 지우기 (넣어 둔 데이�
 | 앱 | 이미지 `jeju-meomulmeong:0.1.0`(약 510MB), 컨테이너 `jeju-meomulmeong-app`. 백엔드 + 빌드한 React 화면. Node 는 빌드 단계에서만 써요 |
 | 데이터 창고 | 이미지 `postgres:17-alpine`, 컨테이너 `jeju-meomulmeong-db`. `127.0.0.1:5434` 로만 열어요. 데이터는 `jeju-meomulmeong_pgdata` 볼륨에 남아요 |
 | 처음 뜰 때 | 앱이 샘플 데이터 스키마가 없으면 합성 데이터를 만들어 PostgreSQL 에 넣어요 (`serve --prepare`, 약 25초). 다음부터는 바로 떠요 |
-| 창고 암호 | 이 PC 안에서만 여는 개발 · 시연용 기본값이에요. 바꾸려면 처음 띄우기 전에 `MEOMUL_PG_PASSWORD` 를 셸 환경변수와 `backend/.env` 에 같은 값으로 넣어요 |
+| 창고 암호 | 이 PC 안에서만 여는 개발 · 시연용 기본값이에요. 바꾸려면 처음 띄우기 전에 `.env` 에 `MEOMUL_PG_PASSWORD` 를 넣어요. 데이터 창고와 앱이 같은 값을 읽어요 |
 | 주소 | `127.0.0.1:3000` 으로만 열어요. 로그인 기능이 없어서 밖으로는 열지 않아요 |
 | 실행 사용자 | 루트가 아닌 `meomul` (uid 10001) |
-| 환경변수 | `backend/.env` 가 있으면 실행할 때 읽어 넘겨요. API 키는 이미지에 들어가지 않아요 |
+| 환경변수 | 저장소 맨 위 `.env` 가 있으면 실행할 때 읽어 넘겨요. API 키는 이미지에 들어가지 않아요 |
 | 결과물 | 제안서 · 실행 기록은 `jeju-meomulmeong_outputs` 볼륨(`/app/backend/outputs`)에 남아요 |
 | 상태 확인 | 30초마다 `/api/health` 를 불러요 (`docker ps` 의 healthy) |
 
-**클라우드 LLM(Claude)을 쓸 때** — `backend/.env` 에 `ANTHROPIC_API_KEY` 를 넣고 다시 띄우면 화면의 LLM 모드에서 클라우드를 고를 수 있어요.
+**클라우드 LLM(Claude)을 쓸 때** — `.env` 에 `ANTHROPIC_API_KEY` 를 넣고 다시 띄우면 화면의 LLM 모드에서 클라우드를 고를 수 있어요.
 키는 실행할 때만 컨테이너에 넘기고 이미지에는 들어가지 않아요. 컨테이너가 인터넷에 닿아야 해요.
 
 **허브 실데이터로 띄울 때** — 6.3절대로 받아 `build-data --mode hub` 를 실행하면 같은 PostgreSQL 의 `hub` 스키마에 들어가요.
