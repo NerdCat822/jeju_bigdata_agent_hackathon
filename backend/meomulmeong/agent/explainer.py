@@ -183,8 +183,9 @@ def _s2(b: Bundle) -> tuple[str, str]:
     area, place = b.text("area"), b.text("place")
     target, t = out.get("target"), out.get("type")
     sugg = b.suggestions()
-    if target:
-        headline = f"{area}에서는 「{target}」{'을' if fmt.has_batchim(target) else '를'} 먼저 볼 만해요"
+    if target:  # 카드 자료가 제주 전체 단위면 '제주 전체에서는' 대신 묻는 동네 이름으로 말해요
+        where = place if area == "제주 전체" and place else area
+        headline = f"{where}에서는 「{target}」{'을' if fmt.has_batchim(target) else '를'} 먼저 볼 만해요"
     elif sugg:
         headline = f"「{_type_text(t)}」 동네라 관광객 모객보다 머무는 환경을 키우는 제안이 맞아요" if t else "조건을 충족한 제안이 있어요"
     else:

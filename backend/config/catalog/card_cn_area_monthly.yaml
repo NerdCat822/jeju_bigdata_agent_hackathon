@@ -7,7 +7,9 @@ time_grain: month
 description: >
   중국인 관광객의 카드 이용을 시군구와 도심/읍면, 업종으로 나눈 월간 자료예요.
   읍면동 단위가 없어서 읍면동을 '시군구 × 도심/읍면'으로 올려 연결해요.
-  허브의 '월간 중국인관광객 카드 사용 정보'와 '중국인 관광객 지역, 업종별 카드 이용 데이터'를 여기에 적재해요.
+  허브의 '업종별 성별 카드 이용 정보'(파일, 2018-01~2025-06)가 있으면 그것을 먼저 써요. 이 자료는 시군구·도심/읍면으로
+  나뉘지 않아 제주 전체(city '제주 전체', area_type '전체') 값으로 올려요.
+  없으면 '중국인 관광객 지역, 업종별 카드 이용 데이터'(API, 2016~2018)를 시군구 × 도심/읍면으로 올려요.
 keywords: [중국인, 관광객, 카드, 업종, 테마, 식음료, 숙박, 쇼핑, 소비, 외국인]
 columns:
   - {name: month, type: DATE, desc: 기준월 (매월 1일)}
@@ -19,8 +21,23 @@ columns:
   - {name: use_amt, type: BIGINT, desc: 이용금액 (원)}
 limits:
   - 카드 소비는 내국인과 중국인 관광객만 포함해요.
-  - 읍면동 단위가 아니라 시군구 × 도심/읍면 단위 값이에요.
+  - 읍면동 단위가 아니에요. 허브의 '업종별 성별 카드 이용 정보'는 제주 전체 단위라 시군구·도심/읍면으로 나눠 보지 못해요.
 sources:
+  hub_file:  # 허브에서 로그인해 받는 파일이라 자동 수집은 하지 않아요. data/hub/card_biz/ 에 넣어요
+    dataset_id: 1048
+    title: 업종별 성별 카드 이용 정보
+    file_glob: "card_biz/*.csv"
+    date_format: YYYYMM
+    filter: "trim(user_type) = '중국'"
+    select:
+      month: "std_month(base_year_month)"
+      city: "'제주 전체'"
+      area_type: "'전체'"
+      theme: "std_theme(biz_nm)"
+      user_cnt: "to_bigint(user_count)"
+      use_cnt: "to_bigint(use_count)"
+      use_amt: "to_bigint(use_amount)"
+    aggregate: {user_cnt: sum, use_cnt: sum, use_amt: sum}
   hub:
     dataset_id: 600
     data_key: tt1tDtaa0at16Daa0D60D06tDD0166t1

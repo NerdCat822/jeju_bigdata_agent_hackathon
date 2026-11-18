@@ -591,21 +591,25 @@ def build_warehouse(settings: Settings, config: AppConfig, catalog: Catalog, mod
         cur.execute(f"CREATE TABLE meta_issue (table_name {_TEXT}, issue {_TEXT}, detail {_TEXT}, n BIGINT)")  # type: ignore[arg-type]
         cur.execute(f"CREATE TABLE meta_build (key {_TEXT}, value {_TEXT})")  # type: ignore[arg-type]
 
-        # 원본을 찾는 순서: 센터 모드는 센터 → 허브, 허브 모드는 허브, 샘플 모드는 합성
-        order = {"synthetic": [("synthetic", "hub")], "hub": [("hub", "hub")],
-                 "center": [("center", "center"), ("hub", "hub")]}[mode]
+        # 원본을 찾는 순서: 센터 모드는 센터 → 허브, 허브 모드는 허브, 샘플 모드는 합성.
+        # 허브는 파일로 받은 자료(hub_file)가 있으면 API 수집본(hub)보다 먼저 써요 (더 최근 자료예요).
+        hub_keys = ["hub_file", "hub"]
+        order = {"synthetic": [("synthetic", ["hub"])], "hub": [("hub", hub_keys)],
+                 "center": [("center", ["center"]), ("hub", hub_keys)]}[mode]
         for spec in catalog.tables.values():
             used, frame, src, exported = None, None, None, False
-            for base_mode, src_key in order:
-                cand = spec.sources.get(src_key)
-                if not cand:
-                    continue
-                df = _raw_frame(settings.raw_dir(base_mode), cand)
-                if df is None:  # 수집본이 없으면 export-csv 로 내보낸 표를 찾아요 (다른 PC 에서 만든 창고를 옮길 때)
-                    df = _exported_frame(settings.export_dir(base_mode), spec)
-                    exported = df is not None
-                if df is not None:
-                    used, frame, src = base_mode, df, cand
+            for base_mode, keys in order:
+                cands = [spec.sources[k] for k in keys if k in spec.sources]
+                for cand in cands:
+                    frame = _raw_frame(settings.raw_dir(base_mode), cand)
+                    if frame is not None:
+                        used, src = base_mode, cand
+                        break
+                if frame is None and cands:  # 수집본이 없으면 export-csv 로 내보낸 표를 찾아요 (다른 PC 에서 만든 창고를 옮길 때)
+                    frame = _exported_frame(settings.export_dir(base_mode), spec)
+                    if frame is not None:
+                        used, src, exported = base_mode, cands[-1], True
+                if frame is not None:
                     break
             note = ""
             if frame is None or src is None:

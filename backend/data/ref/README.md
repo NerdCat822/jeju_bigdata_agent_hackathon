@@ -6,7 +6,7 @@
 |---|---|---|
 | `ref_emd.csv` | 행정동 43개 (코드·시군구·동/읍면·7권역·좌표·별칭) | 코드와 명칭은 센터 명세서(4-11)와 대조 완료. 7권역 배정과 좌표는 잠정값 |
 | `ref_zone.csv`, `ref_card_zone.csv` | 카드 데이터의 5개 지구와 읍면동 연결 | 잠정 (지구 경계 원문 확인 필요) |
-| `ref_theme.csv`, `ref_theme_alias.csv` | 허브 업종 9종을 6개 테마로 정렬, 질문 속 단어를 테마로 연결 | 확정 전 팀 검토 필요 |
+| `ref_theme.csv`, `ref_theme_alias.csv` | 허브 업종 9종과 카드 업종 43종(업종별 성별 카드 이용 정보)을 6개 테마로 정렬, 질문 속 단어를 테마로 연결 | 확정 전 팀 검토 필요 |
 | `ref_hub.csv` | 공항·항만·터미널 거점 6곳 | 좌표는 대략값 |
 | `ref_route.csv`, `ref_route_emd.csv` | 노선과 경유 읍면동 | **샘플** (`source=sample`). 실데이터에서는 정류소 좌표로 다시 만들어야 해요 |
 | `ref_purpose.csv`, `ref_nationality.csv` | 방문목적 9종, 국적 12종 | 허브 API 명세 기준 |

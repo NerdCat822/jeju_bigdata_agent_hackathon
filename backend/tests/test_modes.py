@@ -9,6 +9,7 @@ from meomulmeong.data.catalog import Catalog
 from meomulmeong.data.warehouse import Warehouse, build_warehouse, export_csv
 from meomulmeong.service import AgentService
 from meomulmeong.settings import BACKEND_DIR, load_config
+from meomulmeong.tools import stage2
 
 
 @pytest.fixture()
@@ -119,3 +120,36 @@ def test_exported_table_with_wrong_columns_is_rejected(empty_home):
     (out / "arrivals_purpose_monthly.csv").write_text("month,purpose\n2025-06-01,관광\n", encoding="utf-8")
     with pytest.raises(ValueError, match="표준 컬럼이 빠졌어요.*visitors"):
         _build(empty_home, "hub")
+
+
+def test_card_file_is_loaded_jeju_wide_and_stage2_uses_it(empty_home, refs):
+    """허브 파일 '업종별 성별 카드 이용 정보'(data/hub/card_biz/)는 내보낸 표보다 먼저 쓰고, 제주 전체 단위로 올려요.
+    동네가 속한 시군구·도심/읍면 값이 없으니 2단계는 제주 전체 값을 쓰고 그렇다고 밝혀요."""
+    out = empty_home / "data" / "export" / "hub"
+    out.mkdir(parents=True)
+    (out / "card_cn_area_monthly.csv").write_text(
+        "month,city,area_type,theme,user_cnt,use_cnt,use_amt\n2018-12-01,서귀포시,읍면,숙박,1,1,1\n", encoding="utf-8")
+    raw = empty_home / "data" / "hub" / "card_biz"
+    raw.mkdir(parents=True)
+    rows = ["base_year_month,biz_nm,user_type,sex,user_count,use_count,use_amount"]
+    for k in range(24):  # 2023-07 ~ 2025-06
+        y, m = 2023 + (6 + k) // 12, (6 + k) % 12 + 1
+        p1 = (y, m) >= (2024, 7)
+        rows += [f"{y}{m:02d},면세점,중국,여성,10,10,{200 if p1 else 100}",
+                 f"{y}{m:02d},면세점,중국,남성,10,10,{100 if p1 else 50}",
+                 f"{y}{m:02d},한식 음식점업,중국,여성,5,5,{90 if p1 else 100}",
+                 f"{y}{m:02d},면세점,일본,여성,10,10,999"]
+    (raw / "업종별성별카드이용정보.csv").write_text("\ufeff" + "\n".join(rows) + "\n", encoding="utf-8")
+    settings, report = _build(empty_home, "hub")
+    meta = {t.table: t for t in report.tables}["card_cn_area_monthly"]
+    assert (meta.n_rows, meta.note, meta.source_title) == (48, "", "업종별 성별 카드 이용 정보")
+    svc = AgentService.create("hub", "template", settings=settings)
+    ctx = svc.agent.ctx.new_request()
+    assert ctx.wh.query("SELECT DISTINCT city, area_type FROM card_cn_area_monthly").rows == [("제주 전체", "전체")]
+    sh = stage2.s2_shift(ctx, "emd", refs.find_emd("성산읍").emd_cd)
+    assert sh.fact("area").text == "제주 전체"
+    assert sh.fact("cn_growth:쇼핑·소매").value == pytest.approx(1.0)  # (200 + 100) ÷ (100 + 50) − 1
+    assert sh.fact("cn_growth:식음료").value == pytest.approx(-0.1)
+    assert sh.fact("cn_growth:전체").period == "2024-07~2025-06 vs 2023-07~2024-06"
+    assert any("제주 전체 단위" in lim for lim in sh.limits)
+    assert "제주 전체 × 테마" in sh.evidence[0].note

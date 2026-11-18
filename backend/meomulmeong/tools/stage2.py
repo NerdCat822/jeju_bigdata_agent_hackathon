@@ -107,15 +107,25 @@ def s2_shift(ctx: ToolContext, place_kind: str | None, place_key: str | None, th
         if area["area_type"]:
             where.append(f"area_type = {sql_str(area['area_type'])}")
         w = (" AND ".join(where)) or "TRUE"
-        sql = f"""
+
+        def theme_sql(cond: str) -> str:
+            return f"""
 SELECT theme,
        SUM(use_amt) FILTER (WHERE {p.sql_p1()}) AS amt_p1,
        SUM(use_amt) FILTER (WHERE {p.sql_p0()}) AS amt_p0
 FROM card_cn_area_monthly
-WHERE {w}
+WHERE {cond}
 GROUP BY theme
 ORDER BY amt_p1 DESC NULLS LAST"""
-        res = ctx.wh.query(sql)
+
+        res = ctx.wh.query(theme_sql(w))
+        unit = "시군구 × 도심/읍면 × 테마"
+        if w != "TRUE" and not any(a1 for _t, a1, _a0 in res.rows):
+            # 허브의 '업종별 성별 카드 이용 정보'는 제주 전체 단위예요. 이 동네가 속한 지역의 값이 없으면 제주 전체 값을 써요
+            limits.append(f"중국인 카드 자료가 제주 전체 단위라 {area['area_label']} 대신 제주 전체 값을 썼어요.")
+            area["area_label"], unit = "제주 전체", "제주 전체 × 테마"
+            facts[1] = Fact(key="area", label="카드 분석 단위", value="제주 전체", unit="text", text="제주 전체")
+            res = ctx.wh.query(theme_sql("TRUE"))
         rows = [(t, float(a1 or 0), float(a0) if a0 else None) for t, a1, a0 in res.rows]
         tot1 = sum(r[1] for r in rows)
         tot0 = sum(r[2] for r in rows if r[2]) if p.comparable else None
@@ -134,7 +144,7 @@ ORDER BY amt_p1 DESC NULLS LAST"""
                  + [["전체", round(tot1), round(tot0) if tot0 else None, _r4(growth["전체"]), 1.0]],
             formats={"최근(P1) 이용금액": "won", "직전(P0) 이용금액": "won", "증가율": "pct", "비중(P1)": "share"},
             sql=res.sql, tables=[CARD_CN], period=p.label,
-            note="중국인 소비 증가율 = 이용금액 P1 ÷ P0 − 1 (시군구 × 도심/읍면 × 테마)"))
+            note=f"중국인 소비 증가율 = 이용금액 P1 ÷ P0 − 1 ({unit})"))
         for t, _a1, _a0 in rows:
             if growth[t] is not None:
                 facts.append(Fact(key=f"cn_growth:{t}", label=f"중국인 {t} 소비 증가율", value=growth[t], unit="pct",
