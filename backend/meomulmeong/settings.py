@@ -52,6 +52,7 @@ class AnalysisCfg(BaseModel):
 
 class Stage2Cfg(BaseModel):
     min_share_for_growth: float = 0.03
+    min_share_for_theme_growth: float = 0.01
     max_suggestions: int = 3
 
 

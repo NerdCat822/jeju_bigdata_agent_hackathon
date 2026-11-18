@@ -14,6 +14,7 @@ analysis:
 
 stage2:
   min_share_for_growth: 0.03  # 국적 성장률 순위에 넣을 최소 비중
+  min_share_for_theme_growth: 0.01  # 중국인 테마 소비 증가율을 계산할 직전 기간 최소 비중 (작은 금액의 변화가 큰 증가율로 보이지 않게)
   max_suggestions: 3          # 한 번에 보여 줄 제안 개수
 
 stage3:

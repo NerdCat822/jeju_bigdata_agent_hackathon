@@ -138,11 +138,12 @@ def test_card_file_is_loaded_jeju_wide_and_stage2_uses_it(empty_home, refs):
         rows += [f"{y}{m:02d},면세점,중국,여성,10,10,{200 if p1 else 100}",
                  f"{y}{m:02d},면세점,중국,남성,10,10,{100 if p1 else 50}",
                  f"{y}{m:02d},한식 음식점업,중국,여성,5,5,{90 if p1 else 100}",
+                 f"{y}{m:02d},여행사업,중국,여성,1,1,{50 if p1 else 1}",  # 직전 비중 0.4% → 증가율을 빼요
                  f"{y}{m:02d},면세점,일본,여성,10,10,999"]
     (raw / "업종별성별카드이용정보.csv").write_text("\ufeff" + "\n".join(rows) + "\n", encoding="utf-8")
     settings, report = _build(empty_home, "hub")
     meta = {t.table: t for t in report.tables}["card_cn_area_monthly"]
-    assert (meta.n_rows, meta.note, meta.source_title) == (48, "", "업종별 성별 카드 이용 정보")
+    assert (meta.n_rows, meta.note, meta.source_title) == (72, "", "업종별 성별 카드 이용 정보")
     svc = AgentService.create("hub", "template", settings=settings)
     ctx = svc.agent.ctx.new_request()
     assert ctx.wh.query("SELECT DISTINCT city, area_type FROM card_cn_area_monthly").rows == [("제주 전체", "전체")]
@@ -152,4 +153,7 @@ def test_card_file_is_loaded_jeju_wide_and_stage2_uses_it(empty_home, refs):
     assert sh.fact("cn_growth:식음료").value == pytest.approx(-0.1)
     assert sh.fact("cn_growth:전체").period == "2024-07~2025-06 vs 2023-07~2024-06"
     assert any("제주 전체 단위" in lim for lim in sh.limits)
+    assert sh.fact("cn_growth:기타") is None and sh.fact("cn_share:기타") is not None  # 작은 비중: 증가율만 빼요
+    assert any("기타 소비는 직전 기간 비중이 1%보다 작아" in lim for lim in sh.limits)
+    assert "기타" not in sh.charts[0].x
     assert "제주 전체 × 테마" in sh.evidence[0].note

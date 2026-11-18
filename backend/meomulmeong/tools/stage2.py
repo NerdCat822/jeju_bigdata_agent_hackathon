@@ -130,10 +130,17 @@ ORDER BY amt_p1 DESC NULLS LAST"""
         tot1 = sum(r[1] for r in rows)
         tot0 = sum(r[2] for r in rows if r[2]) if p.comparable else None
         growth, share = {}, {}
+        small: list[str] = []  # 직전 기간 비중이 아주 작은 테마는 증가율을 빼요 (작은 금액의 변화가 큰 증가율로 보여서예요)
         for t, a1, a0 in rows:
-            growth[t] = (a1 / a0 - 1) if a0 else None
+            base_ok = bool(a0) and (not tot0 or a0 / tot0 >= cfg2.min_share_for_theme_growth)
+            growth[t] = (a1 / a0 - 1) if base_ok else None
+            if a0 and not base_ok:
+                small.append(t)
             share[t] = (a1 / tot1) if tot1 else None
         growth["전체"] = (tot1 / tot0 - 1) if tot0 else None
+        if small:
+            limits.append(f"중국인 {'·'.join(small)} 소비는 직전 기간 비중이 {cfg2.min_share_for_theme_growth:.0%}보다 작아 "
+                          "증가율을 빼고 금액만 보여 줘요 (작은 금액의 변화가 큰 증가율로 보여서예요).")
         metrics["cn_growth"], metrics["cn_share"] = growth, share
         spans["cn_growth"] = spans["cn_share"] = _span(p)
         periods.append(p.label)
