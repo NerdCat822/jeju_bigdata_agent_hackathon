@@ -104,10 +104,8 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 .
 ├─ backend/     에이전트 코어와 웹 API (Python · PostgreSQL · FastAPI)  → backend/README.md
 ├─ frontend/    웹 화면 (React · TypeScript)                            → frontend/README.md
-├─ docs/        조사 노트와 화면 사진
-├─ Dockerfile · docker-compose.yml   (앱 + PostgreSQL)
-├─ 머물멍_AI_Agent_기획서.pdf
-└─ 제주_AI빅데이터_활용_AI_Agent_개발_챌린지.pdf   (대회 안내문)
+├─ docs/        기획서 · 대회 안내문 · 검수 리포트(PDF), 조사 노트, 화면 사진
+└─ Dockerfile · docker-compose.yml   (앱 + PostgreSQL)
 ```
 
 | LLM 모드 | 모델 | 비고 |
@@ -162,8 +160,9 @@ LLM 해설이 검증을 통과하지 못하면 고칠 점을 알려 다시 쓰�
 |---|---|
 | [backend/README.md](backend/README.md) | 에이전트 구조, 도구, 안전장치, 데이터 모드, 웹 API, 평가, Docker |
 | [frontend/README.md](frontend/README.md) | 화면 구성, 실행, 오프라인 규칙, 차트·지도 기준, 테스트 |
-| [머물멍_AI_Agent_기획서.pdf](머물멍_AI_Agent_기획서.pdf) | 기획서 |
-| [제주_AI빅데이터_활용_AI_Agent_개발_챌린지.pdf](제주_AI빅데이터_활용_AI_Agent_개발_챌린지.pdf) | 대회 안내문 |
+| [docs/머물멍_AI_Agent_기획서.pdf](docs/머물멍_AI_Agent_기획서.pdf) | 기획서 |
+| [docs/제주_AI빅데이터_활용_AI_Agent_개발_챌린지.pdf](docs/제주_AI빅데이터_활용_AI_Agent_개발_챌린지.pdf) | 대회 안내문 |
+| [docs/머물멍 웹 서비스 최종 검수 리포트.pdf](<docs/머물멍 웹 서비스 최종 검수 리포트.pdf>) | 2026-11-17 웹 서비스 검수 리포트 |
 | [docs/data-catalog.md](docs/data-catalog.md) · [docs/research-notes.md](docs/research-notes.md) | 2026-11-06 데이터·대회 조사 노트 |
 
 ---

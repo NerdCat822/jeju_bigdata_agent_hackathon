@@ -11,7 +11,7 @@
 숫자는 SQL이, 제안 후보는 규칙이 만들고, LLM은 질문 해석과 쉬운 해설만 맡아요. 한 줄 결론도 규칙이 만든 문장을 그대로 써요.
 화면은 React 웹이에요. 화면 코드는 [../frontend/](../frontend/README.md)에 있고, 이 백엔드가 여는 웹 API(`python -m meomulmeong serve`, 8절)를 불러 써요.
 
-기획서: [../머물멍_AI_Agent_기획서.pdf](../머물멍_AI_Agent_기획서.pdf)
+기획서: [../docs/머물멍_AI_Agent_기획서.pdf](../docs/머물멍_AI_Agent_기획서.pdf)
 
 ---
 
