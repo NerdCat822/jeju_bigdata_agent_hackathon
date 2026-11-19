@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>머물멍 결과 설명자료</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============================================================ 표지 -->
+<section class="cover">
+  <div class="kicker">제주 AI·빅데이터 활용 AI Agent 개발 챌린지 · 최종 결과물</div>
+  <div class="brand">
+    <img src="../../frontend/src/assets/mascot-stage3.png" alt="">
+    <div>
+      <h1>머물멍 결과 설명자료</h1>
+      <div class="sub">사람이 떠나는 동네에 누가 오고, 어떻게 오게 할 것인가</div>
+    </div>
+  </div>
+  <p class="lead">
+    제주 43개 읍면동의 청년 정착을 진단하고, 빈자리를 채울 관광객과 그들이 오는 길까지 제안하는 3단계 AI 에이전트를 만들었다.
+    제주데이터허브 실데이터 8종으로 43곳의 유형을 나누고, 표선면을 예로 세 단계와 최종 제안서까지 실행했다.
+    숫자는 SQL이, 제안은 규칙이 만들고, Claude는 검증을 통과한 쉬운 설명만 쓴다. 골든셋 60문항을 모두 맞혔다.
+  </p>
+  <div class="map">
+    <table>
+      <thead><tr><th style="width:30%">제출 항목</th><th>이 문서에서 찾을 곳</th></tr></thead>
+      <tbody>
+        <tr><td>문제 정의</td><td>1장</td></tr>
+        <tr><td>Agent 구조</td><td>2장 (구조도, 구성 요소, 도구, 자율 수행 범위, 사용 모델)</td></tr>
+        <tr><td>주요 기능</td><td>3장</td></tr>
+        <tr><td>실행 결과</td><td>4장 (실데이터 43곳 진단, 표선면 사례, 처리 시간)</td></tr>
+        <tr><td>검증 방법 · 한계</td><td>5장 (답마다 자동 검증, 골든셋, 테스트, 외부 검수, 한계)</td></tr>
+        <tr><td>센터 활용 방안</td><td>6장</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="meta">
+    작성 2026-11-19 · 저장소 <code>main</code> 브랜치 기준 · 실행 결과는 2026-11-18~19 시연 서버(제주데이터허브 실데이터, Claude Opus 5.5)에서 얻었다.<br>
+    출처: 제주특별자치도, 제주데이터허브 · 제주빅데이터센터 제공 자료 포함
+  </div>
+</section>
+
+<!-- ============================================================ 1. 문제 정의 -->
+<section class="chapter">
+  <h2><span class="no">1</span>문제 정의</h2>
+
+  <h3>1.1 같은 동네에서 맞물리는 세 가지 변화</h3>
+  <p>
+    제주는 세 가지 변화를 동시에 겪고 있다. 2023년 14년 만에 인구가 순유출로 돌아섰고, 2026년 상반기 내국인 관광객은 6.4% 줄었지만
+    외국인 관광객은 31.9% 늘었다. 같은 기간 국내선 공급석은 37만 석 줄었다 <span class="muted">(기획서 1.1)</span>. 세 변화는 인구·관광·교통 분야에서
+    따로 분석되어 왔지만, 실제로는 같은 동네 안에서 맞물려 있다.
+  </p>
+  <table>
+    <thead><tr><th style="width:18%">변화</th><th>정책 질문</th><th style="width:26%">담당 단계</th></tr></thead>
+    <tbody>
+      <tr><td>청년이 떠난다</td><td>어느 동네에서 청년이 빠지고 어디는 버티는가. 청년 정착 지원은 어디에 효과가 있을까</td><td>1단계 「청년이 머무는 동네」</td></tr>
+      <tr><td>관광객이 바뀐다</td><td>빈자리를 채우는 외국인 소비는 어느 업종·요일·국적에서 오는가</td><td>2단계 「빈자리를 누가 채우나」</td></tr>
+      <tr><td>접근이 줄었다</td><td>감편 조건에서 수요는 어떻게 변하고, 어떤 노선·코스로 동네까지 데려올 수 있는가</td><td>3단계 「어떻게 오게 하나」</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.2 누가, 어떻게 쓰는가</h3>
+  <p>
+    이 질문들은 원래 데이터 분석가가 여러 자료를 맞춰 보고 SQL을 짜야 답할 수 있다. 머물멍은 IT 비전문가인 도민·소상공인과 읍면 담당자가
+    <strong>"성산읍 청년 인구 왜 줄었어?"</strong> 같은 한 문장이나 지도에서 동네 하나를 고르는 것만으로, 근거와 한계가 붙은 답과 제안서를 받게 한다.
+    제주빅데이터센터 분석실에 상시 탑재해 인터넷 없이도 돌아가는 것을 목표로 한다.
+  </p>
+
+  <h3>1.3 목표</h3>
+  <table>
+    <thead><tr><th style="width:24%">목표</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td><strong>물으면 분석한다</strong></td><td>한 문장을 장소·기간·연령·업종·가정값으로 해석하고, 필요한 데이터를 골라 SQL로 계산한다</td></tr>
+      <tr><td><strong>단계가 이어진다</strong></td><td>1단계의 유형(A~D)이 2단계의 질문을, 2단계의 타깃 관광객이 3단계의 입력을 정한다. 동네 하나만 고르면 최종 제안서까지 만든다</td></tr>
+      <tr><td><strong>근거 없는 말은 하지 않는다</strong></td><td>숫자는 SQL이, 제안 후보는 규칙이 만들고 LLM은 해석과 문장만 맡는다. 모든 답에 근거표·SQL·기간·한계를 붙이고, 상관을 인과로 단정하지 않는다</td></tr>
+      <tr><td><strong>센터에서 오프라인으로 돈다</strong></td><td>센터 PC에서 인터넷 없이 기본 모드로 돌고, Claude 모드와 같은 숫자를 낸다</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ 2. Agent 구조 -->
+<section class="chapter">
+  <h2><span class="no">2</span>Agent 구조</h2>
+
+  <figure class="noframe">
+    <svg viewBox="0 0 720 296" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="머물멍 에이전트 구조">
+      <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b9590a"/></marker></defs>
+      <g font-family="Pretendard Variable, NanumGothic, sans-serif" text-anchor="middle">
+        <rect x="0" y="202" width="720" height="92" rx="10" fill="#faf5ee"/>
+        <text x="12" y="220" text-anchor="start" font-size="10.5" font-weight="650" fill="#8a776a">에이전트가 읽는 것</text>
+        <g fill="#fffaf3" stroke="#e8dccf" stroke-width="1.2">
+          <rect x="4" y="8" width="108" height="66" rx="9"/><rect x="126" y="8" width="108" height="66" rx="9"/>
+          <rect x="248" y="8" width="108" height="66" rx="9"/><rect x="370" y="8" width="108" height="66" rx="9" fill="#fff1df" stroke="#f0b06a"/>
+          <rect x="492" y="8" width="108" height="66" rx="9"/><rect x="614" y="8" width="104" height="66" rx="9"/>
+          <rect x="352" y="114" width="366" height="66" rx="9" fill="#fff"/><rect x="4" y="114" width="328" height="66" rx="9" fill="#fff"/>
+          <rect x="8" y="228" width="170" height="58" rx="8" fill="#fff"/><rect x="186" y="228" width="170" height="58" rx="8" fill="#fff"/>
+          <rect x="364" y="228" width="170" height="58" rx="8" fill="#fff"/><rect x="542" y="228" width="172" height="58" rx="8" fill="#fff"/>
+        </g>
+        <g fill="#2b211b" font-size="12" font-weight="650">
+          <text x="58" y="31">질문</text><text x="180" y="31">해석기</text><text x="302" y="31">확인 카드</text>
+          <text x="424" y="31">계획 · 실행</text><text x="546" y="31">검증기</text><text x="666" y="31">해설기</text>
+          <text x="535" y="136">답 (Answer)</text><text x="168" y="136">연계 실행 · 최종 제안서</text>
+          <text x="93" y="249" font-size="11">PostgreSQL 데이터 창고</text><text x="271" y="249" font-size="11">카탈로그 · 참조표</text>
+          <text x="449" y="249" font-size="11">설정 파일 (코드 밖)</text><text x="628" y="249" font-size="11">외부 API (선택)</text>
+        </g>
+        <g fill="#57473c" font-size="9.4">
+          <text x="58" y="48">화면 · 명령줄</text><text x="58" y="61">지도 · 추천 질문</text>
+          <text x="180" y="48">규칙 파서가 장소·기간</text><text x="180" y="61">· 연령 · 가정값 추출</text>
+          <text x="302" y="48">"이렇게 이해했어요"</text><text x="302" y="61">사용자 확인 · 고치기</text>
+          <text x="424" y="48">단계별 레시피가</text><text x="424" y="61">도구(SQL)를 차례로 호출</text>
+          <text x="546" y="48">숫자 · 인과 · 기간 등</text><text x="546" y="61">8가지, 최대 2회 다시 쓰기</text>
+          <text x="666" y="48">규칙 문장 또는</text><text x="666" y="61">Claude (동의 후)</text>
+          <text x="535" y="153">한 줄 결론 · 핵심 숫자 · 설명 · 제안 · 차트 · 지도</text><text x="535" y="167">근거표 · SQL · 한계 · 검증 결과 · 실행 기록 · 다음 질문</text>
+          <text x="168" y="153">1단계 유형 → 2단계 타깃 → 3단계 시나리오 · 코스</text><text x="168" y="167">→ 위치 지도 · 근거표 · SQL을 묶은 HTML 제안서</text>
+          <text x="93" y="265">모드별 스키마(샘플·실데이터·센터)</text><text x="93" y="278">읽기 전용 조회</text>
+          <text x="271" y="265">테이블 설명 YAML 8장</text><text x="271" y="278">읍면동 43곳 · 테마 · 거점 · 노선</text>
+          <text x="449" y="265">settings.yaml 기준값 · playbook.yaml</text><text x="449" y="278">제안 규칙 12개 · export_rules.yaml</text>
+          <text x="628" y="265">Claude Opus 5.5 (해석 보조 · 설명)</text><text x="628" y="278">NAVER Cloud Maps (지도 · 경로)</text>
+        </g>
+        <g stroke="#b9590a" stroke-width="1.6" fill="none" marker-end="url(#a2)">
+          <path d="M112 41 H122"/><path d="M234 41 H244"/><path d="M356 41 H366"/><path d="M478 41 H488"/><path d="M600 41 H610"/>
+          <path d="M666 74 V110"/><path d="M352 147 H336"/>
+        </g>
+        <path d="M546 74 C546 86 522 88 502 88 H444 C432 88 424 84 424 78" stroke="#b9590a" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#a2)"/>
+        <text x="485" y="102" font-size="8.6" fill="#b9590a">통과 못 하면 고칠 점을 알려 다시 씀</text>
+      </g>
+    </svg>
+    <figcaption><b>그림 1. 머물멍 에이전트 구조.</b> 질문이 해석기 → 확인 카드 → 계획·실행 → 검증기 → 해설기를 거쳐 답이 된다. 연계 실행은 이 흐름을 1→2→3단계로 세 번 돌리고 최종 제안서를 만든다.</figcaption>
+  </figure>
+
+  <h3>2.1 구성 요소의 역할</h3>
+  <table class="compact">
+    <thead><tr><th style="width:15%">구성 요소</th><th>하는 일</th><th style="width:26%">구현 (<code>backend/meomulmeong/</code>)</th></tr></thead>
+    <tbody>
+      <tr><td>해석기</td><td>규칙 파서가 단계·의도·장소·연령·기간·테마·가정값을 뽑는다. 장소는 참조표로 표준화한다(법환동 → 대륜동). 규칙으로 확신하지 못한 질문만 Claude에 JSON 스키마로 넘기고, Claude가 낸 장소도 참조표에 없으면 버린다</td><td><code>agent/parser.py</code></td></tr>
+      <tr><td>확인 카드</td><td>해석 결과를 칩으로 보여 주고, 읍면동이 빠졌으면 실행할 수 없다고 알린다. 사용자가 고친 값은 서버가 참조표로 다시 검사한다</td><td><code>agent/parser.py</code> · 화면 <code>ConfirmCard</code></td></tr>
+      <tr><td>계획 · 실행</td><td>단계별 레시피가 도구를 순서대로 부른다. 2·3단계에 앞 단계 결과(유형 → 타깃)가 없으면 먼저 실행한다</td><td><code>agent/stages.py</code> · <code>tools/</code></td></tr>
+      <tr><td>검증기</td><td>해설 문장을 숫자·짝·인과·예측·참조·제안 근거·기간·반출 기준으로 검사한다. 떨어지면 고칠 점을 알려 최대 2회 다시 쓰게 하고, 그래도 떨어지면 규칙 문장으로 바꾼다</td><td><code>agent/verifier.py</code></td></tr>
+      <tr><td>해설기</td><td>지표만으로 만드는 규칙 문장(초안)을 쓰고, Claude 모드에서는 초안과 지표를 주고 3문장 이내로 다듬게 한다. 한 줄 결론과 목록형 답은 규칙 문장을 그대로 쓴다</td><td><code>agent/explainer.py</code></td></tr>
+      <tr><td>기억</td><td>세션마다 앞 질문의 장소·단계·결과를 기억해 "거기 30대만?" 같은 후속 질문과 단계 연계를 잇는다</td><td><code>agent/memory.py</code></td></tr>
+      <tr><td>제안서</td><td>세 단계의 답을 위치 지도(네이버 Static Map 또는 SVG), 근거표, SQL, 한계와 함께 HTML 한 장으로 묶는다</td><td><code>report/builder.py</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 도구</h3>
+  <table class="compact">
+    <thead><tr><th style="width:12%">구분</th><th style="width:30%">도구</th><th>기능</th></tr></thead>
+    <tbody>
+      <tr><td>공통</td><td><code>resolve_place</code> · <code>search_catalog</code> · <code>run_sql</code></td><td>장소 표준화, 테이블 검색, 읽기 전용 SQL (SELECT 한 문장, 허용 테이블, 행 수·시간 제한)</td></tr>
+      <tr><td>1단계</td><td><code>s1_trend</code> · <code>s1_classify</code> · <code>s1_peers</code> · <code>s1_zone</code></td><td>청년 거주·근무·방문 추이와 지표, 유형 분류·추천 순위, 유사 읍면, 지구 묶음 진단</td></tr>
+      <tr><td>2단계</td><td><code>s2_shift</code> · <code>s2_playbook</code></td><td>중국인 테마별 소비·단체/개별 인당 배율·요일·국적 분석, 규칙 12개로 제안 후보 생성</td></tr>
+      <tr><td>3단계</td><td><code>s3_forecast</code> · <code>s3_route_beta</code> · <code>s3_courses</code></td><td>수요 기준선·시나리오(ε 0.5/1.0/1.5), 노선 관광 민감도 β, 직행·환승 1회 코스와 접근성 공백</td></tr>
+      <tr><td>출력</td><td><code>make_chart</code> · <code>make_map</code> · <code>build_report</code> · <code>export_check</code></td><td>차트·지도 사양, 최종 제안서(HTML), 반출 규칙 검사</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.3 판단과 자율 수행 범위</h3>
+  <table class="compact">
+    <thead><tr><th style="width:18%">구분</th><th>범위</th></tr></thead>
+    <tbody>
+      <tr><td><strong>스스로 한다</strong></td><td>단계·레시피·테이블 선택, SQL 작성·실행, 검증과 다시 쓰기(최대 2회), 앞 단계 자동 실행, 차트 선택, 설명 쓰기</td></tr>
+      <tr><td><strong>사용자 확인 후</strong></td><td>해석 확정(확인 카드), Claude로 전송(미리보기 후 동의), 시나리오 가정값 변경, 제안서 저장</td></tr>
+      <tr><td><strong>하지 않는다</strong></td><td>원자료 행 단위 출력, 참조표에 없는 노선·관광지·읍면동 만들기, 인과 단정, 노선 신설 설계</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.4 사용 모델과 기술</h3>
+  <table class="compact">
+    <thead><tr><th style="width:18%">항목</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>기본 (AI 없이)</td><td>규칙 파서 + SQL + 문장 템플릿. 외부 전송 0건, 같은 질문에 항상 같은 답. 센터 PC 기본값</td></tr>
+      <tr><td>Claude (선택)</td><td>Claude Opus 5.5 (<code>claude-opus-5-5</code>, Anthropic 공식 SDK, 구조화 출력). 불확실한 질문 해석, 쉬운 설명, 자유 질문 SQL만 맡는다. 동네별 집계 지표만 보내고 동의한 세션만 쓴다. 설명 쓰기에 45초를 넘기면 규칙 문장으로 대체한다</td></tr>
+      <tr><td>로컬 LLM</td><td>쓰지 않는다 (2026-11-13 팀 결정). 그래서 인터넷이 없는 센터 PC에서는 기본 모드로 돈다. 숫자와 제안은 두 모드가 같다</td></tr>
+      <tr><td>기술 구성</td><td>백엔드 Python 3.11 · FastAPI(REST + 진행 상황 SSE) · PostgreSQL 17, 화면 React 19 · TypeScript · Vite, 차트·지도는 SVG 직접 구현, 지도 선택 기능 NAVER Cloud Maps, 배포 Docker</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ 3. 주요 기능 -->
+<section class="chapter">
+  <h2><span class="no">3</span>주요 기능</h2>
+  <table class="compact">
+    <thead><tr><th style="width:23%">기능</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td><strong>세 단계 분석과 연계 실행</strong></td><td>동네 하나를 고르고 "처음부터 끝까지"를 누르면 1→2→3단계를 차례로 돌리고 최종 제안서를 만든다. 어느 단계부터 물어도 앞 단계가 필요하면 먼저 실행한다</td></tr>
+      <tr><td><strong>타이핑 없이 시작</strong></td><td>단계별 추천 질문, 읍면동 목록, 네이버 지도에서 누르기(누른 자리의 행정동을 찾음), 주소로 찾기</td></tr>
+      <tr><td><strong>확인 카드</strong></td><td>직접 쓴 질문은 "이렇게 이해했어요"로 장소·연령·기간·테마·가정값을 먼저 보여 주고, "고치기"로 바꿔 실행한다</td></tr>
+      <tr><td><strong>진행 표시 · 멈추기</strong></td><td>단계·도구·설명 쓰기를 한 줄씩 보여 준다(SSE). 멈출 수 있고, 다른 사람의 분석을 기다리는 중이면 그렇다고 표시한다</td></tr>
+      <tr><td><strong>결론부터 보여 주는 답</strong></td><td>한 줄 결론 → 핵심 숫자 3개 → 쉬운 설명 → 제안 → 차트(표로 보기)·지도. 유형은 글자와 색을 함께 쓴다</td></tr>
+      <tr><td><strong>근거 공개</strong></td><td>모든 숫자의 근거표와 실행한 SQL, 산식, 자료 기간, 한계, 검증 결과, 실행 기록(도구·시간·LLM 시도)을 펼쳐 볼 수 있다</td></tr>
+      <tr><td><strong>전송 미리보기와 동의</strong></td><td>Claude에 보낼 집계 지표와 초안을 그대로 보여 주고, 동의한 세션만 보낸다</td></tr>
+      <tr><td><strong>규칙 기반 제안</strong></td><td>제안은 설정 파일의 규칙 12개에서만 나오고, 규칙 번호와 근거 지표(기준값 포함)를 함께 보여 준다</td></tr>
+      <tr><td><strong>감편 시나리오</strong></td><td>국내선 공급 변화율과 탄력성 ε를 가정으로 입도객을 계산하고, ε 0.5·1.0·1.5 민감도와 "가정" 배지를 늘 함께 보여 준다</td></tr>
+      <tr><td><strong>코스와 접근성 공백</strong></td><td>거점 6곳에서 직행·환승 1회로 동네까지 오는 버스 코스를 네이버 길찾기 도로 경로로 그리고, 닿지 않는 거점을 공백으로 표시한다</td></tr>
+      <tr><td><strong>최종 제안서</strong></td><td>세 단계의 결과·근거표·SQL·한계를 위치 지도와 함께 HTML로 묶는다. 인쇄하면 PDF가 된다</td></tr>
+      <tr><td><strong>데이터 모드 · 명령줄</strong></td><td>샘플·실데이터·센터 데이터를 같은 경로로 쓴다. 명령줄(<code>ask</code>, <code>chain --report</code>)과 Python API도 있다</td></tr>
+    </tbody>
+  </table>
+  <div class="grid2">
+    <figure>
+      <img src="img/01_home.jpg" alt="첫 화면">
+      <figcaption><b>그림 2. 첫 화면.</b> 동네 고르기 + 처음부터 끝까지, 단계별 추천 질문, 지도.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/06_payload_consent.jpg" alt="전송 미리보기">
+      <figcaption><b>그림 3. 전송 미리보기와 동의.</b> Claude에 보낼 내용을 그대로 보여 준다.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================================================ 4. 실행 결과 -->
+<section class="chapter">
+  <h2><span class="no">4</span>실행 결과</h2>
+
+  <h3>4.1 실데이터로 본 43개 읍면동</h3>
+  <p>
+    제주데이터허브 유동인구로 20·30대 거주·근무와 방문자의 변화를 계산해 43곳의 유형을 나눴다
+    (최근 12개월 2025-09~2026-08 대 직전 12개월, 임계값 τ = 3%).
+  </p>
+  <div class="kpis" style="grid-template-columns: repeat(5, 1fr)">
+    <div class="kpi"><div class="v">3곳</div><div class="l"><span class="tag a">A</span> 정착 성장형</div></div>
+    <div class="kpi"><div class="v">6곳</div><div class="l"><span class="tag b">B</span> 출퇴근형</div></div>
+    <div class="kpi"><div class="v">8곳</div><div class="l"><span class="tag c">C</span> 방문 의존형</div></div>
+    <div class="kpi"><div class="v">10곳</div><div class="l"><span class="tag d">D</span> 활력 저하형</div></div>
+    <div class="kpi"><div class="v">16곳</div><div class="l"><span class="tag">유지</span> 변화가 작음</div></div>
+  </div>
+  <table class="compact">
+    <thead><tr><th style="width:16%">유형</th><th>읍면동</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag a">A</span> 정착 성장형</td><td>이호동, 도두동, 대륜동</td></tr>
+      <tr><td><span class="tag b">B</span> 출퇴근형</td><td>추자면, 용담2동, 노형동, 대정읍, 서홍동, 예래동</td></tr>
+      <tr><td><span class="tag c">C</span> 방문 의존형</td><td>일도1동, 이도2동, 삼도1동, 삼도2동, 표선면, 송산동, 천지동, 동홍동</td></tr>
+      <tr><td><span class="tag d">D</span> 활력 저하형</td><td>우도면, 일도2동, 용담1동, 건입동, 화북동, 정방동, 중앙동, 효돈동, 영천동, 대천동</td></tr>
+      <tr><td><span class="tag">유지</span> 유지형</td><td>한림읍, 애월읍, 구좌읍, 조천읍, 한경면, 이도1동, 삼양동, 봉개동, 아라동, 오라동, 연동, 외도동, 남원읍, 성산읍, 안덕면, 중문동</td></tr>
+    </tbody>
+  </table>
+  <p>
+    청년 거주가 가장 많이 는 곳은 오라동(+12.4%), 도두동(+9.4%), 봉개동(+8.7%), 대륜동(+8.7%), 아라동(+7.7%)이다.
+    오라동처럼 거주는 늘었지만 근무가 줄어든 곳은 정해진 조건에 따라 유지형으로 두고, 가장 가까운 유형(A)을 참고로 함께 보여 준다.
+  </p>
+
+  <h3>4.2 사례: 표선면 처음부터 끝까지</h3>
+  <p>지도에서 표선면을 고르고 "처음부터 끝까지"를 눌러 얻은 결과다. 세 단계 모두 자동 검증을 통과했다. 1·2단계 설명은 Claude가 썼고, 목록(코스)이 들어가는 3단계는 규칙 문장을 그대로 썼다.</p>
+
+  <h4>1단계 · 「C 방문 의존형」 — 청년 거주는 줄고 방문은 늘었다</h4>
+  <table class="compact">
+    <thead><tr><th>지표 (일평균)</th><th class="num">최근 2025-09~2026-08</th><th class="num">직전 2024-09~2025-08</th><th class="num">변화</th></tr></thead>
+    <tbody>
+      <tr><td>20·30대 거주인구</td><td class="num">1,827명</td><td class="num">1,889명</td><td class="num">−3.3%</td></tr>
+      <tr><td>20·30대 근무인구</td><td class="num">307명</td><td class="num">305명</td><td class="num">+0.8%</td></tr>
+      <tr><td>방문인구</td><td class="num">4,380명</td><td class="num">4,281명</td><td class="num">+2.3%</td></tr>
+      <tr><td>외국인 장기체류 거주</td><td class="num">662명</td><td class="num">558명</td><td class="num">+18.7%</td></tr>
+    </tbody>
+  </table>
+  <p class="small">20·30대 비중 17.9%, 정주비 64.5%. 지표가 비슷한 곳은 구좌읍(청년 거주 −2.5%), 성산읍(+0.2%), 남원읍(−1.9%)이다.</p>
+
+  <h4>2단계 · 「중국인 체류형 관광객」을 먼저 볼 만하다</h4>
+  <table class="compact">
+    <thead><tr><th style="width:28%">근거 지표</th><th class="num" style="width:16%">값</th><th>기간 · 비고</th></tr></thead>
+    <tbody>
+      <tr><td>중국인 카드 소비 (전체)</td><td class="num">−6.7%</td><td>2024-07~2025-06 vs 직전 12개월, 제주 전체 (허브 1048)</td></tr>
+      <tr><td>중국인 숙박 소비</td><td class="num">+28.0%</td><td>비중 12.8%</td></tr>
+      <tr><td>중국인 쇼핑·소매 · 식음료 · 문화·레저</td><td class="num">−13.9% · +1.9% · −2.9%</td><td>쇼핑·소매 비중 70.1%. 직전 비중 1% 미만인 기타·교통은 증가율 제외</td></tr>
+      <tr><td>가장 빨리 는 국적</td><td class="num">대만 +61.3%</td><td>비중 9.2%, 2024-08~2025-07 vs 직전 12개월</td></tr>
+      <tr><td>주말 하루 소비 ÷ 평일 하루</td><td class="num">중국인 1.07배 · 내국인 1.09배</td><td>가장 많은 요일 토요일 · 일요일. 2017-09~2017-11 자료</td></tr>
+    </tbody>
+  </table>
+  <table class="compact">
+    <thead><tr><th class="c" style="width:7%">규칙</th><th>제안 (화면 문구)</th><th style="width:36%">근거 (기준)</th></tr></thead>
+    <tbody>
+      <tr><td class="c">R02</td><td>중국인 숙박 소비가 늘고 있어요. 숙박과 묶은 체험·식사 상품을 검토해 보세요.</td><td>중국인 숙박 소비 증가율 +28.0% (≥ +10.0%)</td></tr>
+      <tr><td class="c">R06</td><td>대만 방문객이 빠르게 늘고 있어요. 대만 방문객용 안내물과 결제수단을 먼저 점검해 보세요.</td><td>대만 방문자 성장률 +61.3% (≥ +20.0%), 비중 9.2% (≥ 3.0%)</td></tr>
+    </tbody>
+  </table>
+  <p class="small">C 유형에 적용되는 규칙 가운데 2개가 조건을 충족했다. 중국인 카드 자료는 제주 전체 단위라 "서귀포시 읍면 지역 대신 제주 전체 값을 썼다"고 한계에 밝힌다.</p>
+
+  <h4>3단계 · 국내선 공급이 10% 줄면 2025-08 입도객은 약 21.8만 명 줄어드는 것으로 계산된다</h4>
+  <table class="compact">
+    <thead><tr><th>가정 (국내선 공급 −10%)</th><th class="num">ε 0.5</th><th class="num">ε 1.0 (기본)</th><th class="num">ε 1.5</th></tr></thead>
+    <tbody>
+      <tr><td>2025-08 입도객 (기준선 2024-08 실적 2,175,946명)</td><td class="num">2,067,149명</td><td class="num">1,958,351명</td><td class="num">1,849,554명</td></tr>
+    </tbody>
+  </table>
+  <ul class="small">
+    <li>개별여행 입도객은 1,013,067명에서 911,760명으로 계산된다 (ε 1.0).</li>
+    <li>표선면을 지나는 노선 4개 가운데 관광 수요와 뚜렷하게 함께 움직인 노선(R² ≥ 0.5)은 없었다.</li>
+    <li>거점에서 오는 코스 3개: 제주국제공항 → 112번(도로 41.9km), 제주버스터미널 → 121번(39.5km), 서귀포버스터미널 → 101번(34.3km). 제주항 여객터미널은 직행·환승 1회로 닿지 않아 접근성 공백으로 표시했다.</li>
+  </ul>
+  <div class="grid2">
+    <figure>
+      <img src="img/15_stage2.jpg" alt="표선면 2단계">
+      <figcaption><b>그림 4. 표선면 2단계.</b> 타깃과 제안, 규칙 번호와 근거 지표.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/21_report_course_map.jpg" alt="제안서의 코스 지도">
+      <figcaption><b>그림 5. 최종 제안서의 코스 지도.</b> 네이버 Static Map 위에 코스와 거점을 그렸다. 시간은 조회 시각의 자동차 기준이다.</figcaption>
+    </figure>
+  </div>
+
+  <h3>4.3 처리 시간</h3>
+  <table class="compact">
+    <thead><tr><th style="width:44%">실행</th><th>걸린 시간</th></tr></thead>
+    <tbody>
+      <tr><td>기본 모드, 질문 하나 (골든셋 60문항 평균)</td><td>0.07초 (1단계 0.06 · 2단계 0.08 · 3단계 0.04)</td></tr>
+      <tr><td>기본 모드, 세 단계 연계 (골든셋 연계 5문항 평균)</td><td>0.19초</td></tr>
+      <tr><td>Claude 설명, 질문 하나 (2026-11-13 실제 호출 5문항)</td><td>2.3~8.7초</td></tr>
+      <tr><td>Claude 설명, 표선면 세 단계 연계 (2026-11-18 시연 서버)</td><td>약 7.6초</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ 5. 검증 -->
+<section class="chapter">
+  <h2><span class="no">5</span>검증 방법 · 한계</h2>
+
+  <h3>5.1 답마다 하는 자동 검증</h3>
+  <p>모든 답은 화면에 나가기 전에 아래 항목을 검사한다. 검증 결과는 답마다 펼쳐 볼 수 있다.</p>
+  <table class="compact">
+    <thead><tr><th style="width:18%">검사</th><th style="width:30%">막는 문제</th><th>방법</th></tr></thead>
+    <tbody>
+      <tr><td>숫자 대조</td><td>설명 속 숫자와 근거 불일치</td><td>문장의 모든 숫자를 지표·근거표 값과 대조 (반올림 허용, "10만 493명"처럼 나눠 쓴 수는 합쳐서 대조)</td></tr>
+      <tr><td>숫자-지표 짝</td><td>맞는 숫자를 다른 지표의 값처럼 씀</td><td>숫자가 가리키는 지표의 낱말이 같은 문장에 있어야 한다</td></tr>
+      <tr><td>인과 표현</td><td>"관광객 때문에 청년이 떠났다"</td><td>때문·원인·탓·초래 등을 찾아낸다. 원인 질문은 정해진 문장으로만 답한다</td></tr>
+      <tr><td>예측 · 추측</td><td>"올 거예요", "가능성이 있어요"</td><td>단정적 예측과 추측 표현 차단 (가정을 밝힌 시나리오 문장은 허용)</td></tr>
+      <tr><td>참조 대조</td><td>없는 노선 · 읍면동</td><td>노선 번호와 지명을 참조표·근거와 대조</td></tr>
+      <tr><td>제안 근거</td><td>근거 없는 제안</td><td>제안은 규칙에서만 나오고 규칙 ID와 근거 지표가 있어야 한다</td></tr>
+      <tr><td>기간 확인</td><td>기간이 다른 자료 섞기</td><td>함께 쓴 지표의 기간이 겹치는지 확인</td></tr>
+      <tr><td>반출 등급</td><td>원자료 · 소집단 노출</td><td>집계 지표만 내보내고 식별 컬럼 금지, 센터 모드는 최소 셀 미만 가림</td></tr>
+      <tr><td>초안 충실도 · 형식 <span class="muted">(Claude)</span></td><td>숫자를 다른 대상에 붙임, 근거 없는 최상급, 배율 방향 뒤집기, 지시문 되받아 쓰기</td><td>초안에서 그 숫자와 함께 쓰인 대상만 허용. 480자를 넘거나 결론만 되풀이하면 다시 쓰거나 규칙 문장으로 대체</td></tr>
+    </tbody>
+  </table>
+  <p class="small">설명이 검사에서 떨어지면 고칠 점을 알려 최대 2회 다시 쓰게 하고, 그래도 떨어지거나 45초를 넘기면 숫자만 담은 규칙 문장으로 바꾼다. 숫자 자체는 SQL이 만들어 바뀌지 않는다.</p>
+
+  <h3>5.2 골든셋 60문항</h3>
+  <p>질문과 정답을 미리 정한 평가 세트다. 정답(기대값)은 에이전트의 SQL과 <strong>다른 경로</strong>(pandas로 원본을 직접 계산)로 만들어, 같은 실수가 정답에 섞이지 않게 했다.</p>
+  <table class="compact">
+    <thead><tr><th>구분</th><th class="num">문항</th><th class="num">정답</th><th class="num">정확도</th><th class="num">목표</th><th class="num">평균 응답</th></tr></thead>
+    <tbody>
+      <tr><td>1단계</td><td class="num">20</td><td class="num">20</td><td class="num">100%</td><td class="num">95%</td><td class="num">0.06초</td></tr>
+      <tr><td>2단계</td><td class="num">15</td><td class="num">15</td><td class="num">100%</td><td class="num">90%</td><td class="num">0.08초</td></tr>
+      <tr><td>3단계</td><td class="num">15</td><td class="num">15</td><td class="num">100%</td><td class="num">90%</td><td class="num">0.04초</td></tr>
+      <tr><td>연계 (1→2→3)</td><td class="num">5</td><td class="num">5</td><td class="num">100%</td><td class="num">80%</td><td class="num">0.19초</td></tr>
+      <tr><td>인과 함정 (원인 단정 유도)</td><td class="num">5</td><td class="num">5</td><td class="num">100%</td><td class="num">100%</td><td class="num">0.05초</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">2026-11-18 실행, 샘플 데이터 · 기본 모드 (<code>python -m eval</code>). 같은 시드면 누구나 같은 결과를 다시 만들 수 있다.</p>
+
+  <h3>5.3 자동 테스트와 실제 호출 확인</h3>
+  <table class="compact">
+    <thead><tr><th style="width:30%">항목</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>백엔드 테스트 (pytest)</td><td>274개 통과. 해석기, 도구 SQL, 검증기(맞는 문장은 통과·틀린 문장은 차단), 데이터 적재(실데이터 파일·내보낸 표), 웹 API, 배포 파일(이미지에 비밀값·원자료가 없는지, 포트가 이 PC 안에서만 열리는지), 지도(가짜 전송 계층)</td></tr>
+      <tr><td>화면 테스트 (Vitest)</td><td>84개 통과. 숫자 표기, 스트림 풀기, 확인 카드·연계 실행·멈추기 흐름, 답·근거표·차트·지도 그리기, 연결 실패 안내</td></tr>
+      <tr><td>Claude 실제 호출 (2026-11-13)</td><td>5문항(1·2·3단계, 줄여 쓴 지명, 자유 질문) 모두 해석·수치 정답, 설명 5건 모두 첫 시도에 검증 통과 (검증기가 맞는 문장을 떨어뜨리던 낱말 문제를 고친 뒤)</td></tr>
+      <tr><td>시연 서버 확인 (2026-11-18~19)</td><td>실데이터 · Claude 모드에서 표선면 세 단계 모두 검증 통과. 공개 주소에서 지도·경로·제안서 동작 확인</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.4 외부 검수와 반영</h3>
+  <p>2026-11-17에 웹 서비스 검수 리포트(<code>docs/</code>에 포함)를 받고, 제출 전에 고칠 항목을 반영했다.</p>
+  <table class="compact">
+    <thead><tr><th style="width:44%">지적</th><th>반영</th></tr></thead>
+    <tbody>
+      <tr><td>한 사람이 모드를 바꾸면 모든 접속자에게 적용됨</td><td>배포본은 모드를 고정(<code>MEOMUL_LOCK_MODES</code>)하고 화면은 읽기 전용으로 표시</td></tr>
+      <tr><td>공개 주소에 API 문서가 열려 있고 누구나 Claude 호출 가능</td><td>API 문서 닫기(<code>MEOMUL_API_DOCS=false</code>). Claude는 전송에 동의한 세션만, 분석은 한 번에 하나</td></tr>
+      <tr><td>귤색 단추의 흰 글자 대비 2.05:1</td><td>글자를 진한 갈색으로 바꿔 대비를 높임</td></tr>
+      <tr><td>여러 사람이 동시에 물으면 이유 없이 기다림</td><td>진행 목록에 대기 표시, 멈추기 단추</td></tr>
+      <tr><td>설명 문단에 숫자가 6~8개</td><td>핵심 숫자 3개를 카드로 빼고 설명은 짧게</td></tr>
+      <tr><td>'LLM 모드', 'Stage' 같은 낯선 용어 · 연결 실패 문구의 개발 명령어</td><td>'AI 설명', '1단계' 등으로 바꾸고, 연결 실패는 일반 문장으로</td></tr>
+      <tr><td>핵심 동작(동네 고르기 → 처음부터 끝까지)이 첫 화면 아래에 있음</td><td>인사말 옆으로 올림</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">"심사용 배포는 AI 없이 고정"이라는 권고는 따르지 않았다. 대신 Claude를 쓰되 전송 미리보기·동의, 검증, 한 번에 하나 실행으로 위험을 관리한다.</p>
+
+  <h3>5.5 한계</h3>
+  <table class="compact">
+    <thead><tr><th style="width:14%">구분</th><th>한계와 대응</th></tr></thead>
+    <tbody>
+      <tr><td>데이터</td><td>
+        유동인구는 통신 데이터 추정치이고, 허브 쿼터 때문에 달마다 며칠만 받아 하루 평균으로 계산한다.
+        중국인 카드(1048)는 제주 전체 단위라 2단계가 읍면동 차이를 반영하지 못한다 (센터 카드 v02로 풀 수 있다, 6장).
+        요일별 카드와 단체/개별 소비는 2016~2017 자료뿐이라 기간을 함께 적는다.
+        버스 노선 참조표는 샘플이라 3단계의 코스와 노선 민감도는 방법을 보여 주는 수준이다. 좌표와 지구 연결은 잠정값이다.
+      </td></tr>
+      <tr><td>방법</td><td>
+        상관만 보고 인과를 단정하지 않는다. 시나리오는 예측이 아니라 가정(감편률·탄력성)에 따른 계산이다.
+        유형 경계(τ = 3%) 근처의 동네는 기준값에 따라 유형이 바뀔 수 있어, 유지형에는 가장 가까운 유형을 함께 보여 준다.
+        노선이 적은 동네는 관광 민감 노선이 없게 나올 수 있다 (표선면 4개 중 0개).
+      </td></tr>
+      <tr><td>AI</td><td>
+        검증기는 숫자가 없는 문장의 뜻 바뀜과 최상급 낱말 없이 덧붙인 평가까지는 잡지 못한다.
+        골든셋 전체를 Claude 모드로 돌리지는 않았다 (요금). 목록이 들어가는 답은 Claude 모드에서도 규칙 문장을 쓴다.
+      </td></tr>
+      <tr><td>운영</td><td>
+        로그인 기능이 없고 분석은 한 번에 하나다. 대화 맥락은 서버 메모리에만 있다.
+        센터 모드는 명세서로만 만들었고 실제 추출본으로 검증하지 않았다. 센터용 설치 스크립트가 아직 없다.
+      </td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ 6. 센터 활용 -->
+<section class="chapter">
+  <h2><span class="no">6</span>센터 활용 방안</h2>
+
+  <h3>6.1 센터에 탑재하면 달라지는 것</h3>
+  <p>공개 데이터만으로도 동작하지만, 센터 PC에 탑재하면 센터 전용 데이터로 같은 질문에 더 정밀하게 답한다. 이 차이가 센터에 상시 탑재할 이유가 된다.</p>
+  <table class="compact">
+    <thead><tr><th style="width:16%">항목</th><th style="width:38%">공개 모드 (허브 데이터, 지금)</th><th>센터 모드 (센터 데이터)</th></tr></thead>
+    <tbody>
+      <tr><td>청년 인구</td><td>읍면동 × 일 × 연령대 (달마다 며칠)</td><td>매일 · 시간대 (4-11 유동인구 v02), 50m 격자 (4-07)</td></tr>
+      <tr><td>외국인 소비</td><td>중국인 카드 제주 전체 × 테마, 요일은 5개 지구 (2016~2017)</td><td>읍면동 × 업종 42개 × 내국인/중국인, 2023-08~현재 (1-08 카드 v02) — 지금 가장 큰 한계를 푼다</td></tr>
+      <tr><td>버스</td><td>노선 × 일, 노선 참조표는 샘플</td><td>정류소 · 시간대 · 이용자 구분 (3-02·3-04), 노선·정류소 정보(3-01·3-03)로 경유 읍면동 재작성</td></tr>
+      <tr><td>결과 반출</td><td>해당 없음</td><td>반출 규칙(최소 셀 5, 식별 컬럼 금지)을 통과한 집계표만 반출 신청</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.2 탑재 방법</h3>
+  <ul>
+    <li>인터넷 없이 기본 모드로 돈다. 화면은 미리 빌드한 <code>frontend/dist</code>를 옮기고, Python 3.11과 PostgreSQL만 있으면 된다. GPU는 쓰지 않는다.</li>
+    <li>센터 추출본을 <code>backend/data/center/</code>에 넣고 <code>build-data --mode center</code>를 실행하면 같은 표준 테이블로 적재되고, 센터 자료가 없는 표는 허브 자료로 채운다.</li>
+    <li>새 테이블은 설명 파일(YAML) 한 장, 제안 규칙은 <code>playbook.yaml</code>, 기준값은 <code>settings.yaml</code>을 고쳐 반영한다. 개발자 없이 센터 담당자가 관리할 수 있다.</li>
+  </ul>
+
+  <h3>6.3 운영 시나리오</h3>
+  <table class="compact">
+    <thead><tr><th style="width:22%">시나리오</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>도민 셀프 분석</td><td>센터를 찾은 도민·소상공인·예비창업자가 "우리 동네" 진단과 최종 제안서를 센터 PC에서 직접 받는다</td></tr>
+      <tr><td>컨설팅 · 분석 지원 보조</td><td>센터 담당자가 최종 제안서를 컨설팅 초안으로 써서 지원 건수를 늘린다</td></tr>
+      <tr><td>행정 과제 연계</td><td>도 데이터기반행정 과제(생활인구 지표, 대중교통 노선체계, 제주 경제 변화)에 1단계 유형과 3단계 노선·접근성 결과를 제공한다</td></tr>
+      <tr><td>관광 · 교통 기획</td><td>감편 같은 변수에 따른 수요 변화와 접근성 공백을 증편·코스 상품 기획의 출발점으로 쓴다</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.4 탑재 전에 할 일</h3>
+  <ol>
+    <li>센터용 설치·실행 스크립트(<code>install.bat</code>, <code>run.bat</code>)와 오프라인 설치 꾸러미</li>
+    <li>실제 센터 추출본으로 유동인구 v02 · 버스 노선별 이용 변환식 검증</li>
+    <li>카드 v02(읍면동 × 업종 42개) 연결로 2단계를 읍면동 단위로</li>
+    <li>버스 노선·정류소 정보로 노선 참조표를 다시 만들어 3단계 코스를 실제 경유 기준으로</li>
+    <li>제안 규칙 12개의 문구와 기준값을 센터 담당자와 검토, 반출 신청 패키지 생성</li>
+  </ol>
+
+  <div class="note">
+    머물멍은 인과를 단정하지 않고, 함께 움직이는 지표와 확인할 외부 요인을 보여 준 뒤 판단은 사람에게 남긴다.
+    사람이 머무는 동네를 데이터로 함께 찾는 것, 머물멍이 제주빅데이터센터에서 하려는 일이다.
+  </div>
+
+  <div class="source-note">
+    출처: 제주특별자치도, 제주데이터허브(jejudatahub.net). 본 자료는 제주빅데이터센터에서 제공하는 자료를 활용한 것이며,
+    연구결과는 제주특별자치도 및 제주테크노파크와 관련이 없음을 밝힙니다.
+  </div>
+</section>
+
+</body>
+</html>

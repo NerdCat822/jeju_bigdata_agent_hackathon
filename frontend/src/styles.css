@@ -1195,6 +1195,8 @@ a {
 
 .evidence {
   display: grid;
+  /* 펼친 SQL 의 긴 줄이 칸을 넓혀 표의 오른쪽 열을 밀어내지 않게 칸 너비를 상자에 맞춰요 (SQL 은 그 안에서 가로로 스크롤) */
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   min-width: 0;
 }

@@ -1,0 +1,624 @@
+/* 머물멍 AI Agent 기획서 (A4 고정 쪽). docs/submission/make_pdf.py 가 PDF 로 바꿔요. */
+
+@font-face {
+  font-family: "Pretendard Variable";
+  src: url("../../frontend/node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2") format("woff2-variations");
+  font-weight: 45 920;
+  font-display: block;
+}
+
+:root {
+  --ink: #2b2622;
+  --ink-2: #5a4f47;
+  --ink-3: #8c8078;
+  --line: #e6ddd3;
+  --line-2: #d9cfc4;
+  --beige: #f6f1ea;
+  --cream: #fffaf3;
+  --orange: #f08a12;
+  --orange-ink: #c86a06;
+  --red: #c8401a;
+  --dark: #3b3029;
+  --green: #2c7a4b;
+  --mono: "JetBrains Mono", "D2Coding", "Consolas", "DejaVu Sans Mono", monospace;
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: "Pretendard Variable", Pretendard, "Noto Sans KR", "NanumGothic", sans-serif;
+  color: var(--ink);
+  font-size: 9.3pt;
+  line-height: 1.6;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-variant-numeric: tabular-nums;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+}
+
+.page {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  padding: 17mm 17mm 16mm;
+  overflow: hidden;
+  page-break-after: always;
+  break-after: page;
+  background: #fff;
+}
+
+.page:last-child {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+.foot {
+  position: absolute;
+  left: 17mm;
+  right: 17mm;
+  bottom: 8mm;
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-3);
+  font-size: 7.2pt;
+}
+
+/* ---------------------------------------------------------------- 표지 */
+.page.cover {
+  background: var(--cream);
+  padding: 22mm 21mm 16mm;
+}
+
+.cover .kicker {
+  font-size: 9.6pt;
+  color: var(--ink-2);
+}
+
+.cover .kicker b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.cover .hero {
+  position: relative;
+  width: 112mm;
+  height: 112mm;
+  margin: 22mm auto 0;
+  border-radius: 50%;
+  background: #fde9d3;
+}
+
+.cover .hero img {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 66mm;
+  transform: translate(-50%, -50%);
+}
+
+.cover .bubble {
+  position: absolute;
+  right: -2mm;
+  top: 30mm;
+  padding: 2.4mm 4.2mm;
+  border: 0.5mm solid var(--ink);
+  border-radius: 6mm;
+  background: #fff;
+  font-size: 11pt;
+  font-weight: 700;
+}
+
+.cover .bubble::before {
+  content: "";
+  position: absolute;
+  left: -2.6mm;
+  top: 50%;
+  width: 3.4mm;
+  height: 3.4mm;
+  border-left: 0.5mm solid var(--ink);
+  border-bottom: 0.5mm solid var(--ink);
+  background: #fff;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.cover h1 {
+  margin: 26mm 0 0;
+  font-size: 40pt;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.cover h1 span {
+  color: var(--orange);
+}
+
+.cover .tagline {
+  margin-top: 3.5mm;
+  font-size: 15pt;
+  font-weight: 700;
+}
+
+.cover .desc {
+  margin-top: 4mm;
+  color: var(--ink-2);
+  font-size: 10.5pt;
+  line-height: 1.7;
+}
+
+.cover .meta {
+  position: absolute;
+  left: 21mm;
+  right: 21mm;
+  bottom: 22mm;
+  display: flex;
+  justify-content: space-between;
+  gap: 6mm;
+  padding-top: 5mm;
+  white-space: nowrap;
+  border-top: 0.3mm solid var(--line-2);
+  font-size: 9pt;
+}
+
+.cover .meta .k {
+  color: var(--ink-3);
+  font-size: 8.2pt;
+}
+
+/* ---------------------------------------------------------------- 머리 · 절 */
+.sec {
+  display: flex;
+  align-items: baseline;
+  gap: 3mm;
+  margin: 0 0 5mm;
+  padding-bottom: 3.2mm;
+  border-bottom: 0.6mm solid var(--ink);
+}
+
+.sec .num {
+  color: var(--orange-ink);
+  font-size: 13pt;
+  font-weight: 700;
+}
+
+.sec h1 {
+  margin: 0;
+  font-size: 19pt;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+.sec .en {
+  margin-left: auto;
+  color: var(--ink-3);
+  font-size: 7.6pt;
+  letter-spacing: 0.14em;
+}
+
+h2 {
+  margin: 5.5mm 0 2.4mm;
+  font-size: 12pt;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+h2:first-child,
+.sec + h2 {
+  margin-top: 0;
+}
+
+h2 .n {
+  margin-right: 1.5mm;
+  color: var(--orange-ink);
+}
+
+h3 {
+  margin: 3.5mm 0 1.6mm;
+  font-size: 9.8pt;
+  font-weight: 700;
+}
+
+p {
+  margin: 0 0 2.2mm;
+}
+
+.lead {
+  font-size: 10pt;
+  line-height: 1.7;
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.small {
+  font-size: 8.2pt;
+  line-height: 1.55;
+}
+
+ul,
+ol {
+  margin: 0 0 2.4mm;
+  padding-left: 5mm;
+}
+
+li {
+  margin: 0.4mm 0;
+}
+
+strong,
+b {
+  font-weight: 700;
+}
+
+code {
+  padding: 0 0.8mm;
+  border-radius: 0.8mm;
+  background: var(--beige);
+  font-family: var(--mono);
+  font-size: 0.88em;
+}
+
+/* ---------------------------------------------------------------- 표 */
+table {
+  width: 100%;
+  margin: 1.5mm 0 3.6mm;
+  border-collapse: collapse;
+  font-size: 8.5pt;
+  line-height: 1.5;
+}
+
+th,
+td {
+  padding: 1.6mm 2.2mm;
+  border-bottom: 0.25mm solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  background: var(--beige);
+  border-bottom: 0.3mm solid var(--line-2);
+  font-weight: 700;
+}
+
+tbody td:first-child {
+  font-weight: 700;
+}
+
+table.plain tbody td:first-child {
+  font-weight: 400;
+}
+
+td.num,
+th.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+td.c,
+th.c {
+  text-align: center;
+}
+
+table.tight th,
+table.tight td {
+  padding: 1.15mm 2mm;
+  font-size: 8.1pt;
+}
+
+tr.hl td {
+  background: #fff4e6;
+}
+
+.ok {
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------- 상자 */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3.4mm;
+  margin: 1.5mm 0 3.6mm;
+}
+
+.kpi {
+  padding: 3.6mm 4mm;
+  border-radius: 2.4mm;
+  background: var(--beige);
+}
+
+.kpi .v {
+  color: var(--red);
+  font-size: 16.5pt;
+  line-height: 1.15;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.kpi .l {
+  margin-top: 1.4mm;
+  color: var(--ink-2);
+  font-size: 8.2pt;
+  line-height: 1.45;
+}
+
+.stages {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3.4mm;
+}
+
+.stage {
+  padding: 4mm 4mm 3.6mm;
+  border: 0.3mm solid var(--line-2);
+  border-radius: 3mm;
+  background: #fff;
+}
+
+.stage img {
+  height: 16mm;
+}
+
+.stage .s {
+  margin-top: 2.4mm;
+  color: var(--orange-ink);
+  font-size: 7.8pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.stage .t {
+  margin-top: 0.6mm;
+  font-size: 12pt;
+  font-weight: 750;
+}
+
+.stage .q {
+  margin-top: 1.2mm;
+  color: var(--ink-2);
+  font-size: 9pt;
+  line-height: 1.5;
+}
+
+.stage .k {
+  margin-top: 2.4mm;
+  color: var(--ink-3);
+  font-size: 7.8pt;
+  font-weight: 700;
+}
+
+.stage .d {
+  font-size: 8.4pt;
+  line-height: 1.5;
+}
+
+.arrows {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  color: var(--ink-3);
+  text-align: center;
+  font-size: 10pt;
+  line-height: 1.4;
+}
+
+.darkbar {
+  padding: 3.6mm 5mm;
+  border-radius: 2.6mm;
+  background: var(--dark);
+  color: #fff;
+  font-size: 10pt;
+  line-height: 1.6;
+}
+
+.darkbar b {
+  color: #ffb24d;
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3.4mm;
+  margin-top: 3mm;
+}
+
+.chip {
+  padding: 2mm 3mm;
+  border: 0.3mm solid var(--line-2);
+  border-radius: 6mm;
+  text-align: center;
+  font-size: 8.6pt;
+}
+
+.status {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2.6mm;
+  margin-top: 3.6mm;
+}
+
+.status div {
+  padding: 2.4mm 3mm;
+  border-left: 1mm solid var(--orange);
+  background: #fff8ef;
+  font-size: 8.1pt;
+  line-height: 1.45;
+}
+
+.status b {
+  display: block;
+  font-size: 10.5pt;
+}
+
+.note {
+  margin: 2mm 0 3mm;
+  padding: 2.6mm 3.6mm;
+  border-radius: 2mm;
+  background: var(--beige);
+  font-size: 8.6pt;
+  line-height: 1.6;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3mm 5mm;
+}
+
+.flow {
+  display: flex;
+  align-items: stretch;
+  gap: 1.4mm;
+  margin: 1.5mm 0 1mm;
+}
+
+.flow .box {
+  flex: 1;
+  padding: 2.4mm 1.6mm;
+  border: 0.3mm solid var(--line-2);
+  border-radius: 2.2mm;
+  text-align: center;
+  font-size: 8pt;
+  line-height: 1.4;
+}
+
+.flow .box b {
+  display: block;
+  font-size: 9.4pt;
+}
+
+.flow .box.hl {
+  border-color: #eab06b;
+  background: #fff1df;
+}
+
+.flow .sep {
+  align-self: center;
+  color: var(--ink-3);
+  font-size: 10pt;
+}
+
+.cards3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3mm;
+  margin: 2.4mm 0 2.6mm;
+}
+
+.cards3 div {
+  padding: 2.6mm 3.2mm;
+  border-radius: 2mm;
+  background: var(--beige);
+  font-size: 8.4pt;
+  line-height: 1.5;
+}
+
+.cards3 b {
+  display: block;
+  margin-bottom: 0.6mm;
+  font-size: 9.2pt;
+}
+
+.ux {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6mm 6mm;
+  margin: 1mm 0 2mm;
+  padding: 0;
+  list-style: none;
+}
+
+.ux li {
+  position: relative;
+  padding-left: 3.6mm;
+  font-size: 8.8pt;
+  line-height: 1.55;
+}
+
+.ux li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2mm;
+  width: 1.4mm;
+  height: 1.4mm;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
+figure {
+  margin: 1.5mm 0 3mm;
+}
+
+figure img {
+  display: block;
+  width: 100%;
+  border: 0.3mm solid var(--line-2);
+  border-radius: 2.4mm;
+}
+
+figure.shadow img {
+  box-shadow: 0 1.2mm 3.6mm rgba(59, 48, 41, 0.16);
+}
+
+figcaption {
+  margin-top: 1.4mm;
+  color: var(--ink-3);
+  font-size: 7.9pt;
+  line-height: 1.5;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0 1.4mm;
+  border-radius: 1mm;
+  background: var(--beige);
+  font-size: 7.8pt;
+  font-weight: 700;
+}
+
+.tag.a { background: #e6f4ea; color: #1f6b3d; }
+.tag.b { background: #e8f0fd; color: #1f4fa3; }
+.tag.c { background: #fde8e4; color: #a33a22; }
+.tag.d { background: #fff0d6; color: #8a5300; }
+
+.closing {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+  margin-top: 5mm;
+  padding: 5mm 6mm;
+  border: 0.3mm solid var(--line-2);
+  border-radius: 3mm;
+}
+
+.closing img {
+  height: 18mm;
+}
+
+.closing b {
+  display: block;
+  font-size: 11.5pt;
+}
+
+.src {
+  margin-top: 2mm;
+  color: var(--ink-3);
+  font-size: 7.6pt;
+  line-height: 1.5;
+}

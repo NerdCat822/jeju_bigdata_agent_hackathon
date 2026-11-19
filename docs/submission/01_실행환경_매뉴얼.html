@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>머물멍 실행환경 · 매뉴얼</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============================================================ 표지 -->
+<section class="cover">
+  <div class="kicker">제주 AI·빅데이터 활용 AI Agent 개발 챌린지 · 최종 결과물</div>
+  <div class="brand">
+    <img src="../../frontend/src/assets/mascot-hello.png" alt="">
+    <div>
+      <h1>머물멍 실행환경 · 매뉴얼</h1>
+      <div class="sub">제주 읍면동 활력 3단계 AI 에이전트 (Jeju Town Vitality Agent)</div>
+    </div>
+  </div>
+  <p class="lead">
+    머물멍을 설치하고 실행하는 방법과 화면 사용법을 정리한 문서다. Docker 명령 한 줄이면 인터넷과 API 키 없이도
+    같은 화면과 같은 답을 재현할 수 있다. 실데이터·Claude·네이버 지도는 필요할 때 환경변수로 켠다.
+    어디서 막힐 수 있는지와 지금의 제약도 함께 밝힌다.
+  </p>
+  <div class="map">
+    <table>
+      <thead><tr><th style="width:30%">제출 항목</th><th>이 문서에서 찾을 곳</th></tr></thead>
+      <tbody>
+        <tr><td>README</td><td>1장 개요 · 저장소의 <code>README.md</code>, <code>backend/README.md</code>, <code>frontend/README.md</code></td></tr>
+        <tr><td>설치 · 실행 절차</td><td>3장 (Docker, 직접 실행, 실데이터·Claude·네이버 지도 켜기, 센터 PC)</td></tr>
+        <tr><td>의존성 목록</td><td>4장 (백엔드·화면 라이브러리와 버전·라이선스, 실행 이미지, 외부 서비스)</td></tr>
+        <tr><td>환경변수 예시</td><td>5장 · 저장소 맨 위의 <code>.env.example</code>, API 키 발급·설정 방법(5.3절), 평가용 키(부록)</td></tr>
+        <tr><td>사용자 매뉴얼</td><td>6장 (화면 순서대로, 화면 사진 18장)</td></tr>
+        <tr><td>오류 · 제약사항</td><td>7장</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="meta">
+    작성 2026-11-19 · 저장소 <code>main</code> 브랜치 기준<br>
+    화면 사진은 2026-11-19 시연 서버(데이터: 제주데이터허브 실데이터, AI 설명: Claude Opus 5.5)에서 찍었다.<br>
+    출처: 제주특별자치도, 제주데이터허브 · 제주빅데이터센터 제공 자료 포함
+  </div>
+</section>
+
+<!-- ============================================================ 1. 개요 -->
+<section class="chapter">
+  <h2><span class="no">1</span>개요</h2>
+
+  <h3>1.1 머물멍이 하는 일</h3>
+  <p>
+    제주 43개 읍면동 가운데 하나를 고르면 <strong>청년이 머무는지 → 빈자리를 누가 채우는지 → 그 사람들을 어떻게 오게 할지</strong>를
+    차례로 진단하고, 근거표·SQL·한계가 붙은 최종 제안서까지 만든다. 숫자는 SQL이, 제안 후보는 설정 파일의 규칙이 만들고,
+    AI(Claude)는 질문 해석과 쉬운 설명만 맡는다. AI가 쓴 문장은 자동 검증을 통과해야 화면에 나온다.
+  </p>
+  <table>
+    <thead><tr><th style="width:24%">단계</th><th style="width:38%">답하는 질문</th><th>내놓는 것</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1단계</strong> 청년이 머무는 동네</td><td>어디서 청년이 빠지고, 어디는 버티는가</td><td>읍면동 활력 유형(A~D·유지), 비슷한 읍면 3곳, 추천 순위</td></tr>
+      <tr><td><strong>2단계</strong> 빈자리를 누가 채우나</td><td>빈자리를 채우는 소비는 어디에, 언제, 무엇에 오는가</td><td>타깃 관광객, 테마·요일·국적 분석, 규칙이 만든 제안 후보</td></tr>
+      <tr><td><strong>3단계</strong> 어떻게 오게 하나</td><td>항공편이 줄면 수요는 어떻게 변하고, 어떤 노선으로 오는가</td><td>수요 시나리오, 관광에 민감한 노선, 거점에서 오는 코스</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.2 실행 방법 세 가지</h3>
+  <table>
+    <thead><tr><th style="width:20%">방법</th><th style="width:25%">이럴 때</th><th style="width:35%">필요한 것</th><th>여는 주소</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td><strong>① Docker</strong> (권장)</td><td>심사·시연, 처음 써 볼 때</td><td>Docker Engine, Docker Compose 2.24 이상</td><td class="nw">http://localhost:3000</td></tr>
+      <tr><td><strong>② 직접 실행</strong></td><td>개발, Docker를 쓰지 않을 때</td><td>Python 3.11 이상, PostgreSQL, Node 20.19 이상(화면 빌드)</td><td class="nw">http://127.0.0.1:8501</td></tr>
+      <tr><td><strong>③ 센터 PC</strong></td><td>인터넷이 없는 제주빅데이터센터 분석실</td><td>Python 3.11, PostgreSQL, 미리 빌드한 화면(<code>frontend/dist</code>)</td><td class="nw">http://127.0.0.1:8501</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.3 동작 모드</h3>
+  <table>
+    <thead><tr><th style="width:16%">구분</th><th style="width:20%">모드</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="3">데이터</td><td>샘플 데이터 <span class="muted">(synthetic, 기본)</span></td><td>시드를 고정한 합성 데이터. 처음 실행할 때 자동으로 만들어져 누구나 같은 값을 재현한다. 화면에 "샘플 데이터" 배지가 붙는다.</td></tr>
+      <tr><td>실데이터 <span class="muted">(hub)</span></td><td>제주데이터허브 Open API·파일로 받은 자료. 각자 허브 프로젝트 키로 받아 적재한다 (3.4절).</td></tr>
+      <tr><td>센터 데이터 <span class="muted">(center)</span></td><td>제주빅데이터센터 추출본. 센터 PC 안에서만 쓴다. 센터 자료가 없는 표는 허브 자료로 채운다.</td></tr>
+      <tr><td rowspan="2">AI 설명</td><td>기본 <span class="muted">(template, 기본)</span></td><td>규칙이 만든 문장으로 설명한다. 밖으로 보내는 것이 없고, 같은 질문에 항상 같은 답을 낸다. 인터넷이 없는 센터 PC에서도 돈다.</td></tr>
+      <tr><td>Claude <span class="muted">(anthropic, 선택)</span></td><td>Claude Opus 5.5가 질문 해석과 쉬운 설명을 맡는다. 동네별 집계 지표만 보내며, 보낼 내용을 미리 보여 주고 동의를 받은 뒤에만 보낸다.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.4 저장소 구성</h3>
+<pre><code>.
+├─ backend/                에이전트 코어와 웹 API (Python · FastAPI · PostgreSQL)
+│  ├─ config/              settings.yaml(분석 기준값) · playbook.yaml(제안 규칙 12개) · catalog/*.yaml(테이블 설명 8장)
+│  ├─ data/ref/            참조표 CSV (읍면동 43곳, 지구, 테마, 거점, 노선, 방문목적, 국적)
+│  ├─ meomulmeong/         에이전트(해석·계획·검증·해설), 도구(SQL), 데이터 적재, 웹 API, 제안서
+│  │  └─ agent/prompts/    Claude에 주는 프롬프트 4종 (질문 해석 · 설명 · 자유 질문 설명 · SQL 작성)
+│  ├─ eval/                골든셋 60문항과 기대값 계산
+│  └─ tests/               자동 테스트 274개
+├─ frontend/               웹 화면 (React · TypeScript, 테스트 84개)
+├─ docs/                   기획서 · 대회 안내문 · 검수 리포트 · 제출 문서(이 문서)
+├─ Dockerfile · docker-compose.yml · docker-compose.shared.yml
+└─ .env.example            환경변수 예시 (복사해서 .env 로 씀)</code></pre>
+  <p class="small muted">
+    원자료(허브 수집본·센터 추출본), 그 CSV 내보내기, API 키가 든 <code>.env</code>는 저장소에 넣지 않는다.
+    README는 세 개다. 저장소 <code>README.md</code>는 전체 요약, <code>backend/README.md</code>는 구조·도구·안전장치·웹 API·평가,
+    <code>frontend/README.md</code>는 화면 구성과 차트·지도 기준을 다룬다.
+  </p>
+</section>
+
+<!-- ============================================================ 2. 실행 환경 -->
+<section class="chapter cont">
+  <h2><span class="no">2</span>실행 환경</h2>
+
+  <h3>2.1 소프트웨어</h3>
+  <table>
+    <thead><tr><th style="width:22%">항목</th><th style="width:28%">버전</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>운영체제</td><td>Linux · Windows 10/11 · macOS</td><td>Docker 또는 Python이 도는 환경. 시연 서버는 Ubuntu 24.04</td></tr>
+      <tr><td>Docker</td><td>Engine 24 이상, Compose 2.24 이상</td><td>①번 방법. <code>env_file</code>의 <code>required: false</code> 문법 때문에 Compose 2.24 이상이 필요하다</td></tr>
+      <tr><td>Python</td><td>3.11 이상</td><td>②·③번 방법. 실행 이미지는 Python 3.11.18</td></tr>
+      <tr><td>Node.js</td><td>20.19 이상</td><td>화면을 빌드할 때만 필요하다. 빌드한 <code>frontend/dist</code>만 있으면 실행 PC에는 Node가 없어도 된다</td></tr>
+      <tr><td>PostgreSQL</td><td>17 (시험한 버전)</td><td>데이터 창고. Docker로 띄우면 <code>postgres:17-alpine</code>을 쓴다</td></tr>
+      <tr><td>웹 브라우저</td><td>최신 Chrome · Edge</td><td>화면은 글꼴·아이콘을 빌드 결과물에 담아 CDN 없이 열린다</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 하드웨어</h3>
+  <table>
+    <thead><tr><th style="width:22%">항목</th><th style="width:28%">권장</th><th>잰 값 (2026-11-19, 시연 서버)</th></tr></thead>
+    <tbody>
+      <tr><td>CPU</td><td>2코어 이상</td><td>분석은 SQL 집계라 답 하나가 0.1~0.3초 (AI 설명 없이)</td></tr>
+      <tr><td>메모리</td><td>4GB 이상</td><td>앱 컨테이너 약 150MB</td></tr>
+      <tr><td>디스크</td><td>여유 3GB 이상</td><td>앱 이미지 513MB, 데이터 창고 153MB (샘플 + 실데이터)</td></tr>
+      <tr><td>GPU</td><td>필요 없음</td><td>로컬 LLM을 쓰지 않는다. 센터 PC 최소사양(i7-8700 · GTX 1060 · RAM 32GB)으로 충분하다</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.3 네트워크와 포트</h3>
+  <table>
+    <thead><tr><th style="width:22%">무엇</th><th style="width:28%">인터넷</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>기본 모드 (샘플 · 기본 설명)</td><td>필요 없음</td><td>외부로 나가는 요청이 0건이다</td></tr>
+      <tr><td>Claude 설명</td><td>필요 (Anthropic API)</td><td>선택 기능. 키가 없거나 연결이 안 되면 기본 설명으로 자동 전환</td></tr>
+      <tr><td>네이버 지도</td><td>필요 (NAVER Cloud Maps)</td><td>선택 기능. 안 되면 내장 지도(점 지도)로 자동 전환</td></tr>
+      <tr><td>실데이터 수집</td><td>필요 (제주데이터허브)</td><td>자료를 받을 때만. 분석할 때는 외부 호출이 없다</td></tr>
+    </tbody>
+  </table>
+  <table class="compact">
+    <thead><tr><th style="width:22%">포트</th><th>쓰는 곳</th></tr></thead>
+    <tbody>
+      <tr><td class="nw">127.0.0.1:3000</td><td>Docker로 띄운 화면·API. 로그인 기능이 없어서 이 PC 안에서만 연다</td></tr>
+      <tr><td class="nw">127.0.0.1:8501</td><td>직접 실행한 화면·API (<code>serve</code>). <code>--host 0.0.0.0</code>은 믿을 수 있는 망에서만 쓴다</td></tr>
+      <tr><td class="nw">127.0.0.1:5434</td><td>Docker로 띄운 데이터 창고(PostgreSQL)</td></tr>
+      <tr><td class="nw">localhost:5173</td><td>화면 개발 서버 (<code>npm run dev</code>)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ 3. 설치·실행 -->
+<section class="chapter cont">
+  <h2><span class="no">3</span>설치 · 실행 절차</h2>
+
+  <h3>3.1 소스 받기</h3>
+  <p>제출한 ZIP을 풀거나 GitHub 저장소를 <code>git clone</code> 한다. 아래 명령은 모두 저장소 맨 위 폴더에서 시작한다.</p>
+
+  <h3>3.2 ① Docker로 한 번에 실행 (권장)</h3>
+<pre><code>cp .env.example .env            <span class="c"># 선택. 키를 넣지 않아도 기본 모드(샘플 데이터 · 기본 설명)로 돈다</span>
+docker compose up -d --build    <span class="c"># 처음에는 이미지를 만들고 샘플 데이터를 넣는다 (3~4분)</span>
+                                <span class="c"># 브라우저에서 http://localhost:3000 을 연다</span>
+docker compose logs -f app      <span class="c"># 로그 보기</span>
+docker compose down             <span class="c"># 내리기 (데이터 · 제안서 · 실행 기록은 볼륨에 남는다)</span></code></pre>
+  <ul>
+    <li>컨테이너 두 개가 뜬다. 화면과 API를 맡는 <strong>앱</strong>(<code>jeju-meomulmeong-app</code>)과 데이터 창고 <strong>PostgreSQL</strong>(<code>jeju-meomulmeong-db</code>)이다.</li>
+    <li>앱이 처음 뜰 때 샘플 데이터 창고가 없으면 합성 데이터를 만들어 넣는다 (약 25초). 다음부터는 바로 뜬다.</li>
+    <li>앱은 30초마다 <code>/api/health</code>로 상태를 확인한다. <code>docker ps</code>에 <code>healthy</code>가 보이면 준비된 것이다.</li>
+  </ul>
+
+  <h3>3.3 ② 직접 실행 (Docker 없이)</h3>
+<pre><code>docker compose up -d db                     <span class="c"># 데이터 창고만 Docker로 띄우거나, 설치된 PostgreSQL 을 쓴다 (.env 의 MEOMUL_PG_*)</span>
+cd backend
+python -m venv .venv
+.venv/bin/python -m pip install -r requirements.lock     <span class="c"># 버전 고정본</span>
+.venv/bin/python -m pip install -e . --no-deps
+.venv/bin/python -m meomulmeong build-data               <span class="c"># 샘플 데이터를 만들어 PostgreSQL 에 넣는다 (약 25초)</span>
+cd ../frontend && npm ci && npm run build                 <span class="c"># 화면 빌드 → frontend/dist</span>
+cd ../backend && .venv/bin/python -m meomulmeong serve --open   <span class="c"># http://127.0.0.1:8501</span></code></pre>
+  <p class="small muted">
+    Windows에서는 <code>.venv/bin/python</code> 대신 <code>.venv\Scripts\python</code>을 쓴다. <code>uv</code>가 있으면
+    <code>uv venv --python 3.11 .venv</code> → <code>uv pip install --python .venv/bin/python -r requirements-dev.txt -e .</code>로 설치해도 된다.
+    따로 설치한 PostgreSQL을 쓸 때는 데이터베이스와 사용자를 미리 만들고, 그 사용자에게 스키마를 만들 권한을 준다.
+  </p>
+
+  <h3>3.4 실데이터(제주데이터허브) 넣기</h3>
+  <p>허브 자료는 재배포할 수 없어서 저장소에 없다. 각자 허브 프로젝트 키(발급 방법은 5.3절)로 받아 같은 데이터 창고에 넣는다.</p>
+<pre><code><span class="c"># 0) .env 에 MEOMUL_HUB_PROJECT_KEY 를 넣는다 (허브 마이페이지 > 프로젝트, 데이터마다 '프로젝트 담기' 필요)</span>
+cd backend
+<span class="c"># 1) 월 단위 4종은 전 기간을 한 번에</span>
+.venv/bin/python -m meomulmeong fetch-hub --table arrivals_purpose_monthly --table foreign_visitors_monthly \
+    --table card_zone_dow_monthly --table spend_tour_type_monthly
+<span class="c"># 2) 일 단위 유동인구는 비교할 24개월을 달마다 나흘만 (하루 쿼터 1,000건 절약)</span>
+.venv/bin/python -m meomulmeong fetch-hub --table pop_kor_emd_daily --table pop_for_long_emd_daily \
+    --start 20240901 --end 20260831 --days 1,9,17,25
+<span class="c"># 3) 버스는 입도객 자료와 겹치는 12개월을 달마다 이틀만</span>
+.venv/bin/python -m meomulmeong fetch-hub --table bus_route_daily --start 20240801 --end 20250731 --days 9,25
+<span class="c"># 4) 파일 자료: 허브의 '업종별 성별 카드 이용 정보'(1048)를 내려받아 backend/data/hub/card_biz/ 에 둔다</span>
+<span class="c"># 5) 적재 (새 스키마를 다 만든 뒤 한 번에 바꿔치기해서, 적재 중에도 기존 데이터로 답한다)</span>
+.venv/bin/python -m meomulmeong build-data --mode hub</code></pre>
+  <ul>
+    <li>적재 후 <code>.env</code>의 <code>MEOMUL_DATA_MODE=hub</code>로 띄우거나, 화면 왼쪽의 데이터 선택에서 "실데이터"를 고른다.</li>
+    <li>Docker만 쓰는 PC에서는 컨테이너로 적재한다: <code>docker compose run --rm -v ./backend/data/hub:/app/backend/data/hub:ro app build-data --mode hub</code></li>
+    <li>다른 PC로 옮길 때는 <code>export-csv --mode hub</code>로 내보낸 <code>data/export/hub/</code> 폴더를 같은 자리에 복사하고 <code>build-data --mode hub</code>를 실행한다. 허브를 다시 부르지 않아도 된다.</li>
+    <li>허브 프록시는 요청이 자주 실패(502)해서 수집기가 한 쪽에 10번까지 다시 보낸다. 하루 쿼터가 차면 멈추고 다음 날 이어 받으라고 알려 준다. 받은 쪽은 남겨 두고 없는 쪽부터 이어 받는다.</li>
+  </ul>
+
+  <h3>3.5 Claude 설명 켜기 (선택)</h3>
+<pre><code><span class="c"># .env</span>
+MEOMUL_LLM_MODE=anthropic
+ANTHROPIC_API_KEY=sk-ant-...        <span class="c"># 본인 키 또는 부록의 평가용 키 (발급 방법은 5.3절). 저장소에 올리지 않는다</span>
+<span class="c"># 다시 띄운다: docker compose up -d   또는   serve 재실행</span></code></pre>
+  <p>
+    화면에서는 답마다 "전송 미리보기"로 보낼 내용(동네별 집계 지표)을 먼저 보여 주고, <strong>동의</strong>를 누른 세션만 Claude에 보낸다.
+    명령줄에서는 <code>--llm anthropic --yes-cloud</code>를 붙인다. 키가 없거나 인증·연결에 실패하면 기본 설명으로 자동 전환하고 그 이유를 상태에 적는다.
+  </p>
+
+  <h3>3.6 네이버 지도 켜기 (선택)</h3>
+  <p>
+    NAVER Cloud Platform 콘솔에서 Maps Application을 만들고 Dynamic Map, Geocoding, Reverse Geocoding, Directions 5, Static Map을 켠 뒤(5.3절),
+    <code>.env</code>에 <code>NAVER_CLOUD_PLATFORM_CLIENT_ID</code>와 <code>NAVER_CLOUD_PLATFORM_CLIENT_SECRET</code>을 넣는다.
+    Dynamic Map은 콘솔의 Web 서비스 URL에 등록한 주소에서만 열린다. Secret은 서버에서만 쓰고 화면으로 보내지 않는다.
+    키가 없거나 지도를 불러오지 못하면 화면은 내장 지도로, 제안서는 SVG 지도로 그린다.
+  </p>
+
+  <h3>3.7 여러 사람이 함께 쓰는 배포 (선택)</h3>
+  <p>
+    로그인 없이 여러 사람이 같은 주소로 쓰는 시연 서버는 <code>MEOMUL_LOCK_MODES=true</code>(데이터·AI 모드 고정, 모드 전환 API 403),
+    <code>MEOMUL_API_DOCS=false</code>(<code>/docs</code>·<code>/openapi.json</code> 닫기)로 띄운다. 모드는 서버 전체에 걸리기 때문이다.
+    공용 게이트웨이와 공용 PostgreSQL에 붙이는 설정은 <code>docker-compose.shared.yml</code>에 있다.
+  </p>
+
+  <h3>3.8 ③ 센터 PC (인터넷 없는 분석실)</h3>
+  <ol>
+    <li>인터넷이 되는 PC에서 <code>frontend</code>를 빌드하고 <code>frontend/dist</code> 폴더를 옮긴다. 센터 PC에는 Node가 필요 없다.</li>
+    <li>Python 3.11과 <code>requirements.lock</code>의 패키지를 설치한다. 인터넷이 없으면 다른 PC에서 받은 wheel 파일로 설치한다.</li>
+    <li>센터 PC의 PostgreSQL에 데이터베이스와 사용자를 만들고 <code>.env</code>의 <code>MEOMUL_PG_*</code>에 접속 정보를 넣는다.</li>
+    <li><code>.env</code>에 <code>MEOMUL_LLM_MODE=template</code>, <code>MEOMUL_NAVER_MAPS=false</code>를 둔다 (외부 호출 0건).</li>
+    <li>센터 추출본 CSV를 <code>backend/data/center/</code>에 넣고 <code>build-data --mode center</code>를 실행한다. 센터 자료가 없는 표는 허브 자료로 채운다.</li>
+    <li><code>python -m meomulmeong serve --prepare --open</code>으로 띄운다.</li>
+  </ol>
+  <p class="small muted">센터용 설치 스크립트(<code>install.bat</code>·<code>run.bat</code>)와 오프라인 설치 꾸러미는 아직 없다 (7.2절).</p>
+
+  <h3>3.9 잘 떴는지 확인</h3>
+<pre><code>curl http://localhost:3000/api/health          <span class="c"># {"ok":true,"ready":true,"message":null}</span>
+cd backend && .venv/bin/python -m meomulmeong status     <span class="c"># 데이터 모드, AI 설명, 표마다 행 수와 수록 기간</span>
+.venv/bin/python -m meomulmeong ask "성산읍 청년 인구 왜 줄었어?"
+.venv/bin/python -m pytest -q                  <span class="c"># 백엔드 테스트 274개 (PostgreSQL 이 떠 있어야 한다)</span>
+.venv/bin/python -m eval                       <span class="c"># 골든셋 60문항</span>
+cd ../frontend && npm test                     <span class="c"># 화면 테스트 84개</span></code></pre>
+</section>
+
+<!-- ============================================================ 4. 의존성 -->
+<section class="chapter cont">
+  <h2><span class="no">4</span>의존성 목록</h2>
+  <p>
+    백엔드는 <code>backend/requirements.lock</code>에 36개 패키지의 버전을 모두 고정했고(실행 이미지가 이 파일로 설치한다),
+    화면은 <code>frontend/package-lock.json</code>으로 고정했다. 아래는 직접 쓰는 라이브러리다.
+  </p>
+
+  <h3>4.1 백엔드 (Python)</h3>
+  <table class="compact">
+    <thead><tr><th style="width:22%">패키지</th><th class="num" style="width:11%">버전</th><th style="width:16%">라이선스</th><th>쓰는 곳</th></tr></thead>
+    <tbody>
+      <tr><td>psycopg[binary]</td><td class="num">3.3.9</td><td>LGPL-3.0</td><td>PostgreSQL 연결 (적재·읽기 전용 조회)</td></tr>
+      <tr><td>pandas</td><td class="num">3.1.1</td><td>BSD-3-Clause</td><td>원본 읽기·적재, 골든셋 기대값 계산</td></tr>
+      <tr><td>numpy</td><td class="num">2.4.6</td><td>BSD-3-Clause</td><td>수치 계산, 노선 민감도 회귀</td></tr>
+      <tr><td>pyarrow</td><td class="num">26.0.1</td><td>Apache-2.0</td><td>수집본 Parquet 저장·읽기</td></tr>
+      <tr><td>pydantic</td><td class="num">2.14.3</td><td>MIT</td><td>답(Answer)·질문 해석·도구 결과의 데이터 모델</td></tr>
+      <tr><td>pydantic-settings</td><td class="num">2.16.2</td><td>MIT</td><td>환경변수(<code>.env</code>) 읽기</td></tr>
+      <tr><td>PyYAML</td><td class="num">6.0.3</td><td>MIT</td><td>설정·제안 규칙·테이블 설명 파일</td></tr>
+      <tr><td>Jinja2</td><td class="num">3.1.6</td><td>BSD-3-Clause</td><td>최종 제안서 HTML</td></tr>
+      <tr><td>httpx</td><td class="num">0.28.1</td><td>BSD-3-Clause</td><td>제주데이터허브 · 네이버 지도 API 호출</td></tr>
+      <tr><td>FastAPI</td><td class="num">0.162.5</td><td>MIT</td><td>웹 API (REST · 진행 상황 SSE)</td></tr>
+      <tr><td>Uvicorn</td><td class="num">0.54.0</td><td>BSD-3-Clause</td><td>웹 서버</td></tr>
+      <tr><td>anthropic <span class="muted">(선택)</span></td><td class="num">2.8.0</td><td>MIT</td><td>Claude 호출 (구조화 출력)</td></tr>
+      <tr><td>pytest · ruff <span class="muted">(개발)</span></td><td class="num">8 · 0.6 이상</td><td>MIT</td><td>테스트, 코드 검사</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 화면 (Node · React)</h3>
+  <table class="compact">
+    <thead><tr><th style="width:22%">패키지</th><th class="num" style="width:11%">버전</th><th style="width:16%">라이선스</th><th>쓰는 곳</th></tr></thead>
+    <tbody>
+      <tr><td>react · react-dom</td><td class="num">19.3.1</td><td>MIT</td><td>화면</td></tr>
+      <tr><td>lucide-react</td><td class="num">1.72.0</td><td>ISC</td><td>아이콘 (빌드 결과물에 포함)</td></tr>
+      <tr><td>pretendard</td><td class="num">1.3.9</td><td>OFL-1.1</td><td>글꼴 (빌드 결과물에 포함, CDN 없음)</td></tr>
+      <tr><td>vite · @vitejs/plugin-react</td><td class="num">8.3.8 · 6.3.0</td><td>MIT</td><td>빌드 · 개발 서버</td></tr>
+      <tr><td>typescript</td><td class="num">7.0.2</td><td>Apache-2.0</td><td>타입 검사</td></tr>
+      <tr><td>vitest · Testing Library · jsdom</td><td class="num">4.1.12 · 16.3.3 · 29.1.1</td><td>MIT</td><td>화면 테스트</td></tr>
+      <tr><td>oxlint</td><td class="num">1.93.0</td><td>MIT</td><td>코드 검사</td></tr>
+      <tr><td>openapi-typescript</td><td class="num">7.13.0</td><td>MIT</td><td>백엔드 API 명세에서 화면 타입 만들기 (개발할 때만)</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">차트와 지도는 라이브러리 없이 SVG로 직접 그린다.</p>
+
+  <h3>4.3 실행 이미지 · 서비스</h3>
+  <table class="compact">
+    <thead><tr><th style="width:30%">이미지</th><th>쓰는 곳</th></tr></thead>
+    <tbody>
+      <tr><td><code>python:3.11-slim</code></td><td>앱 실행 이미지 (<code>jeju-meomulmeong:0.1.0</code>, 약 513MB, 루트가 아닌 <code>meomul</code> 사용자로 실행)</td></tr>
+      <tr><td><code>node:20-slim</code></td><td>화면 빌드 단계에서만 쓴다 (실행 이미지에는 Node가 없다)</td></tr>
+      <tr><td><code>postgres:17-alpine</code></td><td>데이터 창고 (PostgreSQL License)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.4 외부 서비스 (모두 선택)</h3>
+  <table class="compact">
+    <thead><tr><th style="width:30%">서비스</th><th style="width:30%">쓰는 기능</th><th>없을 때</th></tr></thead>
+    <tbody>
+      <tr><td>Anthropic API (Claude Opus 5.5)</td><td>질문 해석 보조, 쉬운 설명, 자유 질문 SQL</td><td>기본 설명(규칙 문장)으로 동작</td></tr>
+      <tr><td>NAVER Cloud Maps</td><td>Dynamic Map, Geocoding, Reverse Geocoding, Directions 5, Static Map</td><td>내장 점 지도 · SVG 지도로 동작</td></tr>
+      <tr><td>제주데이터허브 Open API</td><td>실데이터 수집 (<code>fetch-hub</code>)</td><td>샘플 데이터 또는 내보낸 CSV로 동작</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ 5. 환경변수 -->
+<section class="chapter cont">
+  <h2><span class="no">5</span>환경변수 예시와 API 키</h2>
+  <p>
+    환경변수는 <strong>저장소 맨 위의 <code>.env</code> 하나</strong>에 둔다. 백엔드(명령줄·웹 API)와 docker compose가 같은 파일을 읽는다.
+    <code>.env.example</code>을 같은 자리에 <code>.env</code>로 복사해 채우고, 값을 비워 둔 항목은 기본값을 쓴다.
+    <code>.env</code>는 git과 Docker 이미지에 들어가지 않는다 (<code>.gitignore</code>, <code>.dockerignore</code>).
+  </p>
+<h3>5.1 .env 예시</h3>
+<pre><code><span class="c"># 머물멍 환경변수 예시 — 이 파일을 같은 자리(저장소 맨 위)에 .env 로 복사해 값을 채우세요.</span>
+<span class="c"># 서버의 공용 nginx 게이트웨이·공용 PostgreSQL 에 붙일 때만 주석을 풀어요 (docker-compose.shared.yml 참고)</span>
+<span class="c"># COMPOSE_FILE=docker-compose.yml:docker-compose.shared.yml</span>
+
+MEOMUL_DATA_MODE=synthetic            <span class="c"># synthetic(샘플) | hub(허브 수집본) | center(센터 추출본)</span>
+MEOMUL_LLM_MODE=template              <span class="c"># template(LLM 없음, 기본) | anthropic(클라우드 Claude, 선택)</span>
+MEOMUL_ANTHROPIC_MODEL=claude-opus-5-5
+ANTHROPIC_API_KEY=
+
+<span class="c"># 데이터 창고 (PostgreSQL). 비우면 docker-compose.yml 의 db 서비스 기본값 (127.0.0.1:5434, meomul)</span>
+MEOMUL_PG_HOST=
+MEOMUL_PG_PORT=
+MEOMUL_PG_DB=
+MEOMUL_PG_USER=
+MEOMUL_PG_PASSWORD=                   <span class="c"># docker compose 의 db 서비스 암호로도 쓰인다. 비우면 meomul</span>
+
+MEOMUL_API_HOST=127.0.0.1
+MEOMUL_API_PORT=8501
+MEOMUL_CORS_ORIGINS=
+MEOMUL_WEB_DIST=
+MEOMUL_LOCK_MODES=                    <span class="c"># 여러 사람이 같은 주소로 쓰는 배포본: true</span>
+MEOMUL_API_DOCS=                      <span class="c"># 공개 주소에 둘 때: false</span>
+
+NAVER_CLOUD_PLATFORM_CLIENT_ID=       <span class="c"># 네이버 클라우드 Maps (선택)</span>
+NAVER_CLOUD_PLATFORM_CLIENT_SECRET=
+MEOMUL_NAVER_MAPS=                    <span class="c"># 인터넷이 없는 센터 PC: false</span>
+
+MEOMUL_HUB_PROJECT_KEY=               <span class="c"># 제주데이터허브 Open API 프로젝트 키 (수집할 때만)</span></code></pre>
+
+  <h3>5.2 변수 설명</h3>
+  <table class="compact">
+    <thead><tr><th style="width:33%">환경변수</th><th style="width:16%">기본값</th><th>뜻</th></tr></thead>
+    <tbody>
+      <tr><td><code>MEOMUL_DATA_MODE</code></td><td><code>synthetic</code></td><td>데이터 모드: <code>synthetic</code> · <code>hub</code> · <code>center</code></td></tr>
+      <tr><td><code>MEOMUL_LLM_MODE</code></td><td><code>template</code></td><td>AI 설명: <code>template</code>(기본 설명) · <code>anthropic</code>(Claude)</td></tr>
+      <tr><td><code>MEOMUL_ANTHROPIC_MODEL</code></td><td><code>claude-opus-5-5</code></td><td>Claude 모델</td></tr>
+      <tr><td><code>ANTHROPIC_API_KEY</code></td><td>(없음)</td><td>Claude를 쓸 때만 필요</td></tr>
+      <tr><td><code>MEOMUL_PG_HOST · PORT · DB · USER · PASSWORD</code></td><td>127.0.0.1 · 5434 · meomul · meomul · meomul</td><td>데이터 창고 접속 정보</td></tr>
+      <tr><td><code>MEOMUL_API_HOST</code> / <code>MEOMUL_API_PORT</code></td><td><code>127.0.0.1</code> / <code>8501</code></td><td>웹 API 서버 주소. 기본은 이 PC 안에서만 열린다</td></tr>
+      <tr><td><code>MEOMUL_CORS_ORIGINS</code></td><td>5173·3000 포트</td><td>개발 서버에서 API를 부를 수 있게 허용할 주소</td></tr>
+      <tr><td><code>MEOMUL_WEB_DIST</code></td><td><code>../frontend/dist</code></td><td>빌드한 화면 폴더. 있으면 같은 주소에서 화면도 내준다</td></tr>
+      <tr><td><code>MEOMUL_LOCK_MODES</code></td><td><code>false</code></td><td><code>true</code>면 데이터·AI 모드를 바꾸는 API를 막고 화면은 읽기 전용으로 보여 준다</td></tr>
+      <tr><td><code>MEOMUL_API_DOCS</code></td><td><code>true</code></td><td><code>false</code>면 <code>/docs</code> · <code>/redoc</code> · <code>/openapi.json</code>을 닫는다</td></tr>
+      <tr><td><code>NAVER_CLOUD_PLATFORM_CLIENT_ID · _SECRET</code></td><td>(없음)</td><td>네이버 지도. <code>MEOMUL_NAVER_MAP_CLIENT_ID · _SECRET</code>으로 써도 된다</td></tr>
+      <tr><td><code>MEOMUL_NAVER_MAPS</code></td><td><code>true</code></td><td><code>false</code>면 키가 있어도 네이버 지도를 쓰지 않는다</td></tr>
+      <tr><td><code>MEOMUL_HUB_PROJECT_KEY</code></td><td>(없음)</td><td>제주데이터허브 프로젝트 키 (수집할 때만)</td></tr>
+      <tr><td><code>MEOMUL_HOME</code> / <code>MEOMUL_OUTPUTS</code></td><td><code>backend/</code> / <code>outputs/</code></td><td>설정·데이터 위치, 제안서·실행 기록 저장 위치</td></tr>
+      <tr><td><code>COMPOSE_FILE</code></td><td>(없음)</td><td>docker compose가 읽을 파일 목록 (공용 인프라에 붙일 때만)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.3 API 키 발급과 설정</h3>
+  <p>키는 모두 선택이다. 키 없이도 샘플 데이터와 기본 설명으로 전 기능이 돌고, 키를 넣은 기능만 켜진다. 실제 키는 제출물(코드·문서·영상)에 넣지 않는다.</p>
+  <table class="compact">
+    <thead><tr><th style="width:20%">키 (<code>.env</code> 항목)</th><th>발급 방법</th><th style="width:24%">설정 · 확인</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>제주데이터허브 프로젝트 키</strong><br><code>MEOMUL_HUB_PROJECT_KEY</code><br><span class="muted">실데이터 수집 · 무료</span></td>
+        <td><ol style="margin:0;padding-left:4mm">
+          <li>jejudatahub.net에 회원가입하고 로그인한다.</li>
+          <li>마이페이지 &gt; 프로젝트에서 프로젝트를 만들고 프로젝트 키를 확인한다.</li>
+          <li>쓸 데이터의 상세 페이지에서 "프로젝트 담기"를 누른다: 583, 590, 608, 603, 582, 580, 614 (2장의 표 참고). 담지 않은 데이터는 인증 실패로 받지 못한다.</li>
+          <li>파일 데이터 1048(업종별 성별 카드 이용 정보)은 상세 페이지에서 CSV를 내려받아 <code>backend/data/hub/card_biz/</code>에 둔다.</li>
+        </ol></td>
+        <td><code>.env</code>에 키를 넣고 3.4절의 <code>fetch-hub</code> → <code>build-data --mode hub</code>. 데이터마다 하루 1,000건 상한이 있다</td>
+      </tr>
+      <tr>
+        <td><strong>Anthropic API 키</strong><br><code>ANTHROPIC_API_KEY</code><br><span class="muted">Claude 설명 · 사용량만큼 유료</span></td>
+        <td><ol style="margin:0;padding-left:4mm">
+          <li>Claude Console(platform.claude.com)에 가입하고 결제 수단을 등록한다.</li>
+          <li>평가·시연용이면 Workspaces에서 전용 워크스페이스를 만들고 월 사용 한도(spend limit)를 정한다. 키는 만든 워크스페이스에 묶인다.</li>
+          <li>그 워크스페이스의 API Keys에서 "Create Key"로 키를 만들고, 쓰고 나면 삭제한다.</li>
+        </ol></td>
+        <td><code>.env</code>에 <code>MEOMUL_LLM_MODE=anthropic</code>과 키를 넣고 다시 띄운다. <code>status</code>의 <code>llm_note</code>로 확인. 설명 하나에 보내는 토큰 약 3천 · 받는 토큰 약 250 (5문항 실측 평균)</td>
+      </tr>
+      <tr>
+        <td><strong>NAVER Cloud Maps</strong><br><code>NAVER_CLOUD_PLATFORM_CLIENT_ID</code> · <code>_SECRET</code><br><span class="muted">지도 · 선택</span></td>
+        <td><ol style="margin:0;padding-left:4mm">
+          <li>NAVER Cloud Platform(ncloud.com)에 가입하고 콘솔의 Maps 메뉴에서 Application을 등록한다.</li>
+          <li>API로 Dynamic Map, Static Map, Geocoding, Reverse Geocoding, Directions 5를 고른다.</li>
+          <li>Web 서비스 URL에 화면을 여는 주소의 호스트만 넣는다 (포트·경로 없이, 예: <code>http://localhost</code>, <code>http://127.0.0.1</code>). 등록하지 않은 주소에서는 Dynamic Map이 열리지 않는다.</li>
+          <li>Application 목록에서 [인증 정보]를 눌러 Client ID와 Client Secret을 확인한다.</li>
+        </ol></td>
+        <td><code>.env</code>에 두 값을 넣고 다시 띄운다. Secret은 서버에서만 쓴다. 키가 없거나 막히면 내장 지도로 자동 전환</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <strong>제출물과 키</strong> — 허브 키와 네이버 키는 제출물에 넣지 않는다. 대회 규칙에 따라 외부 AI API(Claude)의 <strong>평가용 키</strong>만
+    심사위원에게 내는 최종 결과물 ZIP의 이 문서 부록에 적을 수 있고, 사용 한도를 걸어 두며 평가 기간이 끝나면 삭제한다.
+    공개 저장소에 있는 이 문서에는 평가용 키를 적지 않는다.
+  </div>
+</section>
+
+<!-- ============================================================ 6. 사용자 매뉴얼 -->
+<section class="chapter">
+  <h2><span class="no">6</span>사용자 매뉴얼</h2>
+  <p class="lead">화면 순서대로 설명한다. 사진은 표선면을 예로 실데이터와 Claude 설명으로 실행한 화면이다.</p>
+
+  <h3>6.1 첫 화면</h3>
+  <figure>
+    <img src="img/01_home.jpg" alt="머물멍 첫 화면">
+    <figcaption><b>그림 1. 첫 화면.</b> 왼쪽 메뉴에는 데이터 모드·AI 설명·단계·최종 제안서가 있고, 위쪽에는 지금 쓰는 데이터 배지와 AI 설명 방식이 늘 보인다.
+    가운데에서 읍면동을 골라 "처음부터 끝까지"를 누르거나, 단계별 추천 질문을 누르거나, 질문을 직접 쓴다.</figcaption>
+  </figure>
+  <ul>
+    <li><strong>타이핑 없이 시작</strong>: 단계별 추천 질문 3개씩, 읍면동 목록, 지도에서 고를 수 있다.</li>
+    <li><strong>처음부터 끝까지</strong>: 동네를 고른 뒤 누르면 1→2→3단계를 차례로 돌리고 최종 제안서를 만든다.</li>
+    <li>여러 사람이 쓰는 시연 서버에서는 데이터·AI 모드가 고정되어 읽기 전용으로 보인다.</li>
+  </ul>
+
+  <h3>6.2 동네 고르기: 목록 · 지도 · 주소</h3>
+  <figure>
+    <img src="img/02_map.jpg" alt="지도에서 읍면동 고르기">
+    <figcaption><b>그림 2. 지도에서 읍면동 고르기.</b> 네이버 지도의 점을 누르거나 지도 아무 곳을 누르면 그 자리의 행정동을 찾아 읍면동을 고른다.
+    "주소로 찾기"에 도로명·지번 주소를 넣어도 된다. 지도 키가 없으면 "간단한 지도"(내장 점 지도)로 보여 준다.</figcaption>
+  </figure>
+
+  <h3>6.3 질문하기와 확인 카드</h3>
+  <p>
+    질문을 직접 쓰면 바로 계산하지 않고 <strong>"이렇게 이해했어요" 카드</strong>를 먼저 보여 준다. 장소·연령·기간·테마·가정값을 확인하고 "실행"을 누른다.
+    다르게 이해했으면 "고치기"로 바꾼 뒤 실행한다. 추천 질문·다음 질문·단계 단추·지도에서 고른 곳은 바로 실행한다.
+  </p>
+  <figure>
+    <img src="img/04_confirm.jpg" alt="확인 카드">
+    <figcaption><b>그림 3. 확인 카드.</b> "표선면 청년 인구 왜 줄었어?"를 장소 표선면, 연령 20·30대, 기간 최근 12개월 대 직전 12개월, 1단계 분석으로 이해했다.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/05_confirm_edit.jpg" alt="확인 카드 고치기">
+    <figcaption><b>그림 4. 고치기.</b> 장소·분석 단계·연령·기간·테마와, 3단계에서는 국내선 공급 변화율·탄력성 같은 가정값을 바꿀 수 있다. 참조표에 없는 값은 서버가 받지 않는다.</figcaption>
+  </figure>
+  <p class="small">이어서 묻기: 같은 대화에서 "거기 30대만?"처럼 짧게 물으면 앞 질문의 장소·단계를 이어받는다. 답 아래의 다음 질문 단추(예: "식음료만 보기", "감편 20%면?")도 같은 대화로 이어진다.</p>
+
+  <h3>6.4 진행 상황과 멈추기</h3>
+  <figure class="w65">
+    <img src="img/07_progress.jpg" alt="진행 상황">
+    <figcaption><b>그림 5. 진행 상황.</b> 답을 만드는 동안 단계와 도구(SQL 계산), AI 설명 쓰기를 한 줄씩 보여 준다. "멈추기"를 누르면 지금 단계를 마치고 멈춘다.
+    분석은 한 번에 하나씩 돌아서, 다른 사람의 분석이 끝나기를 기다리는 동안에는 그렇다고 표시한다.</figcaption>
+  </figure>
+
+  <h3>6.5 답 읽는 법</h3>
+  <p>답은 결론부터 보여 준다. 위에서 아래로 <strong>한 줄 결론 → 핵심 숫자 → 설명 → 제안 → 차트·지도 → 근거표와 SQL → 한계 → 검증 → 전송 미리보기 → 다음 질문</strong> 순서다.</p>
+  <figure>
+    <img src="img/08_stage1_top.jpg" alt="1단계 답의 위쪽">
+    <figcaption><b>그림 6. 1단계 답.</b> 한 줄 결론과 유형 표시(C 방문 의존형), 핵심 숫자 3개(20·30대 거주·근무 변화, 방문자 변화), Claude가 쓴 설명. 설명 속 숫자는 모두 근거표 값과 대조를 통과했다.</figcaption>
+  </figure>
+  <div class="grid2">
+    <figure>
+      <img src="img/09_stage1_charts.jpg" alt="차트">
+      <figcaption><b>그림 7. 차트.</b> 추이는 첫 달을 100으로 본 선 차트, 비교는 막대 목록으로 그린다.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/10_stage1_table.jpg" alt="표로 보기">
+      <figcaption><b>그림 8. 표로 보기.</b> 같은 값을 표로 바꿔 볼 수 있다 (색에 기대지 않고 읽기).</figcaption>
+    </figure>
+  </div>
+  <figure class="w80">
+    <img src="img/11_stage1_typemap.jpg" alt="유형 지도">
+    <figcaption><b>그림 9. 유형 지도.</b> 43곳의 유형을 글자와 색으로 함께 표시하고, 지금 보는 동네와 비슷한 읍면 3곳을 강조한다. 점을 누르면 그 동네를 진단한다.</figcaption>
+  </figure>
+
+  <h3>6.6 근거표와 SQL · 한계 · 검증</h3>
+  <figure class="w80">
+    <img src="img/12_evidence_sql.jpg" alt="근거표와 SQL">
+    <figcaption><b>그림 10. 근거표와 SQL.</b> 답에 쓴 모든 숫자의 근거표와 실제로 실행한 SQL을 펼쳐 볼 수 있다. 산식(변화율 = P1 일평균 ÷ P0 일평균 − 1)도 함께 적는다.</figcaption>
+  </figure>
+  <div class="grid2">
+    <figure>
+      <img src="img/14_limits.jpg" alt="한계">
+      <figcaption><b>그림 11. 한계.</b> 이 답에 쓴 자료의 한계(추정치, 공간 단위, 오래된 기간 등)를 그대로 밝힌다.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/13_verification.jpg" alt="검증 결과">
+      <figcaption><b>그림 12. 검증 결과와 실행 기록.</b> 숫자 대조·인과 표현·기간 등 검증 항목과, 어떤 도구를 몇 초 돌렸는지 보여 준다.</figcaption>
+    </figure>
+  </div>
+
+  <h3>6.7 Claude 설명: 전송 미리보기와 동의</h3>
+  <figure>
+    <img src="img/06_payload_consent.jpg" alt="전송 미리보기와 동의">
+    <figcaption><b>그림 13. 전송 미리보기.</b> Claude에 보낼 내용(질문, 규칙이 만든 한 줄 결론과 설명 초안, 집계 지표)을 그대로 보여 준다.
+    "이 내용을 보내는 데 동의하고 다시 실행"을 누르면 그 세션의 답부터 Claude가 설명을 다시 쓴다. 동의 전에는 기본 설명을 보여 준다.</figcaption>
+  </figure>
+
+  <h3>6.8 2단계 · 3단계 화면</h3>
+  <figure>
+    <img src="img/15_stage2.jpg" alt="2단계 답">
+    <figcaption><b>그림 14. 2단계.</b> 1단계 유형으로 타깃 관광객을 정하고(표선면: 중국인 체류형 관광객), 조건을 충족한 제안 규칙을 규칙 번호와 근거 지표와 함께 보여 준다.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/18_stage3_course.jpg" alt="3단계 코스 지도">
+    <figcaption><b>그림 15. 3단계 코스.</b> 공항·터미널 같은 거점에서 동네까지 오는 버스 코스를 네이버 길찾기의 도로 경로로 그리고, 거리와 자동차 기준 시간을 함께 적는다.
+    오른쪽은 국내선 공급 −10% 가정에서 탄력성 ε 0.5·1.0·1.5별 입도객 계산이다.</figcaption>
+  </figure>
+
+  <h3>6.9 처음부터 끝까지와 최종 제안서</h3>
+  <figure>
+    <img src="img/19_report_ready.jpg" alt="최종 제안서 준비">
+    <figcaption><b>그림 16.</b> 세 단계가 끝나면 최종 제안서를 열거나 HTML 파일로 내려받을 수 있다.</figcaption>
+  </figure>
+  <figure class="w65">
+    <img src="img/20_report_cover.jpg" alt="최종 제안서">
+    <figcaption><b>그림 17. 최종 제안서.</b> 위치 지도, 단계별 한 줄 요약, 세 단계의 결과·근거표·SQL·한계를 한 문서로 묶는다. 자바스크립트 없이 열리고, 브라우저에서 인쇄하면 PDF로 저장된다.</figcaption>
+  </figure>
+
+  <h3>6.10 데이터 정보</h3>
+  <figure class="w80">
+    <img src="img/03_datainfo.jpg" alt="데이터 정보">
+    <figcaption><b>그림 18. 수록 기간과 출처.</b> 왼쪽 메뉴의 "수록 기간과 출처"를 누르면 표마다 수록 기간·행 수·출처와 적재 시각을 보여 준다.</figcaption>
+  </figure>
+
+  <h3>6.11 질문 예시</h3>
+  <table class="compact">
+    <thead><tr><th style="width:18%">단계</th><th>예시 질문</th></tr></thead>
+    <tbody>
+      <tr><td>1단계</td><td>성산읍 청년 인구 왜 줄었어? · 30대가 살기 좋은 읍면은? · 한 달 살이 지원은 어디에? · 애월 쪽 젊은 사람들 요즘 어때?</td></tr>
+      <tr><td>2단계</td><td>성산읍에 누가 올까? · 서귀포 구도심 음식점인데 외국인 손님 늘릴 수 있나? · 구좌읍 숙박 중국인 소비 변화</td></tr>
+      <tr><td>3단계</td><td>구좌읍까지 오는 코스는? · 국내선 10% 감편 시 12월 개별여행 입도객 · 성산읍 감편 때 버스 수요는?</td></tr>
+      <tr><td>이어서 묻기</td><td>거기 30대만? · 식음료만 보기 · 감편 20%면? · 탄력성 1.5로 보기</td></tr>
+      <tr><td>원인 질문</td><td>"왜"를 물어도 원인을 단정하지 않고, 함께 움직인 지표와 확인할 외부 요인을 정해진 문장으로 답한다</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.12 명령줄 사용</h3>
+  <table class="compact">
+    <thead><tr><th style="width:44%">명령 (<code>backend/</code>에서 <code>.venv/bin/python -m meomulmeong …</code>)</th><th>하는 일</th></tr></thead>
+    <tbody>
+      <tr><td><code>build-data [--mode synthetic|hub|center]</code></td><td>원본을 읽어 데이터 창고(PostgreSQL)를 만든다</td></tr>
+      <tr><td><code>fetch-hub --table … [--start --end --days]</code></td><td>제주데이터허브 Open API에서 자료를 받는다 (프로젝트 키 필요)</td></tr>
+      <tr><td><code>ask "질문" [-v] [--json]</code></td><td>질문 하나를 실행한다. <code>-v</code>는 근거표와 SQL까지 보여 준다</td></tr>
+      <tr><td><code>chain 성산읍 --report</code></td><td>1→2→3단계를 돌리고 최종 제안서(HTML)를 만든다</td></tr>
+      <tr><td><code>status</code></td><td>데이터·AI 설명 상태, 표마다 행 수와 수록 기간</td></tr>
+      <tr><td><code>serve [--open] [--prepare] [--port 8501]</code></td><td>웹 API와 화면을 띄운다</td></tr>
+      <tr><td><code>export-csv --mode hub</code></td><td>데이터 창고의 표를 CSV로 내보낸다 (이 PC에서만 쓴다)</td></tr>
+      <tr><td>공통 옵션 <code>--data</code> · <code>--llm anthropic</code> · <code>--yes-cloud</code></td><td>데이터 모드, Claude 사용, Claude 전송 동의</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">제안서와 실행 기록(<code>runs/*.jsonl</code>: 도구·시간·LLM 시도)은 <code>backend/outputs/</code>(Docker는 <code>jeju-meomulmeong_outputs</code> 볼륨)에 남는다.</p>
+</section>
+
+<!-- ============================================================ 7. 오류·제약 -->
+<section class="chapter cont">
+  <h2><span class="no">7</span>오류 · 제약사항</h2>
+
+  <h3>7.1 자주 만나는 오류와 해결</h3>
+  <table class="compact">
+    <thead><tr><th style="width:30%">증상</th><th style="width:28%">원인</th><th>해결</th></tr></thead>
+    <tbody>
+      <tr><td>화면에 "서버에 연결하지 못했어요"</td><td>백엔드가 꺼져 있거나 주소가 다르다</td><td><code>docker compose ps</code> · <code>serve</code> 실행 여부 확인. 개발 서버는 <code>/api</code>를 8501로 넘긴다</td></tr>
+      <tr><td>API가 503 <code>warehouse_missing</code></td><td>PostgreSQL이 꺼져 있거나 데이터를 아직 넣지 않았다</td><td><code>docker compose up -d db</code> 후 <code>build-data</code>. <code>/api/health</code>의 <code>ready</code>로 미리 알 수 있다</td></tr>
+      <tr><td>모드 전환이 409 <code>warehouse_missing</code></td><td>바꾸려는 데이터 모드의 창고가 없다</td><td><code>build-data --mode hub</code> 등으로 먼저 적재</td></tr>
+      <tr><td>답이 "자료가 없어요"로 끝남</td><td>실데이터 모드인데 그 표의 수집본이 없다</td><td>3.4절대로 받거나 내보낸 CSV를 넣고 다시 적재. 적재 보고서에 "원본 없음"으로 나온다</td></tr>
+      <tr><td>포트 사용 중 (3000 · 8501 · 5434)</td><td>다른 프로그램이 같은 포트를 쓴다</td><td><code>serve --port</code>로 바꾸거나 compose의 포트를 고친다</td></tr>
+      <tr><td>Claude 대신 "기본 설명"이 나옴</td><td>전송 동의 전, 키 없음, 인증·인터넷 실패</td><td>전송 미리보기에서 동의. <code>status</code>의 <code>llm_note</code>에 이유가 나온다</td></tr>
+      <tr><td>"AI 설명이 검증을 통과하지 못해 기본 설명으로 대신했어요"</td><td>설명이 숫자·인과·기간 검증을 두 번 다시 써도 통과하지 못했다</td><td>의도한 동작이다. 숫자는 그대로 정확하다</td></tr>
+      <tr><td>네이버 지도 대신 간단한 지도</td><td>키 없음, 등록하지 않은 주소에서 열림, 인터넷 없음</td><td>3.6절. 등록한 웹 주소로 열기</td></tr>
+      <tr><td>수집 중 403 "Today's quota is full" · 502</td><td>허브 API의 하루 쿼터(1,000건) · 프록시 불안정</td><td>다음 날 같은 명령을 다시 실행하면 이어 받는다</td></tr>
+      <tr><td>모드를 바꾸는 단추가 없음 · <code>/api/modes</code> 403</td><td><code>MEOMUL_LOCK_MODES=true</code> 배포본</td><td><code>.env</code>를 고치고 다시 띄운다</td></tr>
+      <tr><td>답이 늦게 시작됨</td><td>분석은 한 번에 하나라 앞 사람의 분석을 기다린다</td><td>진행 목록의 대기 표시를 보고 기다리거나 멈춘다</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.2 제약사항</h3>
+  <h4>데이터</h4>
+  <ul>
+    <li>유동인구는 통신 데이터로 추정한 값이라 주민등록 인구가 아니다. 허브 쿼터 때문에 일 단위 자료는 달마다 며칠만 받아 하루 평균으로 계산한다.</li>
+    <li>중국인 카드 소비(허브 1048, 2018-01~2025-06)는 제주 전체 단위라 읍면동·시군구로 나눠 보지 못한다. 2단계는 제주 전체 값을 쓰고 그렇다고 밝힌다.</li>
+    <li>요일별 카드(608)와 단체/개별 소비(603)는 2016-09~2017-11 자료뿐이다. 최근 자료가 허브에 없어 그 기간을 답에 함께 적는다.</li>
+    <li>버스 노선과 경유 읍면동 참조표는 샘플이다. 노선·정류소 자료(허브 611·612)로 다시 만들어야 한다. 카드 지구와 읍면동의 연결, 읍면동 좌표는 잠정값이다.</li>
+    <li>센터 모드의 변환식(유동인구 v02, 버스 노선별 이용)은 명세서를 보고 썼고, 실제 센터 추출본으로는 아직 검증하지 않았다.</li>
+  </ul>
+  <h4>기능 · 운영</h4>
+  <ul>
+    <li>로그인 기능이 없다. 기본 설정은 이 PC 안에서만 열린다. 분석은 한 번에 하나씩 돈다.</li>
+    <li>대화 맥락(세션)은 서버 메모리에만 있어 서버를 다시 띄우면 사라진다. 데이터 모드를 바꾸면 대화가 새로 시작된다.</li>
+    <li>센터 PC용 설치 스크립트와 오프라인 설치 꾸러미는 아직 없다. 인터넷이 없는 센터 PC에서는 기본 설명(템플릿)으로만 돈다 (로컬 LLM은 쓰지 않는다).</li>
+    <li>최종 제안서는 HTML이다. PDF는 브라우저 인쇄로 만든다.</li>
+  </ul>
+  <h4>AI 설명</h4>
+  <ul>
+    <li>목록이 들어가는 답(추천 순위, 코스, 3단계 전체 계획)은 Claude 모드에서도 규칙 문장을 쓴다. 목록을 옮겨 적다 순서나 이름이 틀리는 일을 막기 위해서다.</li>
+    <li>검증기는 숫자가 없는 문장의 뜻 바뀜이나 최상급 낱말 없이 덧붙인 평가까지는 잡지 못한다.</li>
+    <li>자유 질문(준비된 분석에 맞지 않는 조회)은 Claude가 SQL을 쓰는 실험 기능이라 "SQL 검토 필요" 배지를 붙인다. Claude 호출에는 요금이 든다.</li>
+  </ul>
+
+  <div class="source-note">
+    출처: 제주특별자치도, 제주데이터허브(jejudatahub.net). 본 자료는 제주빅데이터센터에서 제공하는 자료를 활용한 것이며,
+    연구결과는 제주특별자치도 및 제주테크노파크와 관련이 없음을 밝힙니다.
+  </div>
+</section>
+
+<!-- ============================================================ 부록 -->
+<section class="chapter cont">
+  <h2><span class="no">부록</span>평가용 Claude API 키</h2>
+  <!--EVAL_KEY_START-->
+  <p>이 부록의 평가용 키는 심사위원에게 내는 최종 결과물 ZIP의 매뉴얼에만 적는다. 공개 저장소 판에는 적지 않는다.
+  키가 없으면 Claude 설명 대신 기본 설명(규칙 문장)으로 돌고, 숫자·제안·검증은 같다.</p>
+  <!--EVAL_KEY_END-->
+</section>
+
+</body>
+</html>

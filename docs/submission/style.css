@@ -1,0 +1,458 @@
+/* 머물멍 제출 문서 공통 스타일 (A4 인쇄용). make_pdf.py 가 이 HTML 들을 PDF 로 바꿔요. */
+
+@font-face {
+  font-family: "Pretendard Variable";
+  src: url("../../frontend/node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2") format("woff2-variations");
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  --ink: #2b211b;
+  --ink-2: #57473c;
+  --ink-3: #8a776a;
+  --line: #e8dccf;
+  --soft: #faf5ee;
+  --cream: #fffaf3;
+  --accent: #f08a12;
+  --accent-ink: #b9590a;
+  --accent-soft: #fff1df;
+  --blue: #2f6fdb;
+  --blue-soft: #edf3fd;
+  --ok: #2c7a4b;
+  --warn: #b4441b;
+  --mono: "JetBrains Mono", "D2Coding", "Consolas", "DejaVu Sans Mono", monospace;
+}
+
+@page {
+  size: A4;
+  margin: 15mm 15mm 17mm 15mm;
+}
+
+html {
+  font-family: "Pretendard Variable", Pretendard, "Noto Sans KR", "NanumGothic", sans-serif;
+  color: var(--ink);
+  font-size: 9.5pt;
+  line-height: 1.62;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-variant-numeric: tabular-nums;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+}
+
+/* ---------------------------------------------------------------- 표지 */
+.cover {
+  height: 262mm;
+  display: flex;
+  flex-direction: column;
+  page-break-after: always;
+  break-after: page;
+}
+
+.cover .kicker {
+  color: var(--accent-ink);
+  font-size: 9.5pt;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.cover .brand {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+  margin-top: 26mm;
+}
+
+.cover .brand img {
+  width: 30mm;
+  height: 30mm;
+  object-fit: contain;
+}
+
+.cover h1 {
+  font-size: 27pt;
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.cover .sub {
+  margin-top: 3mm;
+  color: var(--ink-2);
+  font-size: 12pt;
+  font-weight: 500;
+}
+
+.cover .lead {
+  margin-top: 12mm;
+  max-width: 150mm;
+  color: var(--ink-2);
+  font-size: 10.5pt;
+  line-height: 1.7;
+}
+
+.cover .map {
+  margin-top: 10mm;
+}
+
+.cover .map table {
+  font-size: 9pt;
+}
+
+.cover .meta {
+  margin-top: auto;
+  padding-top: 4mm;
+  border-top: 0.3mm solid var(--line);
+  color: var(--ink-3);
+  font-size: 8.5pt;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------------- 장 · 절 */
+section.chapter {
+  page-break-before: always;
+  break-before: page;
+}
+
+section.chapter.cont {
+  page-break-before: auto;
+  break-before: auto;
+  margin-top: 10mm;
+}
+
+h2 {
+  margin: 0 0 4mm;
+  padding: 0.6mm 0 0.6mm 3.2mm;
+  border-left: 1.5mm solid var(--accent);
+  font-size: 15.5pt;
+  line-height: 1.3;
+  font-weight: 700;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+h2 .no {
+  margin-right: 2mm;
+  color: var(--accent-ink);
+}
+
+h3 {
+  margin: 6.5mm 0 2.2mm;
+  font-size: 11.5pt;
+  line-height: 1.35;
+  font-weight: 650;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+h4 {
+  margin: 4mm 0 1.5mm;
+  font-size: 10pt;
+  font-weight: 650;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+p {
+  margin: 0 0 2.4mm;
+}
+
+.lead {
+  color: var(--ink-2);
+  font-size: 10pt;
+}
+
+ul,
+ol {
+  margin: 0 0 2.6mm;
+  padding-left: 5.5mm;
+}
+
+li {
+  margin: 0.6mm 0;
+}
+
+strong {
+  font-weight: 650;
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.small {
+  font-size: 8.4pt;
+}
+
+/* ---------------------------------------------------------------- 표 */
+table {
+  width: 100%;
+  margin: 2mm 0 4.5mm;
+  border-collapse: collapse;
+  font-size: 8.6pt;
+  line-height: 1.5;
+}
+
+thead {
+  display: table-header-group;
+}
+
+tr {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+th,
+td {
+  padding: 1.5mm 2.2mm;
+  border: 0.25mm solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: var(--soft);
+  color: var(--ink);
+  font-weight: 650;
+}
+
+td.num,
+th.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+td.c,
+th.c {
+  text-align: center;
+}
+
+td.nw,
+th.nw {
+  white-space: nowrap;
+}
+
+table.compact th,
+table.compact td {
+  padding: 1.1mm 1.8mm;
+  font-size: 8.2pt;
+}
+
+tr.hl > td {
+  background: var(--accent-soft);
+}
+
+/* ---------------------------------------------------------------- 코드 */
+code {
+  padding: 0.1mm 0.9mm;
+  border-radius: 0.8mm;
+  background: var(--soft);
+  font-family: var(--mono);
+  font-size: 0.9em;
+}
+
+pre {
+  margin: 1.5mm 0 4mm;
+  padding: 2.6mm 3.2mm;
+  border: 0.25mm solid var(--line);
+  border-radius: 1.8mm;
+  background: var(--soft);
+  font-family: var(--mono);
+  font-size: 7.7pt;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-all;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+pre code {
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+pre .c {
+  color: var(--ink-3);
+}
+
+/* ---------------------------------------------------------------- 그림 */
+figure {
+  margin: 2.5mm 0 5mm;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+figure img {
+  display: block;
+  width: 100%;
+  border: 0.25mm solid var(--line);
+  border-radius: 1.8mm;
+}
+
+figure.w80 img {
+  width: 80%;
+  margin: 0 auto;
+}
+
+figure.w65 img {
+  width: 65%;
+  margin: 0 auto;
+}
+
+figure.w50 img {
+  width: 50%;
+  margin: 0 auto;
+}
+
+figure.noframe img {
+  border: 0;
+  border-radius: 0;
+}
+
+figcaption {
+  margin-top: 1.4mm;
+  color: var(--ink-3);
+  font-size: 8.2pt;
+  line-height: 1.5;
+}
+
+figcaption b {
+  color: var(--ink-2);
+  font-weight: 650;
+}
+
+figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---------------------------------------------------------------- 상자 */
+.note {
+  margin: 2.5mm 0 4mm;
+  padding: 2.4mm 3.4mm;
+  border-radius: 1.8mm;
+  background: var(--accent-soft);
+  font-size: 9pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.note.blue {
+  background: var(--blue-soft);
+}
+
+.note.gray {
+  background: var(--soft);
+}
+
+.note > :last-child {
+  margin-bottom: 0;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4mm;
+  align-items: start;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 3mm;
+  align-items: start;
+}
+
+.card {
+  padding: 3mm 3.4mm;
+  border: 0.25mm solid var(--line);
+  border-radius: 2mm;
+  background: #fff;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.card h4 {
+  margin-top: 0;
+}
+
+.card p:last-child {
+  margin-bottom: 0;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3mm;
+  margin: 2mm 0 5mm;
+}
+
+.kpi {
+  padding: 3mm 3.4mm;
+  border: 0.25mm solid var(--line);
+  border-radius: 2mm;
+  background: var(--cream);
+}
+
+.kpi .v {
+  font-size: 16pt;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.kpi .l {
+  margin-top: 0.8mm;
+  color: var(--ink-2);
+  font-size: 8.3pt;
+  line-height: 1.4;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0 1.6mm;
+  border-radius: 1mm;
+  background: var(--soft);
+  color: var(--ink-2);
+  font-size: 8pt;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag.a { background: #e6f4ea; color: #1f6b3d; }
+.tag.b { background: #e8f0fd; color: #1f4fa3; }
+.tag.c { background: #fde8e4; color: #a33a22; }
+.tag.d { background: #fff0d6; color: #8a5300; }
+
+.avoid {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.pb {
+  page-break-before: always;
+  break-before: page;
+}
+
+hr {
+  margin: 5mm 0;
+  border: 0;
+  border-top: 0.3mm solid var(--line);
+}
+
+.source-note {
+  margin-top: 6mm;
+  padding: 2.4mm 3.4mm;
+  border: 0.25mm solid var(--line);
+  border-radius: 1.8mm;
+  color: var(--ink-2);
+  font-size: 8.4pt;
+}
